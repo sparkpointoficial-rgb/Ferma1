@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SparkPoint | Mining Farm</title>
+    <style>
+        :root {
+            --gold: #ffcc00;
+            --bg: #0a0a0b;
+            --card-bg: #141416;
+            --green: #00ff88;
+            --text: #f0f0f0;
+            --blue: #3b82f6;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 50px;
+        }
+
+        /* Бегущая строка */
+        .marquee {
+            width: 100%;
+            overflow: hidden;
+            background-color: #111;
+            border-bottom: 1px solid #222;
+            color: var(--gold);
+            white-space: nowrap;
+            padding: 8px 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .marquee__content {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 20s linear infinite;
+        }
+        @keyframes marquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+        .top-nav { width: 100%; display: flex; justify-content: flex-end; padding: 15px 20px; box-sizing: border-box; }
+        .l-btn { background: #111; color: var(--gold); border: 1px solid var(--gold); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-left: 5px; }
+        .l-btn.active { background: var(--gold); color: #000; }
+
+        header { text-align: center; margin-bottom: 30px; }
+        .site-logo-svg { height: 80px; filter: drop-shadow(0 0 10px rgba(255, 204, 0, 0.7)); }
+        .title { font-size: 3rem; font-weight: 900; text-transform: uppercase; margin: 5px 0; color: var(--gold); }
+
+        /* Секция ФЕРМА (Личный кабинет) */
+        .farm-container {
+            width: 95%;
+            max-width: 1100px;
+            background: linear-gradient(145deg, #1a1a1c, #141416);
+            border: 2px solid var(--gold);
+            border-radius: 25px;
+            padding: 25px;
+            margin-bottom: 40px;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.1);
+        }
+        .farm-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+        .balance-box { text-align: right; }
+        .balance-amount { color: var(--green); font-size: 1.8rem; font-weight: 800; font-family: 'Courier New', monospace; }
+        
+        .my-miners-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .miner-slot {
+            background: #0f0f11;
+            border: 1px dashed #444;
+            border-radius: 15px;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #444;
+            position: relative;
+            overflow: hidden;
+        }
+        .miner-active { border: 1px solid var(--green); color: var(--text); background: rgba(0, 255, 136, 0.05); }
+        .miner-active::after {
+            content: '';
+            position: absolute;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(0,255,136,0.1) 0%, transparent 70%);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.3; } 50% { opacity: 0.7; } 100% { opacity: 0.3; } }
+
+        /* Сетка товаров */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 95%; max-width: 1100px; }
+        .card { background: var(--card-bg); border-radius: 20px; padding: 25px; text-align: center; border: 1px solid #222; transition: 0.3s; }
+        .card:hover { border-color: var(--gold); transform: translateY(-5px); }
+        .price { color: var(--gold); font-size: 2rem; font-weight: 800; margin: 10px 0; }
+        .profit-tag { color: var(--green); font-size: 0.9rem; margin-bottom: 15px; display: block; }
+
+        .btn { display: block; width: 100%; padding: 15px; border-radius: 12px; font-weight: 800; text-transform: uppercase; border: none; cursor: pointer; transition: 0.3s; text-decoration: none; text-align: center; box-sizing: border-box; }
+        .btn-buy { background: var(--gold); color: #000; }
+        .btn-claim { background: var(--green); color: #000; margin-top: 15px; font-size: 12px; padding: 10px; }
+
+        .actions { margin-top: 40px; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="marquee">
+    <div class="marquee__content" id="marquee-text">
+        --- ЗАГРУЗКА ДАННЫХ МАЙНИНГА... СЕТЬ: BSC... СТАТУС: ONLINE ---
+    </div>
+</div>
+
+<div class="top-nav">
+    <button id="rb" class="l-btn active" onclick="setLng('ru')">RU</button>
+    <button id="eb" class="l-btn" onclick="setLng('en')">EN</button>
+</div>
+
+<header>
+    <svg viewBox="0 0 100 100" class="site-logo-svg">
+        <rect x="10" y="10" width="80" height="80" rx="10" fill="url(#g)" transform="rotate(45 50 50)"/>
+        <path d="M40 45 L60 35 V65 L40 55 Z" fill="#fff" />
+        <defs><linearGradient id="g"><stop offset="0%" stop-color="#ffcc00"/><stop offset="100%" stop-color="#ffe066"/></linearGradient></defs>
+    </svg>
+    <h1 class="title">SparkPoint</h1>
+    <p id="sub-title" style="color: #666;">Premium Web3 Mining Ecosystem</p>
+</header>
+
+<div class="farm-container">
+    <div class="farm-header">
+        <div>
+            <h2 style="margin:0; color:var(--gold)" id="farm-title">МОЯ ФЕРМА</h2>
+            <small style="color:#666">Status: Connected</small>
+        </div>
+        <div class="balance-box">
+            <div style="font-size: 12px; color:#aaa">ДОХОД (USDT)</div>
+            <div class="balance-amount" id="live-balance">0.000000</div>
+            <button class="btn btn-claim" onclick="claimProfit()">ВЫВЕСТИ ПРИБЫЛЬ</button>
+        </div>
+    </div>
+    <div class="my-miners-grid" id="miners-slots">
+        <div class="miner-slot">Пусто</div>
+        <div class="miner-slot">Пусто</div>
+        <div class="miner-slot">Пусто</div>
+        <div class="miner-slot">Пусто</div>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <span style="font-size:40px">📟</span>
+        <h3>Miner S1</h3>
+        <span class="profit-tag">+ $3.00 / день</span>
+        <div class="price">50 USDT</div>
+        <button class="btn btn-buy" onclick="buyMiner(50, 3, 'S1')">КУПИТЬ КАРТУ</button>
+    </div>
+    <div class="card">
+        <span style="font-size:40px">🚀</span>
+        <h3>Miner Pro X</h3>
+        <span class="profit-tag">+ $9.00 / день</span>
+        <div class="price">100 USDT</div>
+        <button class="btn btn-buy" onclick="buyMiner(100, 9, 'Pro X')">КУПИТЬ КАРТУ</button>
+    </div>
+</div>
+
+<div class="actions">
+    <button class="btn" style="background:var(--blue); color:#fff">ПОДКЛЮЧИТЬ КОШЕЛЕК</button>
+</div>
+
+<script>
+    let currentBalance = 0.0;
+    let dailyProfit = 0.0;
+    let activeMiners = [];
+
+    const content = {
+        ru: {
+            farm: "МОЯ ФЕРМА",
+            marquee: "🔥 НОВЫЕ МАЙНИНГ КАРТЫ ДОСТУПНЫ! ДОХОД ДО $9 В ДЕНЬ! --- ПОДКЛЮЧАЙ BNB SMART CHAIN --- 🔥"
+        },
+        en: {
+            farm: "MY FARM",
+            marquee: "🔥 NEW MINING CARDS AVAILABLE! EARN UP TO $9 DAILY! --- CONNECT TO BSC NETWORK --- 🔥"
+        }
+    };
+
+    function setLng(l) {
+        document.getElementById('farm-title').innerText = content[l].farm;
+        document.getElementById('marquee-text').innerText = content[l].marquee;
+        document.getElementById('rb').classList.toggle('active', l==='ru');
+        document.getElementById('eb').classList.toggle('active', l==='en');
+    }
+
+    // Функция покупки (имитация)
+    function buyMiner(price, profit, name) {
+        alert(`Покупка ${name} за ${price} USDT... (Подтвердите в MetaMask)`);
+        
+        // Добавляем карту в массив
+        activeMiners.push({ name, profit: profit / 86400 }); // прибыль в секунду
+        dailyProfit += profit;
+        
+        updateMinersUI();
+    }
+
+    function updateMinersUI() {
+        const grid = document.getElementById('miners-slots');
+        grid.innerHTML = '';
+        
+        activeMiners.forEach(m => {
+            const div = document.createElement('div');
+            div.className = 'miner-slot miner-active';
+            div.innerHTML = `<small>${m.name}</small><br><b>ONLINE</b>`;
+            grid.appendChild(div);
+        });
+
+        // Заполняем пустые слоты до 4
+        for(let i = activeMiners.length; i < 4; i++) {
+            grid.innerHTML += '<div class="miner-slot">Пусто</div>';
+        }
+    }
+
+    // "Живой" счетчик прибыли
+    setInterval(() => {
+        if (activeMiners.length > 0) {
+            activeMiners.forEach(m => {
+                currentBalance += m.profit;
+            });
+            document.getElementById('live-balance').innerText = currentBalance.toFixed(6);
+        }
+    }, 1000);
+
+    function claimProfit() {
+        if(currentBalance > 0) {
+            alert(`Выведено ${currentBalance.toFixed(2)} USDT на ваш кошелек!`);
+            currentBalance = 0;
+            document.getElementById('live-balance').innerText = "0.000000";
+        }
+    }
+
+    setLng('ru');
+</script>
+</body>
+  </html>
+
