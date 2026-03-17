@@ -2,143 +2,182 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Seka: Тёмная и Удобный Интерфейс</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seka Elite - 33 Points</title>
     <style>
-        body { font-family: 'Arial', sans-serif; background: #0a2e1a; color: white; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        :root { --gold: #f1c40f; --green: #27ae60; --dark-green: #1a472a; --card-white: #ffffff; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: white; margin: 0; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden; }
         
+        /* Игровой стол */
         .table { 
-            position: relative; width: 800px; height: 500px; 
-            background: radial-gradient(#1a5e35, #051a0d); 
-            border: 12px solid #3e2723; border-radius: 180px; 
-            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+            position: relative; width: 900px; height: 500px; 
+            background: radial-gradient(circle, #2d7a4d 0%, #1a472a 100%); 
+            border: 12px solid #3e2723; border-radius: 200px; 
+            margin-top: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 100px #000;
+            border-bottom: 20px solid #2d1b18;
         }
 
-        .player { position: absolute; width: 150px; text-align: center; transition: 0.3s; padding: 10px; }
-        .p0 { bottom: 30px; left: 325px; z-index: 10; } /* ВЫ */
-        .p1 { left: 20px; top: 200px; }
-        .p2 { top: 20px; left: 325px; }
-        .p3 { right: 20px; top: 200px; }
+        .pot-display { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
+        .pot-display h2 { font-size: 48px; color: var(--gold); margin: 0; text-shadow: 2px 4px 6px #000; }
+        .current-bet-info { font-size: 18px; color: #fff; opacity: 0.8; }
 
-        .active-turn { background: rgba(255, 255, 255, 0.1); border-radius: 15px; box-shadow: 0 0 20px #f1c40f; }
-        .folded { opacity: 0.3; filter: grayscale(1); }
+        /* Игроки */
+        .player-block { position: absolute; width: 160px; text-align: center; transition: all 0.4s ease; padding: 10px; border-radius: 20px; }
+        .player-active { background: rgba(241, 196, 15, 0.15); box-shadow: 0 0 25px var(--gold); transform: scale(1.05); }
+        .player-folded { opacity: 0.4; filter: grayscale(0.8); }
 
+        .p0 { bottom: -20px; left: 50%; transform: translateX(-50%); } /* ВЫ */
+        .p1 { left: 20px; top: 50%; transform: translateY(-50%); }
+        .p2 { top: 20px; left: 50%; transform: translateX(-50%); }
+        .p3 { right: 20px; top: 50%; transform: translateY(-50%); }
+
+        .chips-count { background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 10px; color: var(--gold); font-weight: bold; border: 1px solid var(--gold); margin-top: 5px; display: inline-block; }
+
+        /* Дизайн Карт */
+        .card-slot { display: flex; justify-content: center; gap: 5px; margin-top: 10px; height: 75px; }
         .card { 
-            display: inline-block; width: 40px; height: 60px; 
-            background: white; color: black; border-radius: 5px; 
-            margin: 2px; line-height: 60px; font-weight: bold; 
-            font-size: 15px; border: 1px solid #000; box-shadow: 2px 2px 5px #000;
+            width: 50px; height: 70px; background: var(--card-white); border-radius: 6px; 
+            color: #333; position: relative; font-weight: bold; font-size: 18px; 
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 2px 3px 6px rgba(0,0,0,0.4); border: 1px solid #ccc;
         }
-        .card.hidden { background: linear-gradient(45deg, #1c2a38, #000); border: 1px solid #aaa; color: transparent; }
+        .card.red { color: #e74c3c; }
+        .card.hidden { background: linear-gradient(135deg, #2c3e50 25%, #34495e 100%); border: 2px solid #fff; color: transparent; }
+        .card.joker { background: #f1c40f; color: #000; border: 2px solid #fff; }
 
-        .pot-box { position: absolute; top: 40%; left: 35%; width: 30%; text-align: center; }
-        #pot-val { font-size: 34px; color: #f1c40f; text-shadow: 2px 2px 4px #000; }
+        /* Панель управления */
+        .controls { margin-top: 40px; display: flex; gap: 15px; background: #1a1a1a; padding: 20px; border-radius: 15px; border: 2px solid #333; z-index: 100; }
+        .btn { padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .btn-see { background: #3498db; color: white; }
+        .btn-call { background: var(--green); color: white; }
+        .btn-raise { background: #9b59b6; color: white; }
+        .btn-fold { background: #e74c3c; color: white; }
+        .btn-start { background: var(--gold); color: #000; font-size: 20px; padding: 15px 40px; }
+        .btn:disabled { background: #444; cursor: not-allowed; opacity: 0.6; }
 
-        /* ПАНЕЛЬ УПРАВЛЕНИЯ ПРЯМО ТУТ */
-        .player-ui { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; align-items: center; }
-        .btn-row { display: flex; gap: 5px; }
-
-        button { padding: 8px 12px; cursor: pointer; border: none; border-radius: 4px; font-weight: bold; font-size: 12px; text-transform: uppercase; }
-        .btn-main { background: #f1c40f; color: #000; }
-        .btn-bet { background: #2ecc71; color: #fff; }
-        .btn-fold { background: #e74c3c; color: #fff; }
-        .btn-see { background: #3498db; color: #fff; }
-        button:disabled { background: #444 !important; opacity: 0.5; cursor: not-allowed; }
-
-        .chips-label { color: #f1c40f; font-weight: bold; font-size: 18px; margin-bottom: 5px; display: block; }
-        #log { position: fixed; left: 10px; bottom: 10px; width: 250px; height: 100px; background: rgba(0,0,0,0.7); color: #ccc; font-size: 11px; padding: 5px; overflow-y: auto; border: 1px solid #333; }
+        #log { position: fixed; right: 20px; top: 20px; width: 280px; height: 200px; background: rgba(0,0,0,0.8); border: 1px solid #444; padding: 10px; font-size: 13px; overflow-y: auto; color: #bbb; border-radius: 10px; }
+        .log-win { color: var(--gold); font-weight: bold; }
     </style>
 </head>
 <body>
 
+<div id="log">Добро пожаловать в Seka Elite!</div>
+
 <div class="table">
-    <div class="pot-box">
-        <div id="pot-val">💰 0</div>
-        <div style="font-size:12px">Конун: <span id="cur-bet">10</span></div>
+    <div class="pot-display">
+        <h2 id="total-pot">💰 0</h2>
+        <div class="current-bet-info">Ставка: <b id="current-bet">10</b></div>
     </div>
 
-    <div id="player-1" class="player p1">Бот 1<div class="cards"></div><span id="chips-1" class="chips-label">1000</span></div>
-    <div id="player-2" class="player p2">Бот 2<div class="cards"></div><span id="chips-2" class="chips-label">1000</span></div>
-    <div id="player-3" class="player p3">Бот 3<div class="cards"></div><span id="chips-3" class="chips-label">1000</span></div>
+    <div id="player-1" class="player-block p1"><span>Бот 1</span><div class="card-slot"></div><div class="chips-count">1000</div></div>
+    <div id="player-2" class="player-block p2"><span>Бот 2</span><div class="card-slot"></div><div class="chips-count">1000</div></div>
+    <div id="player-3" class="player-block p3"><span>Бот 3</span><div class="card-slot"></div><div class="chips-count">1000</div></div>
 
-    <div id="player-0" class="player p0">
-        <span id="chips-0" class="chips-label">1000</span>
-        <div class="cards"></div>
-        <div id="score-label" style="font-size:12px; margin: 5px 0;"></div>
-        
-        <div class="player-ui">
-            <button id="start-btn" class="btn-main" onclick="startNewRound()">Раздать</button>
-            
-            <div id="actions" style="display:none; flex-direction: column; gap: 5px;">
-                <div class="btn-row">
-                    <button class="btn-see" id="see-btn" onclick="action('see')">Глаза</button>
-                    <button class="btn-bet" id="bet-btn" onclick="action('bet')">Ставка</button>
-                </div>
-                <div class="btn-row">
-                    <button class="btn-fold" onclick="action('fold')">Пас</button>
-                    <button class="btn-main" style="background:#9b59b6; color:white;" onclick="action('showdown')">Вскрыть</button>
-                </div>
-                <input type="range" id="raise-slider" min="10" max="100" step="10" style="width: 100px;">
-                <span style="font-size:10px">Raise: <b id="raise-txt">10</b></span>
-            </div>
-        </div>
+    <div id="player-0" class="player-block p0">
+        <div id="my-score-label" style="color: var(--gold); font-weight: bold; height: 20px;"></div>
+        <div class="card-slot" id="my-cards"></div>
+        <div class="chips-count" id="my-chips">1000</div>
+        <div style="margin-top: 5px; font-weight: bold;">ВЫ</div>
     </div>
 </div>
 
-<div id="log"></div>
+<div class="controls">
+    <button id="start-btn" class="btn btn-start" onclick="initGame()">НОВАЯ РАЗДАЧА</button>
+    <div id="game-actions" style="display: none; gap: 10px;">
+        <button class="btn btn-see" id="btn-see" onclick="gameAction('see')">👀 Глаза</button>
+        <button class="btn btn-call" id="btn-call" onclick="gameAction('call')">Поддержать</button>
+        <button class="btn btn-raise" onclick="gameAction('raise')">🚀 Поднять (+20)</button>
+        <button class="btn btn-fold" onclick="gameAction('fold')">Пас</button>
+        <button class="btn btn-see" style="background:#555" onclick="finishRound()">Вскрыться</button>
+    </div>
+</div>
 
 <script>
-    let players = [{id:0, chips:1000, hand:[], isFolded:false, isBlind:true, show:false}, {id:1, chips:1000, hand:[], isFolded:false, isBlind:true}, {id:2, chips:1000, hand:[], isFolded:false, isBlind:true}, {id:3, chips:1000, hand:[], isFolded:false, isBlind:true}];
-    let pot = 0, currentBet = 10, activeIdx = 0, lastIsBlind = true;
+    const suits = [{s:'♥', c:'red'}, {s:'♦', c:'red'}, {s:'♣', c:'black'}, {s:'♠', c:'black'}];
+    const values = ['10', 'J', 'Q', 'K', 'A'];
+    let players = [
+        {id: 0, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false},
+        {id: 1, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false},
+        {id: 2, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false},
+        {id: 3, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false}
+    ];
+    let pot = 0, curBet = 10, activeIdx = 0, lastBetterBlind = true;
 
-    document.getElementById('raise-slider').oninput = function() { document.getElementById('raise-txt').innerText = this.value; };
-
-    function log(m) { const l = document.getElementById('log'); l.innerHTML = `> ${m}<br>${l.innerHTML}`; }
-
-    function getPoints(hand) {
-        let hasJ = hand.some(c => c.v === 'JK'), pure = hand.filter(c => c.v !== 'JK'), aces = pure.filter(c => c.v === 'A').length;
-        if (aces === 3 || (aces === 2 && hasJ)) return 33;
-        if (aces === 2 || (aces === 1 && hasJ)) return 22;
-        let suits = {'♥':0,'♦':0,'♣':0,'♠':0,'★':0};
-        pure.forEach(c => suits[c.s] += c.p);
-        let maxS = Math.max(...Object.values(suits)) + (hasJ ? 11 : 0);
-        let counts = {}; pure.forEach(c => counts[c.v] = (counts[c.v] || 0) + 1);
-        let setP = 0; for (let v in counts) if (counts[v] === 3 || (counts[v] === 2 && hasJ)) setP = 30;
-        return Math.max(maxS, setP);
+    function addLog(msg, type='') {
+        const log = document.getElementById('log');
+        log.innerHTML = `<div class="${type}">${msg}</div>` + log.innerHTML;
     }
 
-    function startNewRound() {
-        let deck = []; const s = ['♥','♦','♣','♠'], v = ['10','J','Q','K','A'];
-        s.forEach(suit => v.forEach(val => deck.push({v, s:suit, p:v==='A'?11:10})));
-        deck.push({v:'JK', s:'★', p:11}); deck.sort(() => Math.random() - 0.5);
+    // ЛОГИКА ОЧКОВ: 33 за 3 туза, 22 за 2 туза
+    function calculatePoints(hand) {
+        let hasJoker = hand.some(c => c.v === 'JK');
+        let pure = hand.filter(c => c.v !== 'JK');
+        let aces = pure.filter(c => c.v === 'A').length;
 
+        // 3 туза или 2 туза + Джокер = 33
+        if (aces === 3 || (aces === 2 && hasJoker)) return 33;
+        // 2 туза или 1 туз + Джокер = 22
+        if (aces === 2 || (aces === 1 && hasJoker)) return 22;
+
+        // По мастям
+        let suitsSum = {'♥':0, '♦':0, '♣':0, '♠':0, '★':0};
+        pure.forEach(c => suitsSum[c.s] += c.p);
+        let maxSuit = Math.max(...Object.values(suitsSum)) + (hasJoker ? 11 : 0);
+
+        // Тройки (кроме тузов)
+        let counts = {};
+        pure.forEach(c => counts[c.v] = (counts[c.v] || 0) + 1);
+        let triplet = 0;
+        for (let v in counts) {
+            if (counts[v] === 3 || (counts[v] === 2 && hasJoker)) triplet = 30;
+        }
+
+        return Math.max(maxSuit, triplet);
+    }
+
+    function initGame() {
+        let deck = [];
+        suits.forEach(s => values.forEach(v => deck.push({v, s:s.s, c:s.c, p: v==='A'?11:10})));
+        deck.push({v: 'JK', s: '★', c: 'black', p: 11, isJoker: true}); // 21-я карта
+        deck.sort(() => Math.random() - 0.5);
+
+        pot = 0;
         players.forEach(p => {
             p.hand = [deck.pop(), deck.pop(), deck.pop()];
             p.isFolded = false; p.isBlind = true; p.show = false;
             p.chips -= 10; pot += 10;
         });
 
-        currentBet = 10; activeIdx = 0; lastIsBlind = true;
+        curBet = 10; activeIdx = 0; lastBetterBlind = true;
         document.getElementById('start-btn').style.display = 'none';
-        document.getElementById('actions').style.display = 'flex';
-        log("Новая раздача. Вы в тёмную.");
+        document.getElementById('game-actions').style.display = 'flex';
+        addLog("Раздача! По 10 в банке. Вы ходите в тёмную.");
         updateUI();
     }
 
-    function action(type) {
+    function gameAction(type) {
         if (activeIdx !== 0) return;
-        if (type === 'see') { 
-            players[0].isBlind = false; 
-            log("Вы посмотрели карты!"); 
-        } else if (type === 'bet') {
-            let raise = parseInt(document.getElementById('raise-slider').value);
-            currentBet = raise;
-            let cost = players[0].isBlind ? currentBet : currentBet * 2;
+
+        if (type === 'see') {
+            players[0].isBlind = false;
+            addLog("Вы посмотрели карты. Теперь ставки X2.");
+        } else if (type === 'call') {
+            let cost = players[0].isBlind ? curBet : curBet * 2;
             players[0].chips -= cost; pot += cost;
-            lastIsBlind = players[0].isBlind;
-            log(`Ставка: ${cost}`);
+            lastBetterBlind = players[0].isBlind;
+            addLog(`Вы поддержали ставку ${cost}`);
             nextTurn();
-        } else if (type === 'fold') { players[0].isFolded = true; finish(); }
-        else if (type === 'showdown') { finish(); }
+        } else if (type === 'raise') {
+            curBet += 20;
+            let cost = players[0].isBlind ? curBet : curBet * 2;
+            players[0].chips -= cost; pot += cost;
+            lastBetterBlind = players[0].isBlind;
+            addLog(`Вы ПОДНЯЛИ конун до ${curBet}`);
+            nextTurn();
+        } else if (type === 'fold') {
+            players[0].isFolded = true;
+            finishRound();
+        }
         updateUI();
     }
 
@@ -146,54 +185,76 @@
         activeIdx = (activeIdx + 1) % 4;
         if (players[activeIdx].isFolded) { nextTurn(); return; }
         updateUI();
-        if (activeIdx !== 0) setTimeout(botTurn, 1000);
+        if (activeIdx !== 0) setTimeout(botMove, 1000);
     }
 
-    function botTurn() {
+    function botMove() {
         let b = players[activeIdx];
         if (Math.random() > 0.15) {
-            let cost = lastIsBlind ? currentBet : currentBet; // Боты темнят
+            let cost = lastBetterBlind ? curBet : curBet; // Боты в этом демо "темнят"
             b.chips -= cost; pot += cost;
-            log(`Бот ${activeIdx} поставил ${cost}`);
-        } else { b.isFolded = true; log(`Бот ${activeIdx} ПАС`); }
-        nextTurn();
+            addLog(`Бот ${activeIdx} поставил ${cost}`);
+            nextTurn();
+        } else {
+            b.isFolded = true;
+            addLog(`Бот ${activeIdx} спасовал`);
+            nextTurn();
+        }
     }
 
     function updateUI() {
-        document.getElementById('pot-val').innerText = "💰 " + pot;
-        document.getElementById('cur-bet').innerText = currentBet;
+        document.getElementById('total-pot').innerText = "💰 " + pot;
+        document.getElementById('current-bet').innerText = curBet;
+
         players.forEach((p, i) => {
-            document.getElementById(`chips-${i}`).innerText = p.chips;
             const el = document.getElementById(`player-${i}`);
-            el.className = `player p${i} ${i === activeIdx ? 'active-turn' : ''} ${p.isFolded ? 'folded' : ''}`;
-            const cont = el.querySelector('.cards'); cont.innerHTML = '';
-            p.hand.forEach(c => {
-                const d = document.createElement('div');
-                d.className = (i === 0 && !p.isBlind) || p.show ? 'card' : 'card hidden';
-                if (!d.classList.contains('hidden')) { d.innerText = c.v + c.s; if (c.s === '♥' || c.s === '♦') d.style.color = 'red'; }
-                cont.appendChild(d);
+            el.className = `player-block p${i} ${i === activeIdx ? 'player-active' : ''} ${p.isFolded ? 'player-folded' : ''}`;
+            el.querySelector('.chips-count').innerText = p.chips;
+
+            const slot = el.querySelector('.card-slot');
+            slot.innerHTML = '';
+            p.hand.forEach(card => {
+                const div = document.createElement('div');
+                let isVisible = (i === 0 && !p.isBlind) || p.show;
+                div.className = isVisible ? `card ${card.c} ${card.isJoker ? 'joker' : ''}` : 'card hidden';
+                if (isVisible) div.innerText = card.v + (card.isJoker ? '' : card.s);
+                slot.appendChild(div);
             });
         });
-        document.getElementById('see-btn').disabled = !players[0].isBlind;
-        document.getElementById('bet-btn').innerText = players[0].isBlind ? "Тёмная" : "Светлая";
-        document.getElementById('score-label').innerText = players[0].isBlind ? "???" : getPoints(players[0].hand) + " очков";
+
+        document.getElementById('btn-see').disabled = !players[0].isBlind;
+        let callTxt = players[0].isBlind ? `Поддержать (${curBet})` : `Поддержать (${curBet * 2})`;
+        document.getElementById('btn-call').innerText = callTxt;
+        
+        const myScore = document.getElementById('my-score-label');
+        myScore.innerText = players[0].isBlind ? "ТЁМНАЯ" : calculatePoints(players[0].hand) + " очков";
     }
 
-    function finish() {
-        let win = [], max = -1;
+    function finishRound() {
+        let best = -1, winnerId = -1, winners = [];
         players.forEach((p, i) => {
-            p.show = true; if (!p.isFolded) {
-                let pts = getPoints(p.hand);
-                if (pts > max) { max = pts; win = [i]; } else if (pts === max) win.push(i);
+            p.show = true;
+            if (!p.isFolded) {
+                let pts = calculatePoints(p.hand);
+                if (pts > best) { best = pts; winnerId = i; winners = [i]; }
+                else if (pts === best) { winners.push(i); }
             }
         });
+
         updateUI();
-        if (win.length > 1) log("СВАРА!");
-        else { players[win[0]].chips += pot; log(`Выиграл ${win[0]==0?'ВЫ':'Бот '+win[0]} (${max} очк.)`); pot = 0; }
+        if (winners.length > 1) {
+            addLog("СВАРА! Банк остается на кону!", "log-win");
+        } else {
+            players[winnerId].chips += pot;
+            addLog(`Победил ${winnerId === 0 ? "ВЫ" : "Бот " + winnerId} (${best} очк.)! Забрал ${pot}`, "log-win");
+            pot = 0;
+        }
+
         document.getElementById('start-btn').style.display = 'block';
-        document.getElementById('actions').style.display = 'none';
+        document.getElementById('game-actions').style.display = 'none';
     }
 </script>
+
 </body>
 </html>
 
