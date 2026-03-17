@@ -1,278 +1,142 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CriptoCapital - BNB Mining</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
-    body { font-family: 'Orbitron', sans-serif; }
-    .neon { text-shadow: 0 0 20px #f59e0b, 0 0 40px #f59e0b; }
-    .gpu-card { transition: all 0.4s; }
-    .gpu-card:hover { transform: scale(1.05); box-shadow: 0 0 40px #f59e0b; }
-    .fan { animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .mining-glow { animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seka Crypto Game - Test Mode</title>
+    <style>
+        body { font-family: sans-serif; background: #1a472a; color: white; text-align: center; }
+        .table { border: 2px solid #555; border-radius: 50px; width: 80%; margin: 20px auto; padding: 20px; min-height: 400px; position: relative; }
+        .player-hand { margin-top: 50px; }
+        .card { display: inline-block; width: 60px; height: 90px; background: white; color: black; border-radius: 5px; margin: 5px; line-height: 90px; font-weight: bold; vertical-align: middle; border: 2px solid #000; }
+        .controls { margin-top: 20px; }
+        button { padding: 10px 20px; cursor: pointer; background: #f1c40f; border: none; font-weight: bold; border-radius: 5px; }
+        #log { background: rgba(0,0,0,0.5); width: 80%; margin: 20px auto; padding: 10px; height: 100px; overflow-y: auto; text-align: left; font-size: 14px; }
+        .pot { font-size: 24px; color: #f1c40f; margin-bottom: 10px; }
+    </style>
 </head>
-<body class="bg-zinc-950 text-white min-h-screen">
+<body>
 
-  <!-- HEADER -->
-  <header class="bg-black/90 backdrop-blur-xl border-b border-amber-400/30 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <i class="fa-solid fa-coins text-4xl text-amber-400"></i>
-        <h1 class="text-4xl font-bold neon">CRIPTOCAPITAL</h1>
-      </div>
-      
-      <div class="flex items-center gap-6">
-        <div id="wallet-section" onclick="toggleWallet()" 
-             class="cursor-pointer bg-zinc-900 hover:bg-zinc-800 px-6 py-2 rounded-2xl flex items-center gap-3 border border-amber-400/50">
-          <i class="fa-solid fa-wallet"></i>
-          <span id="wallet-text" class="font-medium">Подключить BNB Wallet</span>
+    <h1>Сека (Тестовый режим)</h1>
+    <p>Колода: 21 карта (10-A + Джокер)</p>
+
+    <div class="pot">Банк: <span id="pot-value">0</span> очков</div>
+
+    <div class="table">
+        <div id="opponents"></div>
+        <div class="player-hand">
+            <h3>Ваши карты:</h3>
+            <div id="my-cards"></div>
+            <div id="my-points" style="color: #f1c40f;">Очки: 0</div>
         </div>
-
-        <div class="text-right">
-          <p class="text-amber-400 text-sm">Баланс BNB</p>
-          <p id="balance" class="text-4xl font-bold text-amber-400">1.245</p>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <div class="flex max-w-7xl mx-auto">
-    <!-- SIDEBAR -->
-    <div class="w-72 bg-zinc-900/80 min-h-screen p-6 border-r border-amber-400/20">
-      <div class="flex items-center gap-3 mb-10">
-        <div class="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-3xl">₿</div>
-        <div>
-          <p class="text-2xl font-bold">CriptoCapital</p>
-          <p class="text-xs text-amber-400">BNB Mining Farm</p>
-        </div>
-      </div>
-
-      <button onclick="buyGPU()" class="w-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 py-4 rounded-3xl font-bold text-lg mb-4 flex items-center justify-center gap-3">
-        <i class="fa-solid fa-cart-shopping"></i> КУПИТЬ ВИДЕОКАРТУ
-      </button>
-
-      <button onclick="openDigitalStore()" class="w-full bg-zinc-800 hover:bg-zinc-700 py-4 rounded-3xl font-bold text-lg mb-8 flex items-center justify-center gap-3 border border-dashed border-amber-400">
-        <i class="fa-solid fa-store"></i> DIGITAL STORE
-      </button>
-
-      <div class="space-y-6">
-        <div>
-          <p class="text-xs text-zinc-500 mb-2">ТВОЙ КОШЕЛЁК</p>
-          <div id="wallet-address" class="font-mono text-xs bg-black p-3 rounded-2xl break-all text-amber-400">Не подключён</div>
-        </div>
-        <div>
-          <p class="text-xs text-zinc-500 mb-2">РЕФЕРАЛЬНАЯ ССЫЛКА</p>
-          <div id="referral-link" class="font-mono text-xs bg-black p-3 rounded-2xl break-all text-amber-400 border border-dashed border-amber-400/50">
-            Подключи кошелёк для реферальной ссылки
-          </div>
-        </div>
-      </div>
     </div>
 
-    <!-- MAIN -->
-    <main class="flex-1 p-8">
-      <h2 class="text-5xl font-bold neon mb-8">МОЯ МАЙНИНГ-ФЕРМА BNB</h2>
-      <div class="grid grid-cols-3 gap-6" id="gpu-grid"></div>
-    </main>
-  </div>
-
-  <!-- BUY GPU MODAL -->
-  <div id="buy-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-[100]">
-    <div class="bg-zinc-900 rounded-3xl p-8 w-full max-w-md border border-amber-400">
-      <h3 class="text-3xl font-bold mb-6">Магазин видеокарт</h3>
-      <div id="shop-items" class="space-y-4"></div>
-      <button onclick="closeModal()" class="mt-8 w-full py-4 bg-zinc-800 hover:bg-zinc-700 rounded-3xl">Закрыть</button>
+    <div class="controls">
+        <button onclick="startGame()">Новая раздача</button>
+        <button onclick="placeBet()">Ставка (+10)</button>
+        <button onclick="showdown()">Вскрыться</button>
     </div>
-  </div>
 
-  <!-- DIGITAL STORE MODAL -->
-  <div id="digital-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-[100]">
-    <div class="bg-zinc-900 rounded-3xl p-8 w-full max-w-4xl border border-amber-400">
-      <div class="flex justify-between items-center mb-6">
-        <h3 class="text-3xl font-bold">DIGITAL STORE</h3>
-        <button onclick="closeDigitalModal()" class="text-3xl">✕</button>
-      </div>
-      <div class="grid grid-cols-3 gap-6" id="digital-items"></div>
-    </div>
-  </div>
+    <div id="log"></div>
 
-  <script>
-    let balance = 1.245;
-    let walletAddress = localStorage.getItem('walletAddress') || null;
-    let miningRate = 0.00042; // BNB в секунду
-    let gpus = [
-      { name: "RTX 4090", hash: "145.8", power: "92" },
-      { name: "RX 7900 XTX", hash: "132.1", power: "94" }
-    ];
+    <script>
+        const suits = ['♥', '♦', '♣', '♠'];
+        const values = ['10', 'J', 'Q', 'K', 'A'];
+        let deck = [];
+        let playerHand = [];
+        let pot = 0;
 
-    const balanceEl = document.getElementById('balance');
-
-    // Авто-майнинг
-    setInterval(() => {
-      balance += miningRate;
-      balanceEl.textContent = balance.toFixed(3);
-    }, 1000);
-
-    function renderGPUs() {
-      const grid = document.getElementById('gpu-grid');
-      grid.innerHTML = '';
-      gpus.forEach(gpu => {
-        const div = document.createElement('div');
-        div.className = `gpu-card bg-zinc-900 border border-amber-400/30 rounded-3xl p-6 mining-glow`;
-        div.innerHTML = `
-          <div class="flex justify-between">
-            <div>
-              <p class="text-2xl font-bold">${gpu.name}</p>
-              <p class="text-amber-400">${gpu.hash} MH/s</p>
-            </div>
-            <i class="fa-solid fa-fan text-6xl text-amber-400 fan"></i>
-          </div>
-          <div class="mt-6 h-2 bg-zinc-800 rounded-full overflow-hidden">
-            <div class="h-full bg-amber-400 rounded-full" style="width: ${gpu.power}%"></div>
-          </div>
-        `;
-        grid.appendChild(div);
-      });
-    }
-
-    // === WALLET (исправлено + сохраняется) ===
-    function toggleWallet() {
-      if (walletAddress) {
-        if (confirm("Отключить кошелёк?")) {
-          walletAddress = null;
-          localStorage.removeItem('walletAddress');
-          document.getElementById('wallet-text').innerHTML = `Подключить BNB Wallet`;
-          document.getElementById('wallet-address').textContent = 'Не подключён';
-          document.getElementById('referral-link').innerHTML = `Подключи кошелёк для реферальной ссылки`;
+        function createDeck() {
+            let d = [];
+            suits.forEach(s => {
+                values.forEach(v => {
+                    let p = (v === 'A') ? 11 : 10;
+                    d.push({ v, s, p });
+                });
+            });
+            d.push({ v: 'JK', s: '★', p: 11 }); // Джокер
+            return d;
         }
-        return;
-      }
 
-      walletAddress = "0x" + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
-      localStorage.setItem('walletAddress', walletAddress);
+        function shuffle(d) {
+            for (let i = d.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [d[i], d[j]] = [d[j], d[i]];
+            }
+            return d;
+        }
 
-      document.getElementById('wallet-text').innerHTML = `✅ \( {walletAddress.slice(0,8)}... \){walletAddress.slice(-6)}`;
-      document.getElementById('wallet-address').textContent = walletAddress;
+        function calculatePoints(hand) {
+            let hasJoker = hand.some(c => c.v === 'JK');
+            let pure = hand.filter(c => c.v !== 'JK');
+            
+            // 1. По мастям
+            let sPoints = { '♥':0, '♦':0, '♣':0, '♠':0, '★':0 };
+            pure.forEach(c => sPoints[c.s] += c.p);
+            let maxS = Math.max(...Object.values(sPoints));
+            if (hasJoker) maxS += 11;
 
-      const refCode = walletAddress.slice(-8);
-      document.getElementById('referral-link').innerHTML = 
-        `https://criptocapital.com/ref/${refCode}<br><span class="text-[10px] text-zinc-500">10% от майнинга друзей навсегда</span>`;
-      
-      alert("✅ BNB Wallet подключён!\nАдрес сохранён даже после перезагрузки.");
-    }
+            // 2. Тройки (три одинаковых)
+            let counts = {};
+            pure.forEach(c => counts[c.v] = (counts[c.v] || 0) + 1);
+            let setPoints = 0;
+            for (let v in counts) {
+                if (counts[v] === 3) setPoints = (v === 'A' ? 31 : 30);
+                if (counts[v] === 2 && hasJoker) setPoints = (v === 'A' ? 31 : 30);
+            }
+            
+            // 3. Три туза или три джокера (особые правила секи)
+            if (hasJoker && pure.every(c => c.v === 'A' && pure.length === 2)) setPoints = 31;
 
-    // === DIGITAL STORE ===
-    const digitalProducts = [
-      { id:1, name:"NFT RTX 5090", desc:"Уникальная NFT-карта +50 MH/s навсегда", price:0.85, type:"nft" },
-      { id:2, name:"Pro Farm 30 дней", desc:"×2 скорость майнинга + приоритет", price:0.25, type:"boost" },
-      { id:3, name:"Гайд + Софт", desc:"Полный пакет для запуска фермы", price:0.05, type:"guide" },
-      { id:4, name:"24ч Mega Boost", desc:"+100% хэшрейт на сутки", price:0.03, type:"temp" },
-      { id:5, name:"Неоновый скин", desc:"Космический дизайн фермы", price:0.04, type:"skin" }
-    ];
+            return Math.max(maxS, setPoints);
+        }
 
-    function openDigitalStore() {
-      if (!walletAddress) { alert("Сначала подключи BNB Wallet!"); return; }
-      const modal = document.getElementById('digital-modal');
-      const container = document.getElementById('digital-items');
-      container.innerHTML = '';
-      
-      digitalProducts.forEach(item => {
-        const div = document.createElement('div');
-        div.className = "bg-zinc-800 rounded-3xl p-6 hover:bg-zinc-700 cursor-pointer border border-amber-400/30";
-        div.innerHTML = `
-          <p class="font-bold text-xl">${item.name}</p>
-          <p class="text-zinc-400 text-sm mt-2">${item.desc}</p>
-          <div class="mt-6 flex justify-between items-end">
-            <p class="text-3xl font-bold text-amber-400">${item.price} BNB</p>
-            <button onclick="buyDigital(${item.id}); event.stopImmediatePropagation()" 
-                    class="bg-amber-400 text-black px-8 py-3 rounded-2xl font-bold">Купить</button>
-          </div>
-        `;
-        container.appendChild(div);
-      });
-      modal.classList.remove('hidden');
-    }
+        function startGame() {
+            deck = shuffle(createDeck());
+            playerHand = [deck.pop(), deck.pop(), deck.pop()];
+            pot = 10;
+            document.getElementById('pot-value').innerText = pot;
+            displayCards();
+            log("Раздача произведена. Кон по 10 очков.");
+        }
 
-    function buyDigital(id) {
-      const item = digitalProducts.find(p => p.id === id);
-      if (balance < item.price) { alert("Недостаточно BNB!"); return; }
-      
-      balance -= item.price;
-      balanceEl.textContent = balance.toFixed(3);
+        function displayCards() {
+            const container = document.getElementById('my-cards');
+            container.innerHTML = '';
+            playerHand.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `${c.v}${c.s}`;
+                if (c.s === '♥' || c.s === '♦') div.style.color = 'red';
+                container.appendChild(div);
+            });
+            document.getElementById('my-points').innerText = "Очки: " + calculatePoints(playerHand);
+        }
 
-      if (item.type === "nft") {
-        gpus.push({ name: item.name, hash: "198.5", power: "99" });
-        renderGPUs();
-        alert(`🎉 NFT ${item.name} добавлена в ферму!`);
-      } else if (item.type === "boost") {
-        miningRate *= 2;
-        alert(`🚀 Pro Farm активирована! Скорость ×2`);
-      } else {
-        alert(`✅ ${item.name} успешно куплен!`);
-      }
-      closeDigitalModal();
-    }
+        function placeBet() {
+            pot += 10;
+            document.getElementById('pot-value').innerText = pot;
+            log("Вы добавили 10. В банке: " + pot);
+        }
 
-    function closeDigitalModal() {
-      document.getElementById('digital-modal').classList.add('hidden');
-    }
+        function showdown() {
+            let points = calculatePoints(playerHand);
+            // Симуляция оппонента (простой рандом для теста)
+            let oppPoints = Math.floor(Math.random() * 20) + 11; 
+            log(`Вскрытие! У вас: ${points}. У оппонента: ${oppPoints}.`);
+            if (points >= oppPoints) {
+                log("ВЫ ВЫИГРАЛИ " + pot + "!");
+            } else {
+                log("Вы проиграли.");
+            }
+        }
 
-    // Остальные функции (buyGPU и т.д.) — без изменений, только цвета
-    const shop = [
-      { name: "RTX 5090 Ti", hash: "198.5", power: "98", price: 0.85 },
-      { name: "RTX 4080 Super", hash: "112.4", power: "89", price: 0.45 }
-    ];
-
-    function buyGPU() {
-      if (!walletAddress) { alert("Сначала подключи BNB Wallet!"); return; }
-      // ... (тот же код магазина видеокарт, только цвета amber)
-      const modal = document.getElementById('buy-modal');
-      const container = document.getElementById('shop-items');
-      container.innerHTML = '';
-      shop.forEach((item, i) => {
-        const div = document.createElement('div');
-        div.className = "flex justify-between items-center bg-zinc-800 p-5 rounded-2xl cursor-pointer hover:bg-zinc-700";
-        div.innerHTML = `
-          <div><p class="font-bold">\( {item.name}</p><p class="text-amber-400"> \){item.hash} MH/s</p></div>
-          <div class="text-right"><p class="font-bold text-lg">${item.price} BNB</p>
-          <button onclick="purchase(${i}); event.stopImmediatePropagation()" class="mt-2 bg-amber-400 text-black px-6 py-1 rounded-xl text-sm font-bold">Купить</button></div>`;
-        container.appendChild(div);
-      });
-      modal.classList.remove('hidden');
-    }
-
-    function purchase(index) {
-      const item = shop[index];
-      if (balance < item.price) { alert("Недостаточно BNB!"); return; }
-      balance -= item.price;
-      balanceEl.textContent = balance.toFixed(3);
-      gpus.push({ name: item.name, hash: item.hash, power: item.power });
-      renderGPUs();
-      closeModal();
-      alert(`🎉 Куплена ${item.name}!`);
-    }
-
-    function closeModal() { document.getElementById('buy-modal').classList.add('hidden'); }
-
-    // Инициализация
-    renderGPUs();
-    if (walletAddress) {
-      document.getElementById('wallet-text').innerHTML = `✅ \( {walletAddress.slice(0,8)}... \){walletAddress.slice(-6)}`;
-      document.getElementById('wallet-address').textContent = walletAddress;
-      const refCode = walletAddress.slice(-8);
-      document.getElementById('referral-link').innerHTML = `https://criptocapital.com/ref/${refCode}<br><span class="text-[10px] text-zinc-500">10% от майнинга друзей навсегда</span>`;
-    }
-
-    setTimeout(() => {
-      alert("Добро пожаловать в CriptoCapital BNB! 🔥\nПодключи кошелёк и открывай Digital Store");
-    }, 800);
-  </script>
+        function log(msg) {
+            const l = document.getElementById('log');
+            l.innerHTML += msg + "<br>";
+            l.scrollTop = l.scrollHeight;
+        }
+    </script>
 </body>
 </html>
+
