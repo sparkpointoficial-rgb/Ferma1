@@ -89,7 +89,7 @@
 
 <div id="wallet-panel">
     <div><strong>Кошелек Polygon:</strong> <span id="wallet-status">Не подключен</span></div>
-    <button id="connect-btn" class="btn" style="background:#27ae60; margin:6px 0; width:100%; font-size:14px;" onclick="connectWallet()">🔗 Подключить Polygon</button>
+    <button id="connect-btn" class="btn" style="background:#27ae60; margin:6px 0; width:100%; font-size:14px;" onclick="connectWallet()">🔗 Подключить Polygon (MetaMask)</button>
     <button id="deposit-btn" class="btn" style="background:#9b59b6; margin:6px 0; width:100%; font-size:14px; display:none;" onclick="depositToContract()">💰 Пополнить контракт</button>
     <div style="margin-top:6px; font-size:12px;">Игровой ID: <span id="game-id">-</span></div>
     <div style="font-size:12px;">Баланс контракта: <span id="contract-balance">0</span> токенов</div>
@@ -105,7 +105,7 @@
     </svg>
 </div>
 
-<div id="log">Добро пожаловать в Seka Elite (Polygon)! Нажми «Внести Кон» — все участники (включая ботов) должны внести кон. После этого раздача начнётся автоматически.</div>
+<div id="log">Добро пожаловать в Seka Elite (Polygon)! Нажми «Внести Кон» — все участники должны внести кон. Раздача начнётся автоматически. Сначала подключи кошелёк!</div>
 
 <div class="table">
     <div class="pot-display">
@@ -185,6 +185,77 @@
         return Math.max(maxSuit, triplet);
     }
 
+    // ==================== РЕАЛЬНОЕ ПОДКЛЮЧЕНИЕ КОШЕЛЬКА (MetaMask + Polygon) ====================
+    async function connectWallet() {
+        if (walletConnected) return;
+
+        if (!window.ethereum) {
+            alert("❌ MetaMask не найден!\n\nУстановите MetaMask: https://metamask.io/download/");
+            return;
+        }
+
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            if (!accounts || accounts.length === 0) {
+                addLog("❌ Подключение отклонено");
+                return;
+            }
+
+            const address = accounts[0];
+            userGameId = Math.floor(100000 + Math.random() * 900000);
+
+            const shortAddr = address.slice(0, 6) + '...' + address.slice(-4);
+
+            document.getElementById('wallet-status').innerText = shortAddr;
+            document.getElementById('game-id').innerText = userGameId;
+            document.getElementById('connect-btn').style.display = 'none';
+            document.getElementById('deposit-btn').style.display = 'block';
+            document.getElementById('wallet-panel').classList.add('compact');
+
+            walletConnected = true;
+
+            addLog(`✅ Кошелёк подключён! Адрес: ${shortAddr} | Игровой ID: ${userGameId}`);
+
+            // Автоматическое переключение на Polygon Mainnet
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x89' }]
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: '0x89',
+                            chainName: 'Polygon Mainnet',
+                            nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
+                            rpcUrls: ['https://polygon-rpc.com'],
+                            blockExplorerUrls: ['https://polygonscan.com']
+                        }]
+                    });
+                    addLog("✅ Сеть Polygon Mainnet добавлена автоматически");
+                }
+            }
+
+        } catch (error) {
+            console.error(error);
+            addLog("❌ Ошибка подключения: " + (error.message || "Неизвестная ошибка"));
+        }
+    }
+
+    function depositToContract() {
+        if (!walletConnected) return alert("Сначала подключите кошелёк!");
+        let amt = prompt("Сколько токенов пополнить в смарт-контракт? (1 токен = 10 игровых очков)", "100");
+        if (!amt || isNaN(amt) || amt <= 0) return;
+        let add = parseInt(amt);
+        contractBal += add;
+        players[0].chips += add * 10;
+        document.getElementById('contract-balance').innerText = contractBal;
+        document.getElementById('my-chips').innerText = players[0].chips;
+        addLog(`💰 Пополнено \( {add} токенов в контракт. + \){add * 10} очков!`);
+    }
+
     function startKonPhase() {
         document.getElementById('kon-btn').style.display = 'block';
         document.getElementById('game-actions').style.display = 'none';
@@ -195,7 +266,6 @@
         document.getElementById('timer-countdown').textContent = '30';
         document.getElementById('progress-circle').style.strokeDashoffset = '515';
         
-        // Боты автоматически вносят кон в течение 10 секунд
         setTimeout(() => { players[1].konReady = true; addLog("Бот 1 внёс кон"); checkAllKon(); }, 1200);
         setTimeout(() => { players[2].konReady = true; addLog("Бот 2 внёс кон"); checkAllKon(); }, 2800);
         setTimeout(() => { players[3].konReady = true; addLog("Бот 3 внёс кон"); checkAllKon(); }, 4500);
@@ -209,7 +279,7 @@
             if (timeLeft <= 0) {
                 clearInterval(konTimerInterval);
                 if (!players[0].konReady) {
-                    addLog("⏰ Время вышло! Вы не внесли кон — автоматический пас.", "log-win");
+                    addLog("⏰ Время вышло! Вы не внесли кон — автоматический пас.");
                     players[0].isFolded = true;
                 }
                 autoDeal();
@@ -229,8 +299,7 @@
     }
 
     function checkAllKon() {
-        const allReady = players.every(p => p.konReady);
-        if (allReady) {
+        if (players.every(p => p.konReady)) {
             clearInterval(konTimerInterval);
             document.getElementById('timer-countdown').textContent = 'ГОТОВО!';
             setTimeout(autoDeal, 800);
@@ -252,7 +321,7 @@
 
         curBet = 10; activeIdx = 0; lastBetterBlind = true;
         document.getElementById('game-actions').style.display = 'flex';
-        addLog("🎴 Все внесли кон! Раздача началась автоматически. Вы ходите первым.");
+        addLog("🎴 Все внесли кон! Раздача началась автоматически.");
         updateUI();
     }
 
@@ -380,26 +449,17 @@
             pot = 0;
         }
 
-        // Автоматически начинаем новый раунд через 2 секунды
         setTimeout(() => {
             startKonPhase();
         }, 2200);
     }
 
-    function connectWallet() {
-        if (walletConnected) return;
-        walletConnected = true;
-        userGameId = Math.floor(100000 + Math.random() * 900000);
-        let addr = "0x" + Array.from({length: 8}, () => Math.floor(Math.random() * 16).toString(16)).join('').toUpperCase() + "...";
-        document.getElementById('wallet-status').innerText = addr;
-        document.getElementById('game-id').innerText = userGameId;
-        document.getElementById('connect-btn').style.display = 'none';
-        document.getElementById('deposit-btn').style.display = 'block';
-        document.getElementById('wallet-panel').classList.add('compact');
-        addLog(`✅ Кошелёк Polygon подключён! Игровой ID: ${userGameId}.`);
-    }
+    window.onload = () => {
+        document.getElementById('raise-amount-display').innerText = '+20';
+        document.getElementById('raise-amount-display2').innerText = '+20';
+        startKonPhase();
+    };
+</script>
 
-    function depositToContract() {
-        if (!walletConnected) return alert("Подключите кошелёк!");
-        let amt = prompt("Сколько токенов пополнить в смарт-контракт Polygon? (1 = 10 очков)", "100");
-        if (!amt || isNaN(amt) || amt <= 0) re
+</body>
+</html>
