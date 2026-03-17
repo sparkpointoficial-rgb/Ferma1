@@ -26,7 +26,7 @@
         .player-active { background: rgba(241, 196, 15, 0.15); box-shadow: 0 0 25px var(--gold); transform: scale(1.05); }
         .player-folded { opacity: 0.4; filter: grayscale(0.8); }
 
-        .p0 { bottom: -20px; left: 50%; transform: translateX(-50%); } /* ВЫ */
+        .p0 { bottom: -20px; left: 50%; transform: translateX(-50%); }
         .p1 { left: 20px; top: 50%; transform: translateY(-50%); }
         .p2 { top: 20px; left: 50%; transform: translateX(-50%); }
         .p3 { right: 20px; top: 50%; transform: translateY(-50%); }
@@ -46,28 +46,36 @@
         .card.joker { background: #f1c40f; color: #000; border: 2px solid #fff; font-size: 26px; }
 
         /* Панель управления */
-        .controls { margin-top: 40px; display: flex; gap: 12px; background: #1a1a1a; padding: 18px; border-radius: 15px; border: 2px solid #333; z-index: 100; flex-wrap: wrap; justify-content: center; }
+        .controls { margin-top: 20px; display: flex; gap: 12px; background: #1a1a1a; padding: 18px; border-radius: 15px; border: 2px solid #333; z-index: 100; flex-wrap: wrap; justify-content: center; }
 
         .btn { padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .btn-kon { background: #f1c40f; color: #000; font-size: 18px; }
         .btn-see { background: #3498db; color: white; }
         .btn-dark { background: #27ae60; color: white; }
         .btn-superdark { background: #9b59b6; color: white; }
         .btn-call { background: var(--green); color: white; }
         .btn-raise { background: #9b59b6; color: white; }
         .btn-fold { background: #e74c3c; color: white; }
-        .btn-start { background: var(--gold); color: #000; font-size: 20px; padding: 15px 40px; }
         .btn:disabled { background: #444; cursor: not-allowed; opacity: 0.6; }
 
-        /* Ползунок */
         .raise-group { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; }
-        .raise-group input[type="range"] { accent-color: #f1c40f; width: 140px; }
 
-        #log { position: fixed; right: 20px; top: 20px; width: 280px; height: 200px; background: rgba(0,0,0,0.8); border: 1px solid #444; padding: 10px; font-size: 13px; overflow-y: auto; color: #bbb; border-radius: 10px; }
+        /* КРАСИВЫЙ ТАЙМЕР КОНА */
+        #kon-timer {
+            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+            width: 180px; height: 180px; z-index: 150;
+        }
+        #kon-timer svg { width: 100%; height: 100%; }
+        .timer-circle-bg { fill: none; stroke: #333; stroke-width: 14; }
+        .timer-circle { fill: none; stroke: #f1c40f; stroke-width: 14; stroke-linecap: round; transition: stroke-dashoffset 0.3s linear; }
+        .timer-text { font-size: 42px; font-weight: bold; fill: #fff; text-anchor: middle; dominant-baseline: middle; text-shadow: 0 0 10px #f1c40f; }
+        .timer-label { font-size: 14px; fill: #aaa; text-anchor: middle; dominant-baseline: middle; }
+
+        #log { position: fixed; right: 20px; top: 20px; width: 280px; height: 220px; background: rgba(0,0,0,0.8); border: 1px solid #444; padding: 10px; font-size: 13px; overflow-y: auto; color: #bbb; border-radius: 10px; }
         .log-win { color: var(--gold); font-weight: bold; }
 
         .score-label { color: var(--gold); font-weight: bold; height: 20px; margin-bottom: 5px; text-shadow: 1px 1px 3px #000; }
 
-        /* Компактная панель кошелька (Polygon) */
         #wallet-panel {
             position: absolute; top: 15px; left: 15px; z-index: 200;
             background: rgba(26,26,26,0.95); padding: 10px 14px; border-radius: 12px;
@@ -87,7 +95,17 @@
     <div style="font-size:12px;">Баланс контракта: <span id="contract-balance">0</span> токенов</div>
 </div>
 
-<div id="log">Добро пожаловать в Seka Elite (Polygon)! Подключи кошелёк — игра идёт по внутреннему балансу смарт-контракта (без газа).</div>
+<div id="kon-timer">
+    <svg viewBox="0 0 200 200">
+        <circle class="timer-circle-bg" cx="100" cy="100" r="82"></circle>
+        <circle id="progress-circle" class="timer-circle" cx="100" cy="100" r="82" 
+                stroke-dasharray="515" stroke-dashoffset="515"></circle>
+        <text id="timer-countdown" x="100" y="92" class="timer-text">30</text>
+        <text x="100" y="122" class="timer-label">СЕК ДЛЯ КОН</text>
+    </svg>
+</div>
+
+<div id="log">Добро пожаловать в Seka Elite (Polygon)! Нажми «Внести Кон» — все участники (включая ботов) должны внести кон. После этого раздача начнётся автоматически.</div>
 
 <div class="table">
     <div class="pot-display">
@@ -108,27 +126,22 @@
 </div>
 
 <div class="controls">
-    <button id="start-btn" class="btn btn-start" onclick="initGame()">НОВАЯ РАЗДАЧА</button>
+    <button id="kon-btn" class="btn btn-kon" onclick="payKon()">💰 ВНЕСТИ КОН (10 очков)</button>
     
     <div id="game-actions" style="display: none; gap: 10px; flex-wrap: wrap; justify-content: center;">
         <button class="btn btn-see" id="btn-see" onclick="gameAction('see')">👀 Глаза</button>
-        
-        <!-- Кнопки Тёмный и Перетёмный (только когда в тёмную) -->
         <button class="btn btn-dark" id="btn-dark" onclick="gameAction('dark')">Тёмный</button>
         <div id="superdark-group" class="raise-group">
             <button class="btn btn-superdark" id="btn-superdark" onclick="gameAction('superdark')">Перетёмный</button>
             <input type="range" id="raise-slider" min="20" max="200" step="10" value="20" oninput="updateRaiseAmount(this.value)">
-            <span id="raise-amount-display" style="color:var(--gold); font-weight:bold; min-width:40px;">+20</span>
+            <span id="raise-amount-display" style="color:var(--gold); font-weight:bold;">+20</span>
         </div>
-        
-        <!-- Кнопки после открытия карт -->
         <button class="btn btn-call" id="btn-call" onclick="gameAction('call')">Поддержать</button>
         <div id="normal-raise-group" class="raise-group" style="display:none;">
             <button class="btn btn-raise" id="btn-raise" onclick="gameAction('raise')">Поднять</button>
             <input type="range" id="raise-slider2" min="20" max="200" step="10" value="20" oninput="updateRaiseAmount(this.value)">
-            <span id="raise-amount-display2" style="color:var(--gold); font-weight:bold; min-width:40px;">+20</span>
+            <span id="raise-amount-display2" style="color:var(--gold); font-weight:bold;">+20</span>
         </div>
-        
         <button class="btn btn-fold" onclick="gameAction('fold')">Пас</button>
         <button class="btn btn-see" style="background:#555" onclick="finishRound()">Вскрыться</button>
     </div>
@@ -138,16 +151,18 @@
     const suits = [{s:'♥', c:'red'}, {s:'♦', c:'red'}, {s:'♣', c:'black'}, {s:'♠', c:'black'}];
     const values = ['10', 'J', 'Q', 'K', 'A'];
     let players = [
-        {id: 0, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false},
-        {id: 1, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false},
-        {id: 2, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false},
-        {id: 3, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false}
+        {id: 0, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false},
+        {id: 1, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false},
+        {id: 2, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false},
+        {id: 3, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false}
     ];
     let pot = 0, curBet = 10, activeIdx = 0, lastBetterBlind = true;
     let raiseAmount = 20;
     let walletConnected = false;
     let userGameId = null;
     let contractBal = 0;
+    let konTimerInterval = null;
+    let timeLeft = 30;
 
     function addLog(msg, type='') {
         const log = document.getElementById('log');
@@ -158,47 +173,86 @@
         let hasJoker = hand.some(c => c.isJoker);
         let pure = hand.filter(c => !c.isJoker);
         let aces = pure.filter(c => c.v === 'A').length;
-
         if (aces === 3 || (aces === 2 && hasJoker)) return 33;
         if (aces === 2 || (aces === 1 && hasJoker)) return 22;
-
         let suitsSum = {'♥':0, '♦':0, '♣':0, '♠':0, '★':0};
         pure.forEach(c => suitsSum[c.s] += c.p);
         let maxSuit = Math.max(...Object.values(suitsSum)) + (hasJoker ? 11 : 0);
-
         let counts = {};
         pure.forEach(c => counts[c.v] = (counts[c.v] || 0) + 1);
         let triplet = 0;
-        for (let v in counts) {
-            if (counts[v] === 3 || (counts[v] === 2 && hasJoker)) triplet = 30;
-        }
+        for (let v in counts) if (counts[v] === 3 || (counts[v] === 2 && hasJoker)) triplet = 30;
         return Math.max(maxSuit, triplet);
     }
 
-    function initGame() {
+    function startKonPhase() {
+        document.getElementById('kon-btn').style.display = 'block';
+        document.getElementById('game-actions').style.display = 'none';
+        pot = 0;
+        players.forEach(p => { p.konReady = false; p.isFolded = false; p.show = false; p.hand = []; });
+        
+        timeLeft = 30;
+        document.getElementById('timer-countdown').textContent = '30';
+        document.getElementById('progress-circle').style.strokeDashoffset = '515';
+        
+        // Боты автоматически вносят кон в течение 10 секунд
+        setTimeout(() => { players[1].konReady = true; addLog("Бот 1 внёс кон"); checkAllKon(); }, 1200);
+        setTimeout(() => { players[2].konReady = true; addLog("Бот 2 внёс кон"); checkAllKon(); }, 2800);
+        setTimeout(() => { players[3].konReady = true; addLog("Бот 3 внёс кон"); checkAllKon(); }, 4500);
+
+        konTimerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer-countdown').textContent = timeLeft;
+            const offset = 515 - (515 * (30 - timeLeft) / 30);
+            document.getElementById('progress-circle').style.strokeDashoffset = offset;
+            
+            if (timeLeft <= 0) {
+                clearInterval(konTimerInterval);
+                if (!players[0].konReady) {
+                    addLog("⏰ Время вышло! Вы не внесли кон — автоматический пас.", "log-win");
+                    players[0].isFolded = true;
+                }
+                autoDeal();
+            }
+        }, 1000);
+    }
+
+    function payKon() {
+        if (players[0].konReady || players[0].chips < 10) return;
+        players[0].chips -= 10;
+        pot += 10;
+        players[0].konReady = true;
+        document.getElementById('my-chips').innerText = players[0].chips;
+        document.getElementById('total-pot').innerText = "💰 " + pot;
+        addLog("✅ Вы внесли кон (10 очков)");
+        checkAllKon();
+    }
+
+    function checkAllKon() {
+        const allReady = players.every(p => p.konReady);
+        if (allReady) {
+            clearInterval(konTimerInterval);
+            document.getElementById('timer-countdown').textContent = 'ГОТОВО!';
+            setTimeout(autoDeal, 800);
+        }
+    }
+
+    function autoDeal() {
+        document.getElementById('kon-btn').style.display = 'none';
+        
         let deck = [];
         suits.forEach(s => values.forEach(v => deck.push({v, s:s.s, c:s.c, p: v==='A'?11:10})));
         deck.push({v: 'JK', s: '★', c: 'black', p: 11, isJoker: true});
         deck.sort(() => Math.random() - 0.5);
 
-        // Все участники делают кон по 10 очков
-        pot = 0;
         players.forEach(p => {
             p.hand = [deck.pop(), deck.pop(), deck.pop()];
-            p.isFolded = false; 
-            p.isBlind = true; 
-            p.show = false;
-            p.chips -= 10; 
-            pot += 10;
+            p.isBlind = true;
         });
 
-        curBet = 10; 
-        activeIdx = 0; 
-        lastBetterBlind = true;
-        document.getElementById('start-btn').style.display = 'none';
+        curBet = 10; activeIdx = 0; lastBetterBlind = true;
         document.getElementById('game-actions').style.display = 'flex';
-        
-        addLog("✅ Все участники внесли кон по 10 очков. Раздача началась! Вы ходите в тёмную.");
+        addLog("🎴 Все внесли кон! Раздача началась автоматически. Вы ходите первым.");
         updateUI();
     }
 
@@ -208,42 +262,33 @@
         if (type === 'see') {
             players[0].isBlind = false;
             addLog("Вы посмотрели карты. Теперь ставки ×2.");
-        } 
-        else if (type === 'dark') { // Тёмный (поддержать в тёмную)
+        } else if (type === 'dark') {
             let cost = curBet;
-            players[0].chips -= cost; 
-            pot += cost;
+            players[0].chips -= cost; pot += cost;
             lastBetterBlind = true;
             addLog(`Вы поддержали Тёмный (${cost})`);
             nextTurn();
-        } 
-        else if (type === 'superdark') { // Перетёмный
+        } else if (type === 'superdark') {
             curBet += raiseAmount;
             let cost = curBet;
-            players[0].chips -= cost; 
-            pot += cost;
+            players[0].chips -= cost; pot += cost;
             lastBetterBlind = true;
             addLog(`Вы сделали ПЕРЕТЁМНЫЙ до ${curBet}`);
             nextTurn();
-        } 
-        else if (type === 'call') {
+        } else if (type === 'call') {
             let cost = curBet * 2;
-            players[0].chips -= cost; 
-            pot += cost;
+            players[0].chips -= cost; pot += cost;
             lastBetterBlind = false;
             addLog(`Вы поддержали (${cost})`);
             nextTurn();
-        } 
-        else if (type === 'raise') {
+        } else if (type === 'raise') {
             curBet += raiseAmount;
             let cost = curBet * 2;
-            players[0].chips -= cost; 
-            pot += cost;
+            players[0].chips -= cost; pot += cost;
             lastBetterBlind = false;
             addLog(`Вы подняли до ${curBet}`);
             nextTurn();
-        } 
-        else if (type === 'fold') {
+        } else if (type === 'fold') {
             players[0].isFolded = true;
             finishRound();
         }
@@ -261,8 +306,7 @@
         let b = players[activeIdx];
         if (Math.random() > 0.35) {
             let cost = curBet;
-            b.chips -= cost; 
-            pot += cost;
+            b.chips -= cost; pot += cost;
             addLog(`Бот ${activeIdx} поставил ${cost}`);
             nextTurn();
         } else {
@@ -283,8 +327,6 @@
         document.getElementById('current-bet').innerText = curBet;
 
         const isBlind = players[0].isBlind;
-
-        // Показываем нужные кнопки
         document.getElementById('btn-dark').style.display = isBlind ? 'inline-block' : 'none';
         document.getElementById('superdark-group').style.display = isBlind ? 'flex' : 'none';
         document.getElementById('btn-call').style.display = isBlind ? 'none' : 'inline-block';
@@ -307,13 +349,9 @@
 
             const scoreEl = (i === 0) ? document.getElementById('my-score-label') : el.querySelector('.score-label');
             if (scoreEl) {
-                if (p.show) {
-                    scoreEl.innerText = calculatePoints(p.hand) + " очков";
-                } else if (i === 0) {
-                    scoreEl.innerText = p.isBlind ? "ТЁМНАЯ" : calculatePoints(p.hand) + " очков";
-                } else {
-                    scoreEl.innerText = "";
-                }
+                if (p.show) scoreEl.innerText = calculatePoints(p.hand) + " очков";
+                else if (i === 0) scoreEl.innerText = p.isBlind ? "ТЁМНАЯ" : calculatePoints(p.hand) + " очков";
+                else scoreEl.innerText = "";
             }
         });
 
@@ -326,67 +364,42 @@
             p.show = true;
             if (!p.isFolded) {
                 let pts = calculatePoints(p.hand);
-                if (pts > best) { 
-                    best = pts; 
-                    winnerId = i; 
-                    winners = [i]; 
-                } else if (pts === best) {
-                    winners.push(i);
-                }
+                if (pts > best) { best = pts; winnerId = i; winners = [i]; }
+                else if (pts === best) winners.push(i);
             }
         });
 
         updateUI();
 
+        const winnerName = winnerId === 0 ? `Вы (ID: ${userGameId || '—'})` : `Бот ${winnerId}`;
         if (winners.length > 1) {
             addLog("СВАРА! Банк остаётся на кону!", "log-win");
         } else {
-            const winnerName = winnerId === 0 
-                ? `Вы (ID: ${userGameId || '—'})` 
-                : `Бот ${winnerId}`;
             players[winnerId].chips += pot;
             addLog(`🎉 Раздачу выиграл \( {winnerName} ( \){best} очк.)! Забрал ${pot}`, "log-win");
             pot = 0;
         }
 
-        document.getElementById('start-btn').style.display = 'block';
-        document.getElementById('game-actions').style.display = 'none';
+        // Автоматически начинаем новый раунд через 2 секунды
+        setTimeout(() => {
+            startKonPhase();
+        }, 2200);
     }
 
-    // === КОШЕЛЕК POLYGON ===
     function connectWallet() {
         if (walletConnected) return;
         walletConnected = true;
         userGameId = Math.floor(100000 + Math.random() * 900000);
-        
-        // Polygon-адрес
         let addr = "0x" + Array.from({length: 8}, () => Math.floor(Math.random() * 16).toString(16)).join('').toUpperCase() + "...";
         document.getElementById('wallet-status').innerText = addr;
         document.getElementById('game-id').innerText = userGameId;
         document.getElementById('connect-btn').style.display = 'none';
         document.getElementById('deposit-btn').style.display = 'block';
         document.getElementById('wallet-panel').classList.add('compact');
-
-        addLog(`✅ Кошелёк Polygon подключён! Игровой ID: ${userGameId}. Игра идёт по внутреннему балансу смарт-контракта (без газа).`);
+        addLog(`✅ Кошелёк Polygon подключён! Игровой ID: ${userGameId}.`);
     }
 
     function depositToContract() {
         if (!walletConnected) return alert("Подключите кошелёк!");
-        let amt = prompt("Сколько токенов пополнить в смарт-контракт Polygon? (1 токен = 10 игровых очков)", "100");
-        if (!amt || isNaN(amt) || amt <= 0) return;
-        let add = parseInt(amt);
-        contractBal += add;
-        players[0].chips += add * 10;
-        document.getElementById('contract-balance').innerText = contractBal;
-        updateUI();
-        addLog(`💰 Пополнено \( {add} токенов в смарт-контракт Polygon. + \){add * 10} игровых очков!`);
-    }
-
-    window.onload = () => {
-        document.getElementById('raise-amount-display').innerText = '+20';
-        document.getElementById('raise-amount-display2').innerText = '+20';
-    };
-</script>
-
-</body>
-</html>
+        let amt = prompt("Сколько токенов пополнить в смарт-контракт Polygon? (1 = 10 очков)", "100");
+        if (!amt || isNaN(amt) || amt <= 0) re
