@@ -3,257 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seka Pro - 33 Points</title>
+    <title>Seka Club: ID Balance System</title>
     <style>
-        :root { --gold: #f1c40f; --green: #2ecc71; --dark: #0a2e1a; }
-        body { font-family: 'Arial', sans-serif; background: #000; color: white; margin: 0; display: flex; flex-direction: column; align-items: center; }
-        
-        /* Исправленная инфо-панель сверху */
-        .game-header { width: 100%; background: rgba(0,0,0,0.8); padding: 10px; text-align: center; border-bottom: 2px solid var(--gold); z-index: 100; font-size: 14px; }
-        #game-log { color: #ccc; height: 40px; overflow-y: hidden; }
+        :root { --gold: #f1c40f; --green: #2ecc71; --dark-bg: #0d0d0d; --table-green: radial-gradient(#1a5e35, #051a0d); }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--dark-bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; }
 
-        /* Стол */
+        /* HEADER */
+        .header { width: 100%; background: #1a1a1a; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); box-sizing: border-box; }
+        .balance-display { background: #000; padding: 5px 15px; border-radius: 20px; border: 1px solid var(--gold); color: var(--gold); font-weight: bold; font-size: 18px; }
+        .id-badge { color: #888; font-size: 12px; margin-left: 10px; }
+
+        /* TABLE */
         .table { 
-            position: relative; width: 95vw; max-width: 800px; height: 450px; 
-            background: radial-gradient(#1a5e35, #051a0d); 
-            border: 10px solid #3e2723; border-radius: 150px; 
-            margin: 20px auto; box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            position: relative; width: 95vw; max-width: 800px; height: 420px; 
+            background: var(--table-green); border: 12px solid #3e2723; border-radius: 160px; 
+            margin: 20px auto; box-shadow: 0 0 60px rgba(0,0,0,0.8);
         }
 
-        .player { position: absolute; width: 120px; text-align: center; transition: 0.3s; }
-        .p0 { bottom: 10px; left: 50%; transform: translateX(-50%); } /* ВЫ */
-        .p1 { left: 10px; top: 50%; transform: translateY(-50%); }
-        .p2 { top: 10px; left: 50%; transform: translateX(-50%); }
-        .p3 { right: 10px; top: 50%; transform: translateY(-50%); }
+        .pot-center { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+        .pot-center h2 { font-size: 36px; color: var(--gold); margin: 0; filter: drop-shadow(2px 2px 2px #000); }
 
-        .active-glow { box-shadow: 0 0 20px var(--gold); border-radius: 15px; background: rgba(255,255,255,0.1); }
-        .folded { opacity: 0.3; filter: grayscale(1); }
+        .player { position: absolute; width: 130px; text-align: center; transition: 0.3s; }
+        .p0 { bottom: 15px; left: 50%; transform: translateX(-50%); } /* ИГРОК */
+        .p1 { left: 15px; top: 50%; transform: translateY(-50%); }
+        .p2 { top: 15px; left: 50%; transform: translateX(-50%); }
+        .p3 { right: 15px; top: 50%; transform: translateY(-50%); }
 
-        .card-row { display: flex; justify-content: center; gap: 4px; margin: 5px 0; }
+        /* CARDS - FIXED JOKER BACK */
+        .card-row { display: flex; justify-content: center; gap: 5px; height: 65px; margin-bottom: 5px; }
         .card { 
-            width: 35px; height: 55px; background: white; color: #000; border-radius: 4px; 
-            font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center;
-            box-shadow: 1px 1px 3px #000;
+            width: 42px; height: 60px; background: white; color: #000; border-radius: 5px; 
+            font-weight: bold; font-size: 16px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5); border: 1px solid #ccc;
         }
-        .card.hidden { background: linear-gradient(45deg, #2c3e50, #000); border: 1px solid #fff; color: transparent; }
-        .card.joker { background: var(--gold); color: #000; }
+        /* Рубашка (строго одинаковая для всех, включая джокера) */
+        .card.hidden { 
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important; 
+            color: transparent !important; 
+            border: 2px solid #fff !important; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .card.joker { background: var(--gold); border: 1px solid #fff; }
 
-        .chips { color: var(--gold); font-weight: bold; font-size: 16px; display: block; }
-        .score-tag { font-size: 12px; color: #fff; background: rgba(0,0,0,0.5); padding: 2px 5px; border-radius: 4px; visibility: hidden; }
+        .bot-score { font-size: 11px; background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 4px; color: var(--gold); display: none; }
 
-        .pot-area { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
-        #pot-sum { font-size: 32px; color: var(--gold); margin: 0; }
-
-        /* Панель управления (Удобная) */
-        .controls { width: 100%; max-width: 600px; padding: 15px; background: #1a1a1a; border-radius: 15px 15px 0 0; display: flex; flex-direction: column; gap: 10px; }
-        .btn-group { display: flex; justify-content: space-around; gap: 8px; }
+        /* CONTROLS */
+        .controls { width: 100%; max-width: 600px; padding: 20px; background: #1a1a1a; border-radius: 20px 20px 0 0; }
+        .btn-main { background: var(--gold); color: #000; width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; margin-bottom: 10px; }
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .btn-act { padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; background: #333; }
         
-        button { flex: 1; padding: 12px 5px; border: none; border-radius: 8px; font-weight: bold; font-size: 13px; text-transform: uppercase; cursor: pointer; }
-        .btn-see { background: #3498db; color: white; }
-        .btn-call { background: var(--green); color: white; }
-        .btn-raise { background: #9b59b6; color: white; }
-        .btn-fold { background: #e74c3c; color: white; }
-        .btn-start { background: var(--gold); width: 100%; font-size: 18px; margin-bottom: 10px; }
-        button:disabled { opacity: 0.4; }
+        .slider-cont { margin: 15px 0; display: flex; flex-direction: column; align-items: center; color: var(--gold); }
+        input[type=range] { width: 80%; accent-color: var(--gold); }
 
-        .slider-box { display: flex; align-items: center; gap: 10px; color: var(--gold); font-size: 14px; }
-        input[type=range] { flex: 1; accent-color: var(--gold); }
+        /* CABINET MODAL */
+        #cabinet { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a1a1a; padding: 25px; border-radius: 15px; border: 2px solid var(--gold); z-index: 1000; width: 320px; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 999; }
+        .input-box { width: 100%; padding: 10px; margin: 10px 0; background: #000; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-<div class="game-header">
-    <div id="game-log">Нажми "Новая раздача", чтобы начать!</div>
+<div class="header">
+    <div style="display:flex; align-items:center;">
+        <div class="balance-display">💰 <span id="main-balance">1000</span></div>
+        <div class="id-badge" id="display-id">ID: #0000</div>
+    </div>
+    <button class="btn-act" style="background:var(--gold); color:#000;" onclick="toggleCabinet(true)">КАБИНЕТ</button>
 </div>
 
 <div class="table">
-    <div class="pot-area">
-        <h2 id="pot-sum">💰 0</h2>
-        <div style="font-size:14px">Ставка: <span id="cur-bet-val">10</span></div>
+    <div class="pot-center">
+        <h2 id="total-pot">💰 0</h2>
+        <small>Конун: <span id="current-stake">10</span></small>
     </div>
 
-    <div id="player-1" class="player p1">
-        <div class="score-tag"></div>
-        <div class="card-row"></div>
-        <span class="chips">1000</span><br><small>Бот 1</small>
-    </div>
-    <div id="player-2" class="player p2">
-        <div class="score-tag"></div>
-        <div class="card-row"></div>
-        <span class="chips">1000</span><br><small>Бот 2</small>
-    </div>
-    <div id="player-3" class="player p3">
-        <div class="score-tag"></div>
-        <div class="card-row"></div>
-        <span class="chips">1000</span><br><small>Бот 3</small>
-    </div>
+    <div id="player-1" class="player p1"><div class="bot-score"></div><div class="card-row"></div><small>Бот 1</small></div>
+    <div id="player-2" class="player p2"><div class="bot-score"></div><div class="card-row"></div><small>Бот 2</small></div>
+    <div id="player-3" class="player p3"><div class="bot-score"></div><div class="card-row"></div><small>Бот 3</small></div>
 
     <div id="player-0" class="player p0">
-        <div class="score-tag" style="visibility:visible" id="my-score-display">В тёмную</div>
+        <div id="my-pts" style="color:var(--gold); font-weight:bold; font-size:14px; margin-bottom:5px;"></div>
         <div class="card-row" id="my-cards"></div>
-        <span class="chips" id="my-chips">1000</span><br><b>ВЫ</b>
+        <div style="font-weight:bold;">ВЫ (ID <span id="short-id">000</span>)</div>
     </div>
 </div>
 
 <div class="controls">
-    <button id="start-btn" class="btn-start" onclick="newGame()">НОВАЯ РАЗДАЧА</button>
+    <button id="deal-btn" class="btn-main" onclick="startRound()">НОВАЯ РАЗДАЧА (10)</button>
     
-    <div id="ui-actions" style="display:none; flex-direction: column; gap: 10px;">
-        <div class="slider-box">
-            <span>Поднять на:</span>
-            <input type="range" id="bet-slider" min="10" max="100" step="10" value="20" oninput="updateRaiseText(this.value)">
-            <b id="raise-label">20</b>
+    <div id="play-ui" style="display:none;">
+        <div class="slider-cont">
+            <span>Поднять на: <b id="raise-val">20</b></span>
+            <input type="range" id="raise-slider" min="10" max="200" step="10" value="20" oninput="document.getElementById('raise-val').innerText=this.value">
         </div>
-        <div class="btn-group">
-            <button class="btn-see" id="see-btn" onclick="handleAction('see')">Глаза</button>
-            <button class="btn-call" id="call-btn" onclick="handleAction('call')">Поддержать</button>
-            <button class="btn-raise" onclick="handleAction('raise')">Повысить</button>
-            <button class="btn-fold" onclick="handleAction('fold')">Пас</button>
-            <button class="btn-see" style="background:#555" onclick="finishGame()">Вскрыть</button>
+        <div class="action-grid">
+            <button class="btn-act" id="see-btn" style="background:#3498db" onclick="handle('see')">ГЛАЗА</button>
+            <button class="btn-act" style="background:var(--green)" onclick="handle('call')" id="call-btn">ПОДДЕРЖАТЬ</button>
+            <button class="btn-act" style="background:#9b59b6" onclick="handle('raise')">РАЙЗ</button>
+            <button class="btn-act" style="background:#e74c3c" onclick="handle('fold')">ПАС</button>
+            <button class="btn-act" style="background:#555; grid-column: span 2;" onclick="showdown()">ВСКРЫТЬСЯ</button>
         </div>
     </div>
 </div>
 
+<div class="overlay" onclick="toggleCabinet(false)"></div>
+<div id="cabinet">
+    <h3 style="color:var(--gold); margin-top:0;">Личный кабинет</h3>
+    <p style="font-size:13px; color:#aaa;">Отправьте ваш ID обменнику для пополнения:</p>
+    <div style="background:#000; padding:10px; border-radius:5px; text-align:center; font-weight:bold; letter-spacing:2px;" id="cab-id">#SEKA-0000</div>
+    
+    <div style="margin-top:20px;">
+        <label style="font-size:12px;">Сумма пополнения (очки):</label>
+        <input type="number" id="deposit-amt" class="input-box" value="500">
+        <button class="btn-main" style="font-size:14px; padding:10px;" onclick="requestDeposit()">ЗАПРОСИТЬ ПОПОЛНЕНИЕ</button>
+    </div>
+    <button class="btn-act" style="width:100%; margin-top:10px;" onclick="toggleCabinet(false)">ЗАКРЫТЬ</button>
+</div>
+
 <script>
-    let players = [];
-    let pot = 0, currentBet = 10, activeIdx = 0, lastBetterBlind = true;
+    // --- СИСТЕМА ID И БАЛАНСА ---
+    let playerID = localStorage.getItem('seka_id') || "SEKA-" + Math.floor(1000 + Math.random() * 9000);
+    localStorage.setItem('seka_id', playerID);
+    let balance = parseInt(localStorage.getItem('seka_balance')) || 1000;
 
-    function log(m) { document.getElementById('game-log').innerText = m; }
-    function updateRaiseText(v) { document.getElementById('raise-label').innerText = v; }
+    document.getElementById('display-id').innerText = "ID: #" + playerID;
+    document.getElementById('cab-id').innerText = "#" + playerID;
+    document.getElementById('short-id').innerText = playerID.split('-')[1];
+    updateBalanceUI();
 
-    function calcPoints(hand) {
-        let hasJ = hand.some(c => c.v === 'JK'), pure = hand.filter(c => c.v !== 'JK'), aces = pure.filter(c => c.v === 'A').length;
-        if (aces === 3 || (aces === 2 && hasJ)) return 33;
-        if (aces === 2 || (aces === 1 && hasJ)) return 22;
-        let sP = {'♥':0,'♦':0,'♣':0,'♠':0,'★':0};
-        pure.forEach(c => sP[c.s] += c.p);
-        let maxS = Math.max(...Object.values(sP)) + (hasJ ? 11 : 0);
-        let counts = {}; pure.forEach(c => counts[c.v] = (counts[c.v] || 0) + 1);
-        let setP = 0; for (let v in counts) if (counts[v] === 3 || (counts[v] === 2 && hasJ)) setP = 30;
-        return Math.max(maxS, setP);
+    function updateBalanceUI() {
+        document.getElementById('main-balance').innerText = balance;
+        localStorage.setItem('seka_balance', balance);
     }
 
-    function newGame() {
-        const s = [{s:'♥',c:'red'},{s:'♦',c:'red'},{s:'♣',c:'black'},{s:'♠',c:'black'}], v = ['10','J','Q','K','A'];
+    function toggleCabinet(s) {
+        document.getElementById('cabinet').style.display = s ? 'block' : 'none';
+        document.querySelector('.overlay').style.display = s ? 'block' : 'none';
+    }
+
+    function requestDeposit() {
+        let amt = parseInt(document.getElementById('deposit-amt').value);
+        alert("Запрос отправлен обменнику по ID " + playerID + ". Ожидайте подтверждения...");
+        setTimeout(() => {
+            balance += amt;
+            updateBalanceUI();
+            alert("Обменник подтвердил транзакцию! +" + amt + " очков зачислено.");
+        }, 3000);
+    }
+
+    // --- ЛОГИКА ИГРЫ ---
+    let players = [], pot = 0, curBet = 10, activeIdx = 0;
+
+    function getPoints(hand) {
+        let hasJ = hand.some(c => c.isJ), pure = hand.filter(c => !c.isJ), aces = pure.filter(c => c.v === 'A').length;
+        if (aces === 3 || (aces === 2 && hasJ)) return 33;
+        if (aces === 2 || (aces === 1 && hasJ)) return 22;
+        let sS = {'♥':0,'♦':0,'♣':0,'♠':0,'★':0};
+        pure.forEach(c => sS[c.s] += (c.v==='A'?11:10));
+        return Math.max(...Object.values(sS)) + (hasJ ? 11 : 0);
+    }
+
+    function startRound() {
+        if (balance < 10) return alert("Пополните баланс в кабинете!");
         let deck = [];
-        s.forEach(suit => v.forEach(val => deck.push({v:val, s:suit.s, c:suit.c, p: val==='A'?11:10})));
-        deck.push({v:'JK', s:'★', c:'black', p:11, isJoker:true});
+        ['♥','♦','♣','♠'].forEach(s => ['10','J','Q','K','A'].forEach(v => deck.push({v, s, isJ:false, c: (s=='♥'||s=='♦'?'red':'black')})));
+        deck.push({v:'JK', s:'★', isJ:true, c:'black'});
         deck.sort(() => Math.random() - 0.5);
 
         players = [0,1,2,3].map(i => ({
-            id: i, chips: players[i]?.chips || 1000, hand: [deck.pop(), deck.pop(), deck.pop()], 
+            id: i, hand: [deck.pop(), deck.pop(), deck.pop()], 
             isFolded: false, isBlind: true, show: false
         }));
 
-        players.forEach(p => p.chips -= 10);
-        pot = 40; currentBet = 10; activeIdx = 0; lastBetterBlind = true;
-        
-        document.getElementById('start-btn').style.display = 'none';
-        document.getElementById('ui-actions').style.display = 'flex';
-        log("Игра началась! Вы ходите в тёмную (Ставка 10).");
-        updateUI();
+        balance -= 10; updateBalanceUI();
+        pot = 40; curBet = 10; activeIdx = 0;
+        document.getElementById('deal-btn').style.display = 'none';
+        document.getElementById('play-ui').style.display = 'block';
+        render();
     }
 
-    function handleAction(type) {
-        if (activeIdx !== 0) return;
-        if (type === 'see') {
-            players[0].isBlind = false;
-            log("Вы посмотрели карты! Теперь ваши ставки X2.");
-        } else if (type === 'call') {
-            let cost = players[0].isBlind ? currentBet : currentBet * 2;
-            players[0].chips -= cost; pot += cost;
-            lastBetterBlind = players[0].isBlind;
+    function handle(type) {
+        if (type === 'see') { players[0].isBlind = false; }
+        else if (type === 'call') {
+            let cost = players[0].isBlind ? curBet : curBet * 2;
+            if (balance < cost) return alert("Мало очков!");
+            balance -= cost; pot += cost;
             nextTurn();
         } else if (type === 'raise') {
-            let r = parseInt(document.getElementById('bet-slider').value);
-            currentBet = r;
-            let cost = players[0].isBlind ? currentBet : currentBet * 2;
-            players[0].chips -= cost; pot += cost;
-            lastBetterBlind = players[0].isBlind;
-            log("Вы подняли ставку до " + r);
+            curBet = parseInt(document.getElementById('raise-slider').value);
+            let cost = players[0].isBlind ? curBet : curBet * 2;
+            balance -= cost; pot += cost;
             nextTurn();
-        } else if (type === 'fold') { players[0].isFolded = true; finishGame(); }
-        updateUI();
+        } else if (type === 'fold') { players[0].isFolded = true; showdown(); }
+        updateBalanceUI(); render();
     }
 
     function nextTurn() {
         activeIdx = (activeIdx + 1) % 4;
-        if (players[activeIdx].isFolded) { nextTurn(); return; }
-        updateUI();
-        if (activeIdx !== 0) setTimeout(botTurn, 1000);
-    }
-
-    function botTurn() {
-        let b = players[activeIdx];
-        if (Math.random() > 0.15) {
-            let cost = lastBetterBlind ? currentBet : currentBet; // Боты темнят
-            b.chips -= cost; pot += cost;
-            log("Бот " + activeIdx + " поставил " + cost);
-            nextTurn();
-        } else {
-            b.isFolded = true; log("Бот " + activeIdx + " спасовал.");
-            nextTurn();
+        if (players[activeIdx].isFolded) return nextTurn();
+        render();
+        if (activeIdx !== 0) {
+            setTimeout(() => {
+                if (Math.random() > 0.2) { pot += curBet; } else { players[activeIdx].isFolded = true; }
+                nextTurn();
+            }, 800);
         }
     }
 
-    function updateUI() {
-        document.getElementById('pot-sum').innerText = "💰 " + pot;
-        document.getElementById('cur-bet-val').innerText = currentBet;
-        
+    function render() {
+        document.getElementById('total-pot').innerText = "💰 " + pot;
+        document.getElementById('current-stake').innerText = curBet;
         players.forEach((p, i) => {
             const el = document.getElementById(`player-${i}`);
-            el.className = `player p${i} ${i === activeIdx ? 'active-glow' : ''} ${p.isFolded ? 'folded' : ''}`;
-            el.querySelector('.chips').innerText = p.chips;
-            
-            const cardRow = el.querySelector('.card-row');
-            cardRow.innerHTML = '';
+            const row = el.querySelector('.card-row');
+            row.innerHTML = '';
             p.hand.forEach(card => {
                 const d = document.createElement('div');
-                let visible = (i === 0 && !p.isBlind) || p.show;
-                d.className = visible ? `card` : 'card hidden';
-                if (card.isJoker) d.classList.add('joker');
-                if (visible) {
-                    d.innerText = card.v + (card.isJoker ? '' : card.s);
+                let isVisible = (i === 0 && !p.isBlind) || p.show;
+                d.className = isVisible ? (card.isJ ? 'card joker' : 'card') : 'card hidden';
+                if (isVisible) {
+                    d.innerText = card.v + (card.isJ ? '' : card.s);
                     d.style.color = card.c;
                 }
-                cardRow.appendChild(d);
+                row.appendChild(d);
             });
-
-            // Показываем очки у ботов только если раунд окончен (p.show)
+            // Очки ботов (показываем только в конце)
+            const scoreTag = el.querySelector('.bot-score');
             if (p.show && !p.isFolded) {
-                let tag = el.querySelector('.score-tag');
-                tag.style.visibility = 'visible';
-                tag.innerText = calcPoints(p.hand) + " очков";
-            }
+                scoreTag.style.display = 'inline-block';
+                scoreTag.innerText = getPoints(p.hand) + " очк.";
+            } else { scoreTag.style.display = 'none'; }
         });
-
         document.getElementById('see-btn').disabled = !players[0].isBlind;
-        let callCost = players[0].isBlind ? currentBet : currentBet * 2;
-        document.getElementById('call-btn').innerText = `Поддержать (${callCost})`;
-        document.getElementById('my-score-display').innerText = players[0].isBlind ? "ТЁМНАЯ" : calcPoints(players[0].hand) + " очков";
+        document.getElementById('call-btn').innerText = `ПОДДЕРЖАТЬ (${players[0].isBlind ? curBet : curBet * 2})`;
+        document.getElementById('my-pts').innerText = players[0].isBlind ? "ТЁМНАЯ" : getPoints(players[0].hand) + " ОЧКОВ";
     }
 
-    function finishGame() {
-        let best = -1, winners = [];
+    function showdown() {
+        let best = -1, winId = -1;
         players.forEach((p, i) => {
             p.show = true;
             if (!p.isFolded) {
-                let pts = calcPoints(p.hand);
-                if (pts > best) { best = pts; winners = [i]; }
-                else if (pts === best) winners.push(i);
+                let pts = getPoints(p.hand);
+                if (pts > best) { best = pts; winId = i; }
             }
         });
-
-        updateUI();
-        if (winners.length > 1) log("СВАРА! Банк остается.");
-        else {
-            let w = winners[0];
-            players[w].chips += pot;
-            log(`Победил ${w === 0 ? "ВЫ" : "Бот " + w} (${best} очков)!`);
-            pot = 0;
-        }
-        document.getElementById('start-btn').style.display = 'block';
-        document.getElementById('ui-actions').style.display = 'none';
+        if (winId === 0) { balance += pot; alert("ВЫ ВЫИГРАЛИ " + pot + "!"); }
+        else { alert("Выиграл Бот " + winId + " (" + best + " очк.)"); }
+        pot = 0; updateBalanceUI(); render();
+        document.getElementById('deal-btn').style.display = 'block';
+        document.getElementById('play-ui').style.display = 'none';
     }
 </script>
 </body>
