@@ -2,156 +2,227 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seka Multiplayer Demo</title>
+    <title>Seka: Тёмная, Перетемная и Свара</title>
     <style>
-        :root { --card-bg: white; --card-color: #333; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0e301a; color: white; text-align: center; margin: 0; }
-        
-        .game-container { max-width: 900px; margin: auto; padding: 20px; }
-        
-        /* Стол */
+        body { font-family: 'Segoe UI', sans-serif; background: #0a2e1a; color: white; text-align: center; margin: 0; }
         .table { 
-            position: relative; width: 100%; height: 450px; 
-            background: radial-gradient(#1a5e35, #0a2b16); 
-            border: 10px solid #5d4037; border-radius: 200px; 
-            margin: 20px auto; overflow: hidden; box-shadow: inset 0 0 50px #000;
+            position: relative; width: 800px; height: 500px; 
+            background: radial-gradient(#1a5e35, #071a0d); 
+            border: 12px solid #3e2723; border-radius: 150px; 
+            margin: 20px auto; box-shadow: 0 0 50px #000;
         }
-
-        /* Позиции игроков */
-        .player-slot { position: absolute; width: 150px; text-align: center; }
-        .slot-0 { bottom: 20px; left: 50%; transform: translateX(-50%); } /* Вы */
-        .slot-1 { left: 20px; top: 50%; transform: translateY(-50%); }
-        .slot-2 { top: 20px; left: 50%; transform: translateX(-50%); }
-        .slot-3 { right: 20px; top: 50%; transform: translateY(-50%); }
-
-        .card { 
-            display: inline-block; width: 40px; height: 60px; 
-            background: var(--card-bg); color: var(--card-color); 
-            border-radius: 4px; margin: 2px; line-height: 60px; 
-            font-size: 14px; font-weight: bold; border: 1px solid #000;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-        }
-        .card.back { background: #2c3e50; color: #2c3e50; border: 1px solid #ecf0f1; }
-
-        .pot-info { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px; color: #f1c40f; text-shadow: 2px 2px 2px #000; }
+        .player { position: absolute; width: 140px; padding: 10px; border-radius: 10px; background: rgba(0,0,0,0.3); }
+        .p0 { bottom: 20px; left: 330px; border: 2px solid #f1c40f; } /* Вы */
+        .p1 { left: 20px; top: 200px; }
+        .p2 { top: 20px; left: 330px; }
+        .p3 { right: 20px; top: 200px; }
         
+        .active-turn { box-shadow: 0 0 20px #f1c40f; background: rgba(241, 196, 15, 0.2); }
+        .card { display: inline-block; width: 35px; height: 55px; background: white; color: black; border-radius: 4px; margin: 2px; line-height: 55px; font-size: 12px; font-weight: bold; }
+        .card.hidden { background: #2c3e50; color: #2c3e50; border: 1px solid #fff; }
+        
+        .status-label { font-size: 10px; text-transform: uppercase; color: #aaa; }
+        .pot-area { position: absolute; top: 40%; left: 35%; width: 30%; font-size: 24px; color: #f1c40f; }
         .controls { margin-top: 20px; display: flex; justify-content: center; gap: 10px; }
-        button { padding: 12px 24px; cursor: pointer; background: #e67e22; border: none; color: white; border-radius: 5px; font-weight: bold; }
-        button:hover { background: #d35400; }
-
-        #game-log { background: #000; padding: 10px; height: 80px; overflow-y: auto; margin-top: 20px; font-size: 13px; text-align: left; opacity: 0.8; }
-        .win-tag { color: #2ecc71; font-weight: bold; }
+        
+        button { padding: 10px 15px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; }
+        .btn-blind { background: #8e44ad; color: white; }
+        .btn-light { background: #2ecc71; color: white; }
+        .btn-fold { background: #e74c3c; color: white; }
+        
+        #log { width: 800px; height: 100px; background: #000; margin: 10px auto; overflow-y: auto; padding: 10px; text-align: left; font-size: 12px; }
     </style>
 </head>
 <body>
 
-<div class="game-container">
-    <h2>Сека Online (Demo)</h2>
+<h1>Сека: Битва за банк</h1>
+<div id="info-header">Раздает: <span id="dealer-name">Вы</span> | <span id="game-status" style="color:red">Ожидание</span></div>
+
+<div class="table">
+    <div class="pot-area">БАНК: <span id="pot-val">0</span><br><small style="font-size:14px">Текущая ставка: <span id="current-bet">10</span></small></div>
     
-    <div class="table">
-        <div class="pot-info">Банк: <span id="pot-val">0</span></div>
-        
-        <div class="player-slot slot-1" id="p1"><div>Бот 1</div><div class="cards"></div></div>
-        <div class="player-slot slot-2" id="p2"><div>Бот 2</div><div class="cards"></div></div>
-        <div class="player-slot slot-3" id="p3"><div>Бот 3</div><div class="cards"></div></div>
-        <div class="player-slot slot-0" id="p0"><strong>ВЫ</strong><div class="cards"></div><div id="my-pts"></div></div>
-    </div>
-
-    <div class="controls">
-        <button onclick="dealCards()">Раздать</button>
-        <button onclick="makeBet()">Ставка +50</button>
-        <button onclick="revealAll()">Вскрыться</button>
-    </div>
-
-    <div id="game-log">Добро пожаловать в Секу! Нажмите "Раздать".</div>
+    <div id="player-0" class="player p0"><div class="status-label">Вы</div><div class="cards"></div><div class="points"></div></div>
+    <div id="player-1" class="player p1"><div class="status-label">Бот 1</div><div class="cards"></div></div>
+    <div id="player-2" class="player p2"><div class="status-label">Бот 2</div><div class="cards"></div></div>
+    <div id="player-3" class="player p3"><div class="status-label">Бот 3</div><div class="cards"></div></div>
 </div>
 
-<script>
-    const suits = ['♥', '♦', '♣', '♠'];
-    const vals = ['10', 'J', 'Q', 'K', 'A'];
-    let players = [[], [], [], []]; // 0 - игрок, 1-3 - боты
-    let pot = 0;
-    let isGameOver = true;
+<div class="controls" id="player-actions" style="display:none">
+    <button class="btn-blind" id="btn-blind" onclick="action('blind')">Тёмная (10)</button>
+    <button class="btn-light" id="btn-see" onclick="seeCards()">Посмотреть карты (Светлая)</button>
+    <button class="btn-light" id="btn-light" onclick="action('light')" style="display:none">Поставить (20)</button>
+    <button class="btn-fold" onclick="action('fold')">Пас</button>
+    <button class="btn-light" onclick="action('showdown')">Вскрыться</button>
+</div>
 
-    function getDeck() {
+<button id="start-btn" onclick="newGame()" style="padding: 20px 40px; background: #f1c40f;">НАЧАТЬ НОВУЮ РАЗДАЧУ</button>
+
+<div id="log"></div>
+
+<script>
+    let players = []; 
+    let pot = 0;
+    let currentBet = 10;
+    let dealerIdx = 0;
+    let activeIdx = 0;
+    let isSvara = false;
+    let lastBetterWasBlind = true;
+    let playerIsBlind = true;
+
+    function addLog(m) { const l = document.getElementById('log'); l.innerHTML = m + "<br>" + l.innerHTML; }
+
+    function createDeck() {
+        const s = ['♥','♦','♣','♠'], v = ['10','J','Q','K','A'];
         let d = [];
-        suits.forEach(s => vals.forEach(v => d.push({v, s, p: v==='A'?11:10})));
-        d.push({v: 'JK', s: '★', p: 11});
+        s.forEach(suit => v.forEach(val => d.push({v:val, s:suit, p: val==='A'?11:10})));
+        d.push({v:'JK', s:'★', p:11});
         return d.sort(() => Math.random() - 0.5);
     }
 
-    function calculate(hand) {
-        let hasJ = hand.some(c => c.v === 'JK');
-        let pure = hand.filter(c => c.v !== 'JK');
-        let sPts = {'♥':0, '♦':0, '♣':0, '♠':0, '★':0};
-        pure.forEach(c => sPts[c.s] += c.p);
-        let maxS = Math.max(...Object.values(sPts)) + (hasJ ? 11 : 0);
-        
-        let counts = {};
-        pure.forEach(c => counts[c.v] = (counts[c.v] || 0) + 1);
+    function calc(hand) {
+        let hasJ = hand.some(c => c.v === 'JK'), pure = hand.filter(c => c.v !== 'JK');
+        let sP = {'♥':0,'♦':0,'♣':0,'♠':0,'★':0};
+        pure.forEach(c => sP[c.s] += c.p);
+        let maxS = Math.max(...Object.values(sP)) + (hasJ ? 11 : 0);
+        let counts = {}; pure.forEach(c => counts[c.v] = (counts[c.v] || 0) + 1);
         let setP = 0;
-        for (let v in counts) {
-            if (counts[v] === 3 || (counts[v] === 2 && hasJ)) setP = (v === 'A' ? 31 : 30);
-        }
+        for (let v in counts) if (counts[v] === 3 || (counts[v] === 2 && hasJ)) setP = (v === 'A' ? 31 : 30);
         return Math.max(maxS, setP);
     }
 
-    function dealCards() {
-        let deck = getDeck();
-        pot = 40; // Начальные ставки
-        isGameOver = false;
-        document.getElementById('pot-val').innerText = pot;
-        document.getElementById('game-log').innerHTML = "Игра началась! Банк 40.";
-
+    function newGame() {
+        let deck = createDeck();
+        players = [];
         for(let i=0; i<4; i++) {
-            players[i] = [deck.pop(), deck.pop(), deck.pop()];
-            renderCards(i, i !== 0); // Скрываем карты ботов
+            players.push({ id: i, cards: [deck.pop(), deck.pop(), deck.pop()], isFolded: false, isBlind: true });
         }
-        document.getElementById('my-pts').innerText = "Очки: " + calculate(players[0]);
-    }
-
-    function renderCards(id, hidden) {
-        const container = document.querySelector(`#p${id} .cards`);
-        container.innerHTML = '';
-        players[id].forEach(c => {
-            const div = document.createElement('div');
-            div.className = hidden ? 'card back' : 'card';
-            if (!hidden) {
-                div.innerHTML = `${c.v}${c.s}`;
-                if (c.s === '♥' || c.s === '♦') div.style.color = 'red';
-            }
-            container.appendChild(div);
-        });
-    }
-
-    function makeBet() {
-        if(isGameOver) return;
-        pot += 50;
-        document.getElementById('pot-val').innerText = pot;
-        addLog("Вы поставили 50.");
-    }
-
-    function revealAll() {
-        if(isGameOver) return;
-        isGameOver = true;
-        let results = [];
-
-        for(let i=0; i<4; i++) {
-            renderCards(i, false); // Открываем всех
-            results.push({id: i, pts: calculate(players[i])});
-        }
-
-        results.sort((a, b) => b.pts - a.pts);
-        let winner = results[0];
         
-        let name = winner.id === 0 ? "ВЫ" : "Бот " + winner.id;
-        addLog(`<span class="win-tag">Победил ${name} (${winner.pts} очк.)! Забрал ${pot}</span>`);
+        if (!isSvara) pot = 40; // Начальный кон
+        document.getElementById('pot-val').innerText = pot;
+        document.getElementById('start-btn').style.display = 'none';
+        document.getElementById('player-actions').style.display = 'flex';
+        document.getElementById('game-status').innerText = "Идет игра";
+        
+        activeIdx = (dealerIdx + 1) % 4;
+        currentBet = 10;
+        lastBetterWasBlind = true;
+        playerIsBlind = true;
+        updateUI();
+        addLog("Раздача! Ход игрока " + activeIdx + (isSvara ? " (СВАРА!)" : ""));
     }
 
-    function addLog(msg) {
-        const log = document.getElementById('game-log');
-        log.innerHTML = msg + "<br>" + log.innerHTML;
+    function updateUI() {
+        document.getElementById('current-bet').innerText = currentBet;
+        for(let i=0; i<4; i++) {
+            const container = document.querySelector(`#player-${i} .cards`);
+            container.innerHTML = '';
+            const el = document.getElementById(`player-${i}`);
+            el.className = `player p${i} ${i === activeIdx ? 'active-turn' : ''} ${players[i].isFolded ? 'folded' : ''}`;
+            
+            players[i].cards.forEach(c => {
+                const cardDiv = document.createElement('div');
+                cardDiv.className = (i === 0 && !playerIsBlind) || (players[i].show) ? 'card' : 'card hidden';
+                if (!cardDiv.classList.contains('hidden')) {
+                    cardDiv.innerText = c.v + c.s;
+                    if (c.s === '♥' || c.s === '♦') cardDiv.style.color = 'red';
+                }
+                container.appendChild(cardDiv);
+            });
+        }
+        // Обновляем кнопки для игрока
+        document.getElementById('btn-blind').innerText = `Тёмная (${currentBet})`;
+        document.getElementById('btn-light').innerText = `Поставить (${lastBetterWasBlind ? currentBet * 2 : currentBet})`;
+        document.getElementById('btn-blind').style.display = playerIsBlind ? 'inline-block' : 'none';
+        document.getElementById('btn-light').style.display = !playerIsBlind ? 'inline-block' : 'none';
+        document.getElementById('btn-see').style.display = playerIsBlind ? 'inline-block' : 'none';
+    }
+
+    function seeCards() {
+        playerIsBlind = false;
+        addLog("Вы посмотрели карты! Теперь ваши ставки в 2 раза выше.");
+        updateUI();
+    }
+
+    function action(type) {
+        if (activeIdx !== 0) return; // Ждем бота (в этой демо версии боты ходят мгновенно)
+
+        if (type === 'blind') {
+            pot += currentBet;
+            lastBetterWasBlind = true;
+            addLog("Вы поставили Тёмную: " + currentBet);
+        } else if (type === 'light') {
+            let val = lastBetterWasBlind ? currentBet * 2 : currentBet;
+            pot += val;
+            currentBet = val;
+            lastBetterWasBlind = false;
+            addLog("Вы поставили в светлую: " + val);
+        } else if (type === 'fold') {
+            players[0].isFolded = true;
+            addLog("Вы спасовали.");
+        } else if (type === 'showdown') {
+            finishGame();
+            return;
+        }
+
+        nextTurn();
+    }
+
+    function nextTurn() {
+        activeIdx = (activeIdx + 1) % 4;
+        if (players[activeIdx].isFolded) { nextTurn(); return; }
+        
+        if (activeIdx !== 0) {
+            setTimeout(botTurn, 1000);
+        }
+        updateUI();
+    }
+
+    function botTurn() {
+        // Простая логика бота: 80% ставит, 20% пас
+        if (Math.random() > 0.2) {
+            let bVal = lastBetterWasBlind ? currentBet : currentBet;
+            pot += bVal;
+            addLog(`Бот ${activeIdx} поддержал ставку ${bVal}`);
+        } else {
+            players[activeIdx].isFolded = true;
+            addLog(`Бот ${activeIdx} ПАС`);
+        }
+        nextTurn();
+    }
+
+    function finishGame() {
+        let bestScore = -1;
+        let winners = [];
+
+        players.forEach((p, idx) => {
+            if (!p.isFolded) {
+                p.show = true;
+                let score = calc(p.cards);
+                if (score > bestScore) {
+                    bestScore = score;
+                    winners = [idx];
+                } else if (score === bestScore) {
+                    winners.push(idx);
+                }
+            }
+        });
+
+        updateUI();
+
+        if (winners.length > 1) {
+            isSvara = true;
+            addLog(`<b style="color:orange">СВАРА! У игроков ${winners} по ${bestScore} очков. Банк ${pot} остается!</b>`);
+        } else {
+            let winIdx = winners[0];
+            addLog(`<b style="color:yellow">Победил ${winIdx === 0 ? "ВЫ" : "Бот "+winIdx} (${bestScore} очков)! Забрал ${pot}</b>`);
+            pot = 0;
+            isSvara = false;
+            dealerIdx = winIdx;
+        }
+
+        document.getElementById('start-btn').style.display = 'inline-block';
+        document.getElementById('player-actions').style.display = 'none';
+        document.getElementById('pot-val').innerText = pot;
     }
 </script>
 </body>
