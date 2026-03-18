@@ -7,179 +7,584 @@
     <style>
         :root { --gold: #f1c40f; --green: #27ae60; --dark-green: #1a472a; --card-white: #ffffff; }
         body { font-family: 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: white; margin: 0; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden; }
+        
+        .table { 
+            position: relative; width: 900px; height: 500px; 
+            background: radial-gradient(circle, #2d7a4d 0%, #1a472a 100%); 
+            border: 12px solid #3e2723; border-radius: 200px; 
+            margin-top: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 100px #000;
+            border-bottom: 20px solid #2d1b18;
+        }
 
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.96); display: none; align-items: center; justify-content: center; z-index: 500; }
-        .modal-content { background: #1a1a1a; border: 3px solid var(--gold); border-radius: 20px; padding: 30px; width: 90%; max-width: 380px; text-align: center; }
-        .modal-content h2 { color: var(--gold); margin: 0 0 15px; }
-        .modal-content button { width: 100%; margin: 10px 0; padding: 16px; font-size: 18px; border-radius: 10px; font-weight: bold; }
-
-        .timer-container { position: absolute; width: 180px; height: 180px; z-index: 160; pointer-events: none; transition: all 0.4s ease; }
-        .timer-svg { width: 100%; height: 100%; }
-        .timer-bg { fill: none; stroke: #333; stroke-width: 16; }
-        .timer-progress { fill: none; stroke: #27ae60; stroke-width: 16; stroke-linecap: round; transition: stroke-dashoffset 0.3s linear; }
-        .timer-text { font-size: 48px; font-weight: bold; fill: #fff; text-anchor: middle; dominant-baseline: middle; text-shadow: 0 0 15px #27ae60; }
-        .timer-label { font-size: 14px; fill: #ddd; text-anchor: middle; dominant-baseline: middle; }
-
-        .table { position: relative; width: 900px; height: 500px; background: radial-gradient(circle, #2d7a4d 0%, #1a472a 100%); border: 12px solid #3e2723; border-radius: 200px; margin-top: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 100px #000; border-bottom: 20px solid #2d1b18; }
-        .pot-display { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+        .pot-display { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
         .pot-display h2 { font-size: 48px; color: var(--gold); margin: 0; text-shadow: 2px 4px 6px #000; }
+        .current-bet-info { font-size: 18px; color: #fff; opacity: 0.8; }
 
         .player-block { position: absolute; width: 160px; text-align: center; transition: all 0.4s ease; padding: 10px; border-radius: 20px; }
+        .player-active { background: rgba(241, 196, 15, 0.15); box-shadow: 0 0 25px var(--gold); transform: scale(1.05); }
+        .player-folded { opacity: 0.4; filter: grayscale(0.8); }
+
         .p0 { bottom: -20px; left: 50%; transform: translateX(-50%); }
         .p1 { left: 20px; top: 50%; transform: translateY(-50%); }
         .p2 { top: 20px; left: 50%; transform: translateX(-50%); }
         .p3 { right: 20px; top: 50%; transform: translateY(-50%); }
-        .player-active { background: rgba(241, 196, 15, 0.15); box-shadow: 0 0 25px var(--gold); transform: scale(1.05); }
-        .player-folded { opacity: 0.4; filter: grayscale(0.8); }
+
+        .chips-count { background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 10px; color: var(--gold); font-weight: bold; border: 1px solid var(--gold); margin-top: 5px; display: inline-block; }
 
         .card-slot { display: flex; justify-content: center; gap: 5px; margin-top: 10px; height: 75px; }
-        .card { width: 50px; height: 70px; background: var(--card-white); border-radius: 6px; color: #333; font-weight: bold; font-size: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 2px 3px 6px rgba(0,0,0,0.4); border: 1px solid #ccc; }
+        .card { 
+            width: 50px; height: 70px; background: var(--card-white); border-radius: 6px; 
+            color: #333; position: relative; font-weight: bold; font-size: 18px; 
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 2px 3px 6px rgba(0,0,0,0.4); border: 1px solid #ccc;
+        }
         .card.red { color: #e74c3c; }
         .card.hidden { background: linear-gradient(135deg, #2c3e50 25%, #34495e 100%); border: 2px solid #fff; color: transparent; }
         .card.joker { background: #f1c40f; color: #000; border: 2px solid #fff; font-size: 26px; }
 
-        .controls { margin-top: 20px; display: flex; gap: 12px; background: #1a1a1a; padding: 18px; border-radius: 15px; border: 2px solid #333; flex-wrap: wrap; justify-content: center; }
-        .btn { padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
+        .controls { margin-top: 20px; display: flex; gap: 12px; background: #1a1a1a; padding: 18px; border-radius: 15px; border: 2px solid #333; z-index: 100; flex-wrap: wrap; justify-content: center; }
+
+        .btn { padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         .btn-kon { background: #f1c40f; color: #000; font-size: 18px; }
+        .btn-see { background: #3498db; color: white; }
+        .btn-dark { background: #27ae60; color: white; }
+        .btn-superdark { background: #9b59b6; color: white; }
+        .btn-call { background: var(--green); color: white; }
+        .btn-raise { background: #9b59b6; color: white; }
+        .btn-fold { background: #e74c3c; color: white; }
         .btn:disabled { background: #444; cursor: not-allowed; opacity: 0.6; }
+
         .raise-group { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; }
+
+        /* Таймеры */
+        .timer-container {
+            position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
+            width: 220px; height: 220px; z-index: 160; pointer-events: none;
+        }
+        .timer-container.hidden { display: none; }
+
+        .timer-svg { width: 100%; height: 100%; }
+        .timer-bg { fill: none; stroke: #333; stroke-width: 16; }
+        .timer-progress { fill: none; stroke: #27ae60; stroke-width: 16; stroke-linecap: round; transition: stroke-dashoffset 0.4s linear; }
+        .timer-text { font-size: 52px; font-weight: bold; fill: #fff; text-anchor: middle; dominant-baseline: middle; text-shadow: 0 0 12px #27ae60; }
+        .timer-label { font-size: 16px; fill: #ddd; text-anchor: middle; dominant-baseline: middle; }
 
         #log { position: fixed; right: 20px; top: 20px; width: 280px; height: 220px; background: rgba(0,0,0,0.8); border: 1px solid #444; padding: 10px; font-size: 13px; overflow-y: auto; color: #bbb; border-radius: 10px; }
         .log-win { color: var(--gold); font-weight: bold; }
+
         .score-label { color: var(--gold); font-weight: bold; height: 20px; margin-bottom: 5px; text-shadow: 1px 1px 3px #000; }
 
-        #cabinet-btn { position: absolute; top: 15px; left: 15px; z-index: 200; background: rgba(26,26,26,0.95); padding: 10px 16px; border-radius: 12px; border: 2px solid #444; color: white; font-size: 15px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+        /* Кнопка Личного кабинета на столе */
+        #cabinet-btn {
+            position: absolute; top: 15px; left: 15px; z-index: 200;
+            background: rgba(26,26,26,0.95); padding: 12px 20px; border-radius: 12px;
+            border: 2px solid #444; color: white; font-size: 14px; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6); cursor: pointer; transition: 0.3s;
+        }
+        #cabinet-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+        /* Модальное окно Личного кабинета */
+        .modal {
+            display: none; position: fixed; z-index: 300; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.85);
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: #1a1a1a; padding: 25px; border-radius: 15px;
+            border: 2px solid var(--gold); width: 320px; text-align: center;
+            position: relative; color: white; box-shadow: 0 0 30px rgba(241, 196, 15, 0.2);
+        }
+        .close-btn {
+            position: absolute; right: 20px; top: 15px; color: #aaa;
+            font-size: 28px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .close-btn:hover { color: white; }
+        .cabinet-info { margin-top: 15px; text-align: left; font-size: 14px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; }
+        .cabinet-info p { margin: 8px 0; }
+        .cabinet-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .cabinet-actions .btn { width: 100%; font-size: 14px; padding: 10px; margin: 0; }
+        .val-gold { color: var(--gold); font-weight: bold; }
     </style>
 </head>
 <body>
 
-<!-- МОДАЛ ПОДКЛЮЧЕНИЯ (показывается сразу) -->
-<div id="connect-modal" class="modal" style="display:flex;">
-    <div class="modal-content">
-        <h2>🔗 Подключите кошелёк</h2>
-        <p style="color:#bbb; margin:15px 0;">Работает с Trust Wallet, MetaMask, Rainbow и всеми остальными</p>
-        
-        <button class="btn" style="background:#27ae60;" onclick="tryInjectedConnect()">MetaMask / Trust (встроенный браузер)</button>
-        <button class="btn" style="background:#9b59b6;" onclick="openInTrustWallet()">Открыть в приложении Trust Wallet</button>
-        <button class="btn" style="background:#f1c40f; color:#000;" onclick="startWalletConnect()">WalletConnect (QR-код)</button>
-        
-        <div id="wc-qr-container" style="margin:20px auto; text-align:center; display:none;">
-            <img id="wc-qr" style="width:260px; border:8px solid white; border-radius:12px;" src="" alt="QR">
-            <p>Отсканируйте в Trust Wallet или MetaMask</p>
-        </div>
-        
-        <button class="btn" style="background:#444;" onclick="hideConnectModal()">Играть без кошелька (тест)</button>
-    </div>
-</div>
+<button id="cabinet-btn" onclick="openCabinet()">👤 Личный кабинет</button>
 
-<!-- МОДАЛ ЛИЧНОГО КАБИНЕТА -->
 <div id="cabinet-modal" class="modal">
     <div class="modal-content">
-        <h2>👤 Личный кабинет</h2>
-        <div style="text-align:left; font-size:14px; margin:15px 0;">
-            <div>Адрес: <span id="cabinet-address" style="color:var(--gold);">—</span></div>
-            <div>Игровой ID: <span id="cabinet-id" style="color:var(--gold);">—</span></div>
-            <div>Баланс: <span id="cabinet-balance" style="color:var(--gold);">0</span> токенов</div>
+        <span class="close-btn" onclick="closeCabinet()">&times;</span>
+        <h2 style="margin-top: 0; color: var(--gold);">Личный кабинет</h2>
+        
+        <div class="cabinet-info">
+            <p><strong>Кошелек Polygon:</strong> <br><span id="wallet-status" style="color:#aaa;">Не подключен</span></p>
+            <p><strong>Игровой ID:</strong> <span id="game-id" class="val-gold">-</span></p>
+            <hr style="border-color: #333; margin: 10px 0;">
+            <p><strong>Баланс смарт-контракта:</strong> <br><span id="contract-balance" class="val-gold">0</span> MATIC</p>
+            <p><strong>Ваши игровые очки:</strong> <br><span id="cabinet-chips" class="val-gold">1000</span></p>
         </div>
-        <button class="btn" style="background:#27ae60;" onclick="depositFromCabinet()">💰 Внести средства</button>
-        <button class="btn" style="background:#9b59b6;" onclick="withdrawFromCabinet()">💸 Вывести средства</button>
-        <button class="btn" style="background:#444;" onclick="document.getElementById('cabinet-modal').style.display='none'">Закрыть</button>
+
+        <div class="cabinet-actions">
+            <button id="connect-btn" class="btn" style="background:#27ae60;" onclick="connectWallet()">🔗 Подключить MetaMask</button>
+            <button id="deposit-btn" class="btn" style="background:#9b59b6; display:none;" onclick="depositToContract()">💰 Внести средства (Polygon)</button>
+            <button id="withdraw-btn" class="btn" style="background:#e67e22; display:none;" onclick="withdrawFromContract()">💸 Вывести на кошелек</button>
+            <button id="bonus-btn" class="btn" style="background:#f1c40f; color:#000;" onclick="getBonus()">🎁 Получить бонус</button>
+        </div>
     </div>
 </div>
 
-<button id="cabinet-btn" onclick="openCabinet()" style="display:none;">👤 Личный кабинет</button>
-
-<!-- Таймеры и весь игровой стол (без изменений) -->
-<div id="kon-timer" class="timer-container" style="top:80px; left:50%; transform:translateX(-50%);">
-    <svg class="timer-svg" viewBox="0 0 180 180"><circle class="timer-bg" cx="90" cy="90" r="80"></circle><circle id="kon-progress" class="timer-progress" cx="90" cy="90" r="80" stroke-dasharray="502" stroke-dashoffset="502"></circle><text id="kon-countdown" x="90" y="82" class="timer-text">60</text><text x="90" y="115" class="timer-label">СЕК ДЛЯ КОН</text></svg>
+<div id="kon-timer" class="timer-container">
+    <svg class="timer-svg" viewBox="0 0 220 220">
+        <circle class="timer-bg" cx="110" cy="110" r="95"></circle>
+        <circle id="kon-progress" class="timer-progress" cx="110" cy="110" r="95" 
+                stroke-dasharray="597" stroke-dashoffset="597"></circle>
+        <text id="kon-countdown" x="110" y="100" class="timer-text">60</text>
+        <text x="110" y="135" class="timer-label">СЕК ДЛЯ КОН</text>
+    </svg>
 </div>
 
-<div id="turn-timer" class="timer-container" style="display:none;">
-    <svg class="timer-svg" viewBox="0 0 180 180"><circle class="timer-bg" cx="90" cy="90" r="80"></circle><circle id="turn-progress" class="timer-progress" cx="90" cy="90" r="80" stroke-dasharray="502" stroke-dashoffset="502"></circle><text id="turn-countdown" x="90" y="82" class="timer-text">60</text><text id="turn-label" x="90" y="115" class="timer-label">ТВОЙ ХОД</text></svg>
+<div id="turn-timer" class="timer-container hidden">
+    <svg class="timer-svg" viewBox="0 0 220 220">
+        <circle class="timer-bg" cx="110" cy="110" r="95"></circle>
+        <circle id="turn-progress" class="timer-progress" cx="110" cy="110" r="95" 
+                stroke-dasharray="597" stroke-dashoffset="597"></circle>
+        <text id="turn-countdown" x="110" y="100" class="timer-text">60</text>
+        <text x="110" y="135" class="timer-label">ТВОЙ ХОД</text>
+    </svg>
 </div>
 
-<div id="log">Добро пожаловать в Seka Elite!</div>
+<div id="log">Добро пожаловать в Seka Elite! Откройте Личный кабинет, чтобы пополнить баланс.</div>
 
-<div class="table"> ... (весь ваш стол и игроки без изменений) ... </div>
+<div class="table">
+    <div class="pot-display">
+        <h2 id="total-pot">💰 0</h2>
+        <div class="current-bet-info">Ставка: <b id="current-bet">10</b></div>
+    </div>
 
-<div class="controls"> ... (все кнопки без изменений) ... </div>
+    <div id="player-1" class="player-block p1"><div class="score-label"></div><span>Бот 1</span><div class="card-slot"></div><div class="chips-count">1000</div></div>
+    <div id="player-2" class="player-block p2"><div class="score-label"></div><span>Бот 2</span><div class="card-slot"></div><div class="chips-count">1000</div></div>
+    <div id="player-3" class="player-block p3"><div class="score-label"></div><span>Бот 3</span><div class="card-slot"></div><div class="chips-count">1000</div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+    <div id="player-0" class="player-block p0">
+        <div id="my-score-label" class="score-label"></div>
+        <div class="card-slot" id="my-cards"></div>
+        <div class="chips-count" id="my-chips">1000</div>
+        <div style="margin-top: 5px; font-weight: bold;">ВЫ</div>
+    </div>
+</div>
+
+<div class="controls">
+    <button id="kon-btn" class="btn btn-kon" onclick="payKon()">💰 ВНЕСТИ КОН (10 очков)</button>
+    
+    <div id="game-actions" style="display: none; gap: 10px; flex-wrap: wrap; justify-content: center;">
+        <button class="btn btn-see" id="btn-see" onclick="gameAction('see')">👀 Глаза</button>
+        <button class="btn btn-dark" id="btn-dark" onclick="gameAction('dark')">Тёмный</button>
+        <div id="superdark-group" class="raise-group">
+            <button class="btn btn-superdark" id="btn-superdark" onclick="gameAction('superdark')">Перетёмный</button>
+            <input type="range" id="raise-slider" min="20" max="200" step="10" value="20" oninput="updateRaiseAmount(this.value)">
+            <span id="raise-amount-display" style="color:var(--gold); font-weight:bold;">+20</span>
+        </div>
+        <button class="btn btn-call" id="btn-call" onclick="gameAction('call')">Поддержать</button>
+        <div id="normal-raise-group" class="raise-group" style="display:none;">
+            <button class="btn btn-raise" id="btn-raise" onclick="gameAction('raise')">Поднять</button>
+            <input type="range" id="raise-slider2" min="20" max="200" step="10" value="20" oninput="updateRaiseAmount(this.value)">
+            <span id="raise-amount-display2" style="color:var(--gold); font-weight:bold;">+20</span>
+        </div>
+        <button class="btn btn-fold" onclick="gameAction('fold')">Пас</button>
+        <button class="btn btn-see" style="background:#555" onclick="finishRound()">Вскрыться</button>
+    </div>
+</div>
+
 <script>
-    // === ПЕРЕМЕННЫЕ ИГРЫ (оставил как было, только почистил) ===
-    let players = [{id:0,chips:1000,hand:[],isFolded:false,isBlind:true,show:false,konReady:false},{id:1,chips:1000,hand:[],isFolded:false,isBlind:true,show:false,konReady:false},{id:2,chips:1000,hand:[],isFolded:false,isBlind:true,show:false,konReady:false},{id:3,chips:1000,hand:[],isFolded:false,isBlind:true,show:false,konReady:false}];
-    let pot = 0, curBet = 10, activeIdx = 0, raiseAmount = 20;
-    let walletConnected = false, userAddress = "", userGameId = null, contractBal = 0;
-    let konTimerInterval = null, turnTimerInterval = null;
-    const KON_TIME = 60, TURN_TIME = 60;
+    const suits = [{s:'♥', c:'red'}, {s:'♦', c:'red'}, {s:'♣', c:'black'}, {s:'♠', c:'black'}];
+    const values = ['10', 'J', 'Q', 'K', 'A'];
+    let players = [
+        {id: 0, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false},
+        {id: 1, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false},
+        {id: 2, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false},
+        {id: 3, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false}
+    ];
+    let pot = 0, curBet = 10, activeIdx = 0, lastBetterBlind = true;
+    let raiseAmount = 20;
+    
+    // Переменные Личного кабинета
+    let walletConnected = false;
+    let userGameId = null;
+    let contractBal = 0;
+    let bonusReceived = false;
 
-    let wcProvider = null;
+    // Таймеры
+    let konTimerInterval = null;
+    let turnTimerInterval = null;
+    const KON_TIME = 60;
+    const TURN_TIME = 60;
 
-    // === МОДАЛЫ ===
-    function hideConnectModal() { document.getElementById('connect-modal').style.display = 'none'; }
+    // --- Управление Личным Кабинетом ---
     function openCabinet() {
-        document.getElementById('cabinet-address').innerText = userAddress || "—";
-        document.getElementById('cabinet-id').innerText = userGameId || "—";
-        document.getElementById('cabinet-balance').innerText = contractBal;
         document.getElementById('cabinet-modal').style.display = 'flex';
+        updateCabinetUI();
     }
 
-    // === ПОДКЛЮЧЕНИЕ КОШЕЛЬКА (исправлено для Trust Wallet) ===
-    async function tryInjectedConnect() {
-        if (!window.ethereum) return alert("Не найден встроенный кошелёк.\nОткройте сайт внутри Trust Wallet или используйте WalletConnect.");
+    function closeCabinet() {
+        document.getElementById('cabinet-modal').style.display = 'none';
+    }
+
+    function updateCabinetUI() {
+        document.getElementById('contract-balance').innerText = contractBal;
+        document.getElementById('cabinet-chips').innerText = players[0].chips;
+    }
+
+    async function connectWallet() {
+        if (walletConnected) return;
+        if (!window.ethereum) return alert("MetaMask не найден! Установите расширение.");
         try {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            userAddress = accounts[0];
+            if (!accounts?.length) return addLog("❌ Подключение отклонено");
+            
+            const addr = accounts[0];
             userGameId = Math.floor(100000 + Math.random() * 900000);
+            const short = addr.slice(0,6) + '...' + addr.slice(-4);
+            
+            document.getElementById('wallet-status').innerText = short;
+            document.getElementById('wallet-status').style.color = 'var(--gold)';
+            document.getElementById('game-id').innerText = userGameId;
+            
+            document.getElementById('connect-btn').style.display = 'none';
+            document.getElementById('deposit-btn').style.display = 'block';
+            document.getElementById('withdraw-btn').style.display = 'block';
+            
             walletConnected = true;
-            finishConnection();
-        } catch(e) { alert("Подключение отклонено"); }
+            addLog(`✅ Подключён кошелек: ${short}`);
+            
+            try { await window.ethereum.request({method: 'wallet_switchEthereumChain', params: [{chainId: '0x89'}]}); }
+            catch (e) { if (e.code === 4902) {
+                await window.ethereum.request({method: 'wallet_addEthereumChain', params: [{
+                    chainId: '0x89', chainName: 'Polygon Mainnet', nativeCurrency: {name:'MATIC',symbol:'MATIC',decimals:18},
+                    rpcUrls: ['https://polygon-rpc.com'], blockExplorerUrls: ['https://polygonscan.com']
+                }]});
+            }}
+        } catch (e) { addLog("❌ Ошибка: " + (e.message || "неизвестно")); }
     }
 
-    function openInTrustWallet() {
-        const url = encodeURIComponent(window.location.href);
-        window.location.href = `https://link.trustwallet.com/open_url?coin_id=966&url=${url}`;
+    function depositToContract() {
+        if (!walletConnected) return alert("Подключите кошелёк!");
+        let amt = prompt("Сколько MATIC внести в смарт-контракт? (1 MATIC = 100 игровых очков)", "50");
+        if (!amt || isNaN(amt) || +amt <= 0) return;
+        
+        let maticAmount = parseFloat(amt);
+        let pointsEarned = maticAmount * 100;
+        
+        contractBal += maticAmount;
+        players[0].chips += pointsEarned;
+        
+        updateCabinetUI();
+        updateUI();
+        addLog(`💰 Внесено ${maticAmount} MATIC → Начислено ${pointsEarned} очков`);
     }
 
-    async function startWalletConnect() {
-        try {
-            wcProvider = new window.WalletConnectProvider.default({
-                bridge: "https://bridge.walletconnect.org",
-                qrcode: true,
-                rpc: { 137: "https://polygon-rpc.com" }
-            });
-            await wcProvider.enable();
-            userAddress = wcProvider.accounts[0];
-            userGameId = Math.floor(100000 + Math.random() * 900000);
-            walletConnected = true;
-            finishConnection();
-        } catch(e) { alert("WalletConnect ошибка: " + e.message); }
+    function withdrawFromContract() {
+        if (!walletConnected) return alert("Подключите кошелёк!");
+        let pts = prompt(`Сколько очков вывести? (Доступно: ${players[0].chips} очк. | 100 очков = 1 MATIC)`, "100");
+        if (!pts || isNaN(pts) || +pts <= 0) return;
+        
+        let withdrawPoints = parseInt(pts);
+        if (withdrawPoints > players[0].chips) return alert("Недостаточно очков для вывода!");
+        
+        let maticToReceive = withdrawPoints / 100;
+        
+        players[0].chips -= withdrawPoints;
+        // Защита, чтобы баланс контракта визуально не уходил в минус для симуляции
+        contractBal = Math.max(0, contractBal - maticToReceive); 
+        
+        updateCabinetUI();
+        updateUI();
+        addLog(`💸 Выведено ${withdrawPoints} очков → Отправлено ${maticToReceive} MATIC на кошелек`);
     }
 
-    function finishConnection() {
-        hideConnectModal();
-        document.getElementById('cabinet-btn').style.display = 'block';
-        addLog(`✅ Кошелёк подключён! \( {userAddress.slice(0,6)}... \){userAddress.slice(-4)}`);
-        // Переключаем сеть на Polygon
-        if (window.ethereum) window.ethereum.request({method:'wallet_switchEthereumChain', params:[{chainId:'0x89'}]}).catch(()=>{});
+    function getBonus() {
+        if (bonusReceived) return alert("Вы уже получали бонус!");
+        players[0].chips += 500;
+        bonusReceived = true;
+        document.getElementById('bonus-btn').style.opacity = '0.5';
+        document.getElementById('bonus-btn').style.cursor = 'not-allowed';
+        
+        updateCabinetUI();
+        updateUI();
+        addLog("🎁 Получен приветственный бонус: +500 очков!");
     }
-
-    // === ВСЁ ОСТАЛЬНОЕ (таймеры, игра, логика) — без изменений, только исправлены мелкие ошибки ===
-    // (paste сюда весь ваш скрипт от startKonPhase до конца, я его уже почистил)
+    // --- Конец логики Личного Кабинета ---
 
     function addLog(msg, type='') {
-        const logEl = document.getElementById('log');
-        logEl.innerHTML = `<div class="\( {type}"> \){msg}</div>` + logEl.innerHTML;
+        document.getElementById('log').innerHTML = `<div class="${type}">${msg}</div>` + document.getElementById('log').innerHTML;
     }
 
-    // ... (все остальные функции: startKonPhase, payKon, autoDeal, startTurnTimer, moveTurnTimer, gameAction, nextTurn, botMove, updateUI, calculatePoints, finishRound — оставлены как в вашем коде, но исправлены синтаксические ошибки)
+    function calculatePoints(hand) {
+        let hasJoker = hand.some(c => c.isJoker);
+        let pure = hand.filter(c => !c.isJoker);
+        let aces = pure.filter(c => c.v === 'A').length;
+        if (aces === 3 || (aces === 2 && hasJoker)) return 33;
+        if (aces === 2 || (aces === 1 && hasJoker)) return 22;
+        let suitsSum = {'♥':0, '♦':0, '♣':0, '♠':0, '★':0};
+        pure.forEach(c => suitsSum[c.s] += c.p);
+        let maxSuit = Math.max(...Object.values(suitsSum)) + (hasJoker ? 11 : 0);
+        let counts = {};
+        pure.forEach(c => counts[c.v] = (counts[c.v] || 0) + 1);
+        let triplet = 0;
+        for (let v in counts) if (counts[v] === 3 || (counts[v] === 2 && hasJoker)) triplet = 30;
+        return Math.max(maxSuit, triplet);
+    }
+
+    function startKonPhase() {
+        document.getElementById('kon-btn').style.display = 'block';
+        document.getElementById('game-actions').style.display = 'none';
+        document.getElementById('kon-timer').classList.remove('hidden');
+        document.getElementById('turn-timer').classList.add('hidden');
+
+        pot = 0;
+        players.forEach(p => { p.konReady = false; p.isFolded = false; p.show = false; p.hand = []; });
+
+        let timeLeft = KON_TIME;
+        document.getElementById('kon-countdown').textContent = timeLeft;
+        document.getElementById('kon-progress').style.strokeDashoffset = 597;
+
+        setTimeout(() => { players[1].konReady = true; addLog("Бот 1 внёс кон"); checkAllKon(); }, 1800);
+        setTimeout(() => { players[2].konReady = true; addLog("Бот 2 внёс кон"); checkAllKon(); }, 3400);
+        setTimeout(() => { players[3].konReady = true; addLog("Бот 3 внёс кон"); checkAllKon(); }, 5200);
+
+        konTimerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('kon-countdown').textContent = timeLeft;
+            const offset = 597 - (597 * (KON_TIME - timeLeft) / KON_TIME);
+            document.getElementById('kon-progress').style.strokeDashoffset = offset;
+
+            if (timeLeft <= 0) {
+                clearInterval(konTimerInterval);
+                if (!players[0].konReady) {
+                    addLog("⏰ Кон: время вышло → автоматический пас");
+                    players[0].isFolded = true;
+                }
+                autoDeal();
+            }
+        }, 1000);
+    }
+
+    function payKon() {
+        if (players[0].konReady || players[0].chips < 10) {
+            if (players[0].chips < 10) alert("Недостаточно очков! Откройте Личный кабинет и внесите средства.");
+            return;
+        }
+        players[0].chips -= 10; pot += 10; players[0].konReady = true;
+        document.getElementById('total-pot').innerText = "💰 " + pot;
+        updateUI();
+        addLog("Вы внесли кон (10)");
+        checkAllKon();
+    }
+
+    function checkAllKon() {
+        if (players.every(p => p.konReady)) {
+            clearInterval(konTimerInterval);
+            document.getElementById('kon-countdown').textContent = 'ГОТОВО';
+            setTimeout(autoDeal, 1000);
+        }
+    }
+
+    function autoDeal() {
+        document.getElementById('kon-timer').classList.add('hidden');
+        document.getElementById('kon-btn').style.display = 'none';
+
+        let deck = [];
+        suits.forEach(s => values.forEach(v => deck.push({v, s:s.s, c:s.c, p: v==='A'?11:10})));
+        deck.push({v: 'JK', s: '★', c: 'black', p: 11, isJoker: true});
+        deck.sort(() => Math.random() - 0.5);
+
+        players.forEach(p => { p.hand = [deck.pop(), deck.pop(), deck.pop()]; p.isBlind = true; });
+
+        curBet = 10; activeIdx = 0; lastBetterBlind = true;
+        document.getElementById('game-actions').style.display = 'flex';
+        addLog("Раздача началась! Твоя очередь — 60 секунд.");
+        updateUI();
+        startTurnTimer();
+    }
+
+    function startTurnTimer() {
+        if (activeIdx !== 0) return;
+        document.getElementById('turn-timer').classList.remove('hidden');
+
+        let timeLeft = TURN_TIME;
+        document.getElementById('turn-countdown').textContent = timeLeft;
+        document.getElementById('turn-progress').style.strokeDashoffset = 597;
+
+        if (turnTimerInterval) clearInterval(turnTimerInterval);
+
+        turnTimerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('turn-countdown').textContent = timeLeft;
+            const offset = 597 - (597 * (TURN_TIME - timeLeft) / TURN_TIME);
+            document.getElementById('turn-progress').style.strokeDashoffset = offset;
+
+            if (timeLeft <= 0) {
+                clearInterval(turnTimerInterval);
+                addLog("⏰ Время хода истекло → автоматический пас");
+                players[0].isFolded = true;
+                document.getElementById('turn-timer').classList.add('hidden');
+                finishRound();
+            }
+        }, 1000);
+    }
+
+    function gameAction(type) {
+        if (activeIdx !== 0) return;
+
+        if (turnTimerInterval) clearInterval(turnTimerInterval);
+        document.getElementById('turn-timer').classList.add('hidden');
+
+        if (type === 'see') {
+            players[0].isBlind = false;
+            addLog("Вы посмотрели карты → ставки ×2");
+        } else if (type === 'dark') {
+            let cost = curBet;
+            if (players[0].chips < cost) return alert("Мало очков!");
+            players[0].chips -= cost; pot += cost;
+            lastBetterBlind = true;
+            addLog(`Тёмный ${cost}`);
+            nextTurn();
+        } else if (type === 'superdark') {
+            curBet += raiseAmount;
+            let cost = curBet;
+            if (players[0].chips < cost) return alert("Мало очков!");
+            players[0].chips -= cost; pot += cost;
+            lastBetterBlind = true;
+            addLog(`Перетёмный до ${curBet}`);
+            nextTurn();
+        } else if (type === 'call') {
+            let cost = curBet * 2;
+            if (players[0].chips < cost) return alert("Мало очков!");
+            players[0].chips -= cost; pot += cost;
+            lastBetterBlind = false;
+            addLog(`Поддержка ${cost}`);
+            nextTurn();
+        } else if (type === 'raise') {
+            curBet += raiseAmount;
+            let cost = curBet * 2;
+            if (players[0].chips < cost) return alert("Мало очков!");
+            players[0].chips -= cost; pot += cost;
+            lastBetterBlind = false;
+            addLog(`Подъём до ${curBet}`);
+            nextTurn();
+        } else if (type === 'fold') {
+            players[0].isFolded = true;
+            finishRound();
+            return;
+        }
+        updateUI();
+    }
+
+    function nextTurn() {
+        activeIdx = (activeIdx + 1) % 4;
+        if (players[activeIdx].isFolded) return nextTurn();
+        updateUI();
+        if (activeIdx === 0) {
+            addLog("Твоя очередь — 60 секунд!");
+            startTurnTimer();
+        } else {
+            setTimeout(botMove, 600 + Math.random() * 800);
+        }
+    }
+
+    function botMove() {
+        let b = players[activeIdx];
+        if (Math.random() > 0.35 && b.chips >= curBet) {
+            let cost = curBet;
+            b.chips -= cost; pot += cost;
+            addLog(`Бот ${activeIdx} поставил ${cost}`);
+            nextTurn();
+        } else {
+            b.isFolded = true;
+            addLog(`Бот ${activeIdx} пас`);
+            nextTurn();
+        }
+    }
+
+    function updateRaiseAmount(val) {
+        raiseAmount = parseInt(val);
+        document.getElementById('raise-amount-display').innerText = '+' + raiseAmount;
+        document.getElementById('raise-amount-display2').innerText = '+' + raiseAmount;
+    }
+
+    function updateUI() {
+        document.getElementById('total-pot').innerText = "💰 " + pot;
+        document.getElementById('current-bet').innerText = curBet;
+        document.getElementById('my-chips').innerText = players[0].chips;
+
+        const isBlind = players[0].isBlind;
+        document.getElementById('btn-dark').style.display = isBlind ? 'inline-block' : 'none';
+        document.getElementById('superdark-group').style.display = isBlind ? 'flex' : 'none';
+        document.getElementById('btn-call').style.display = isBlind ? 'none' : 'inline-block';
+        document.getElementById('normal-raise-group').style.display = isBlind ? 'none' : 'flex';
+
+        players.forEach((p, i) => {
+            const el = document.getElementById(`player-${i}`);
+            el.className = `player-block p${i} ${i === activeIdx ? 'player-active' : ''} ${p.isFolded ? 'player-folded' : ''}`;
+            el.querySelector('.chips-count').innerText = p.chips;
+
+            const slot = el.querySelector('.card-slot');
+            slot.innerHTML = '';
+            p.hand.forEach(card => {
+                const div = document.createElement('div');
+                let vis = (i === 0 && !p.isBlind) || p.show;
+                div.className = vis ? `card ${card.c} ${card.isJoker ? 'joker' : ''}` : 'card hidden';
+                if (vis) div.innerText = card.isJoker ? '★' : card.v + card.s;
+                slot.appendChild(div);
+            });
+
+            const scoreEl = (i === 0) ? document.getElementById('my-score-label') : el.querySelector('.score-label');
+            if (scoreEl) {
+                if (p.show) scoreEl.innerText = calculatePoints(p.hand) + " очк";
+                else if (i === 0) scoreEl.innerText = p.isBlind ? "ТЁМНАЯ" : calculatePoints(p.hand) + " очк";
+                else scoreEl.innerText = "";
+            }
+        });
+
+        document.getElementById('btn-see').disabled = !isBlind;
+        if(document.getElementById('cabinet-modal').style.display === 'flex') {
+            updateCabinetUI();
+        }
+    }
+
+    function finishRound() {
+        if (turnTimerInterval) clearInterval(turnTimerInterval);
+        document.getElementById('turn-timer').classList.add('hidden');
+
+        let best = -1, winnerId = -1, winners = [];
+        players.forEach((p, i) => {
+            p.show = true;
+            if (!p.isFolded) {
+                let pts = calculatePoints(p.hand);
+                if (pts > best) { best = pts; winnerId = i; winners = [i]; }
+                else if (pts === best) winners.push(i);
+            }
+        });
+
+        updateUI();
+
+        if (winners.length > 1) {
+            addLog("СВАРА! Банк остаётся.", "log-win");
+        } else {
+            players[winnerId].chips += pot;
+            const name = winnerId === 0 ? `Вы` : `Бот ${winnerId}`;
+            addLog(`🎉 Выиграл ${name} (${best} очк) → +${pot}`, "log-win");
+            pot = 0;
+            updateUI();
+        }
+
+        setTimeout(startKonPhase, 2800);
+    }
 
     window.onload = () => {
         document.getElementById('raise-amount-display').innerText = '+20';
         document.getElementById('raise-amount-display2').innerText = '+20';
-        document.getElementById('connect-modal').style.display = 'flex';
-        startKonPhase(); // таймер кон запускается сразу
+        startKonPhase();
     };
 </script>
+
 </body>
 </html>
