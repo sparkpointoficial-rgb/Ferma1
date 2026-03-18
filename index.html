@@ -3,150 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CriptoPan - Web3 Card Game</title>
+    <title>CriptoPan - Web3 Seka</title>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/index.umd.min.js"></script>
+
     <style>
-        :root {
-            --gold: #ffcc00;
-            --dark-bg: #1a1a1a;
-            --panel-bg: #2a2a2a;
-            --text: #ffffff;
-        }
+        :root { --gold: #ffcc00; --bg: #121212; --panel: #1e1e1e; --green: #006400; }
+        body { background: var(--bg); color: white; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        
+        .header { width: 100%; background: var(--panel); padding: 15px; border-bottom: 2px solid var(--gold); display: flex; justify-content: space-around; font-size: 14px; }
+        .gold-text { color: var(--gold); font-weight: bold; display: block; font-size: 18px; }
 
-        body {
-            background-color: var(--dark-bg);
-            color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .game-table { width: 90%; max-width: 600px; height: 350px; background: var(--green); border: 8px solid #3d2b1f; border-radius: 150px; margin: 20px; position: relative; box-shadow: inset 0 0 50px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+        .table-label { color: rgba(255,255,255,0.2); font-size: 24px; font-weight: bold; text-transform: uppercase; }
 
-        /* Личный кабинет */
-        .header {
-            width: 100%;
-            background: var(--panel-bg);
-            padding: 15px 0;
-            border-bottom: 2px solid var(--gold);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-        }
+        .ui-panel { background: var(--panel); padding: 20px; border-radius: 10px; width: 90%; max-width: 600px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        
+        button { background: var(--gold); color: black; border: none; padding: 12px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+        button:hover { transform: scale(1.05); background: #f0c000; }
+        button:disabled { background: #444; color: #888; }
 
-        .stats-item {
-            text-align: center;
-        }
-
-        .stats-item span {
-            color: var(--gold);
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-
-        /* Кнопки управления */
-        .controls {
-            margin: 20px;
-            display: flex;
-            gap: 10px;
-        }
-
-        button {
-            background: var(--gold);
-            color: black;
-            border: none;
-            padding: 10px 20px;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            background: #e6b800;
-            transform: scale(1.05);
-        }
-
-        button:disabled {
-            background: #555;
-            cursor: not-allowed;
-        }
-
-        /* Игровая зона */
-        #game-container {
-            width: 90%;
-            max-width: 800px;
-            background: #004d00; /* Цвет сукна */
-            border: 5px solid #3d2b1f;
-            border-radius: 50px;
-            height: 400px;
-            position: relative;
-            margin-top: 20px;
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
-        }
-
-        /* Лог событий */
-        #game-log {
-            width: 90%;
-            max-width: 800px;
-            height: 150px;
-            background: #000;
-            margin-top: 20px;
-            padding: 10px;
-            overflow-y: auto;
-            border: 1px solid var(--gold);
-            font-family: monospace;
-            font-size: 0.9em;
-            color: #00ff00;
-        }
-
-        .log-entry { margin-bottom: 5px; }
+        #log { width: 90%; max-width: 600px; height: 120px; background: black; margin: 15px; padding: 10px; border: 1px solid #333; overflow-y: auto; font-family: monospace; color: #0f0; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="stats-item">Проект: <br><span>CriptoPan</span></div>
-    <div class="stats-item">ID Игрока: <br><span id="game-id">---</span></div>
-    <div class="stats-item">Баланс (Очки): <br><span id="user-balance">0</span></div>
-    <div class="stats-item">Кошелек: <br><span id="wallet-status">Не подключен</span></div>
+    <div>ПРОЕКТ<span class="gold-text">CriptoPan</span></div>
+    <div>ID ИГРОКА<span id="player-id" class="gold-text">---</span></div>
+    <div>БАЛАНС (ОЧКИ)<span id="balance-val" class="gold-text">0</span></div>
+    <div>КОШЕЛЕК<span id="wallet-addr" class="gold-text">Нет связи</span></div>
 </div>
 
-<div class="controls">
-    <button id="connect-btn" onclick="connectWallet()">Подключить MetaMask</button>
-    <button id="deposit-btn" onclick="depositToContract()" style="display:none;">Внести MATIC</button>
-    <button id="withdraw-btn" onclick="withdrawFromContract()" style="display:none;">Вывести в MATIC</button>
+<div class="game-table">
+    <div class="table-label">CriptoPan Table</div>
 </div>
 
-<div id="game-container">
-    <div style="position: absolute; top: 45%; width: 100%; text-align: center; color: rgba(255,255,255,0.2); font-size: 2em; font-weight: bold;">
-        ИГРОВОЙ СТОЛ СЕКА
-    </div>
+<div class="ui-panel">
+    <button id="btn-connect" onclick="connect()">Подключить Кошелек</button>
+    <button id="btn-deposit" onclick="deposit()" style="display:none;">Внести Крипту</button>
+    <button id="btn-withdraw" onclick="withdraw()" style="display:none;">Вывести Очки</button>
 </div>
 
-<div id="game-log">
-    <div class="log-entry">Добро пожаловать в CriptoPan! Подключите кошелек для начала.</div>
-</div>
+<div id="log">>> Ожидание подключения MetaMask...</div>
 
 <script>
-    // --- КОНФИГУРАЦИЯ WEB3 ---
-    const CONTRACT_ADDRESS = "ВАШ_АДРЕС_ПОСЛЕ_ДЕПЛОЯ"; // Замени на реальный адрес
-    const CONTRACT_ABI = [
+    // --- НАСТРОЙКИ (ЗАМЕНИ АДРЕС ПОСЛЕ ДЕПЛОЯ) ---
+    const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000"; 
+    const ABI = [
         "function deposit() external payable",
         "function withdraw(uint256 _points) external",
-        "function balances(address) view returns (uint256)",
-        "event Deposit(address indexed user, uint256 maticAmount, uint256 points)",
-        "event Withdraw(address indexed user, uint256 maticAmount, uint256 points)"
+        "function balances(address) view returns (uint256)"
     ];
 
     let provider, signer, contract;
-    let walletConnected = false;
-    let userPoints = 0;
 
-    // --- ЛОГИКА ПОДКЛЮЧЕНИЯ ---
-    async function connectWallet() {
+    function addLog(msg) {
+        const log = document.getElementById('log');
+        log.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+        log.scrollTop = log.scrollHeight;
+    }
+
+    async function connect() {
+        if (typeof window.ethers === "undefined") {
+            addLog("❌ Ошибка: Библиотека ethers не загружена. Проверьте интернет.");
+            return;
+        }
+
         if (!window.ethereum) {
-            alert("Пожалуйста, установите MetaMask!");
+            alert("Установите MetaMask!");
             return;
         }
 
@@ -154,91 +79,63 @@
             provider = new ethers.BrowserProvider(window.ethereum);
             const accounts = await provider.send("eth_requestAccounts", []);
             signer = await provider.getSigner();
-            const address = accounts[0];
-
-            contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-            // Обновляем UI
-            const shortAddr = address.slice(0, 6) + "..." + address.slice(-4);
-            document.getElementById('wallet-status').innerText = shortAddr;
-            document.getElementById('game-id').innerText = Math.floor(100000 + Math.random() * 900000);
             
-            document.getElementById('connect-btn').style.display = 'none';
-            document.getElementById('deposit-btn').style.display = 'inline-block';
-            document.getElementById('withdraw-btn').style.display = 'inline-block';
+            contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
-            walletConnected = true;
-            addLog(`✅ Кошелек ${shortAddr} подключен`);
+            const addr = accounts[0];
+            document.getElementById('wallet-addr').innerText = addr.slice(0,6) + "..." + addr.slice(-4);
+            document.getElementById('player-id').innerText = Math.floor(1000 + Math.random() * 9000);
+            
+            document.getElementById('btn-connect').style.display = 'none';
+            document.getElementById('btn-deposit').style.display = 'inline-block';
+            document.getElementById('btn-withdraw').style.display = 'inline-block';
 
-            await syncBalance(address);
+            addLog("✅ Кошелек подключен успешно!");
+            updateBalance(addr);
 
-        } catch (error) {
-            console.error(error);
-            addLog("❌ Ошибка подключения: " + error.message);
+        } catch (e) {
+            addLog("❌ Ошибка подключения: " + e.message);
         }
     }
 
-    // --- СИНХРОНИЗАЦИЯ БАЛАНСА С БЛОКЧЕЙНОМ ---
-    async function syncBalance(address) {
+    async function updateBalance(address) {
         try {
             const points = await contract.balances(address);
-            userPoints = Number(points);
-            document.getElementById('user-balance').innerText = userPoints;
-            addLog(`🔄 Данные обновлены. На счету: ${userPoints} очков.`);
+            document.getElementById('balance-val').innerText = points.toString();
         } catch (e) {
-            console.error("Ошибка баланса:", e);
+            console.error(e);
         }
     }
 
-    // --- ФУНКЦИЯ ДЕПОЗИТА (MATIC -> Очки) ---
-    async function depositToContract() {
-        const amount = prompt("Сколько MATIC внести? (1 MATIC = 100 очков)", "1");
-        if (!amount || isNaN(amount) || amount <= 0) return;
+    async function deposit() {
+        const amount = prompt("Сколько единиц крипты внести?", "0.1");
+        if (!amount) return;
 
         try {
-            addLog(`⏳ Транзакция на ${amount} MATIC отправлена...`);
-            const tx = await contract.deposit({
-                value: ethers.parseEther(amount)
-            });
-            
+            addLog("⏳ Ожидание подтверждения в MetaMask...");
+            const tx = await contract.deposit({ value: ethers.parseEther(amount) });
+            addLog("📡 Транзакция отправлена. Ждем сеть...");
             await tx.wait();
-            addLog("✅ Депозит подтвержден!");
-            await syncBalance(await signer.getAddress());
+            addLog("✅ Депозит зачислен!");
+            updateBalance(await signer.getAddress());
         } catch (e) {
-            addLog("❌ Ошибка транзакции: " + (e.reason || "Отмена"));
+            addLog("❌ Ошибка: " + (e.reason || e.message));
         }
     }
 
-    // --- ФУНКЦИЯ ВЫВОДА (Очки -> MATIC) ---
-    async function withdrawFromContract() {
-        const pointsToWithdraw = prompt(`Сколько очков вывести? (Доступно: ${userPoints})`, "100");
-        if (!pointsToWithdraw || isNaN(pointsToWithdraw) || pointsToWithdraw <= 0) return;
-
-        if (pointsToWithdraw > userPoints) {
-            alert("Недостаточно очков на балансе смарт-контракта!");
-            return;
-        }
+    async function withdraw() {
+        const points = prompt("Сколько очков вывести?");
+        if (!points) return;
 
         try {
-            addLog(`⏳ Запрос на вывод ${pointsToWithdraw} очков...`);
-            const tx = await contract.withdraw(pointsToWithdraw);
-            
+            addLog("⏳ Запрос на вывод средств...");
+            const tx = await contract.withdraw(points);
             await tx.wait();
-            addLog("✅ Вывод выполнен! MATIC отправлен на кошелек.");
-            await syncBalance(await signer.getAddress());
+            addLog("✅ Средства выведены на ваш кошелек!");
+            updateBalance(await signer.getAddress());
         } catch (e) {
-            addLog("❌ Ошибка вывода: " + (e.reason || "Отмена"));
+            addLog("❌ Ошибка: " + (e.reason || e.message));
         }
-    }
-
-    // --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
-    function addLog(message) {
-        const log = document.getElementById('game-log');
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        const time = new Date().toLocaleTimeString();
-        entry.innerText = `[${time}] ${message}`;
-        log.prepend(entry);
     }
 </script>
 
