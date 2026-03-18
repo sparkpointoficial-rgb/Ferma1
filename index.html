@@ -8,7 +8,6 @@
         :root { --gold: #f1c40f; --green: #27ae60; --dark-green: #1a472a; --card-white: #ffffff; }
         body { font-family: 'Segoe UI', Roboto, sans-serif; background: #0f0f0f; color: white; margin: 0; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden; }
         
-        /* Игровой стол */
         .table { 
             position: relative; width: 900px; height: 500px; 
             background: radial-gradient(circle, #2d7a4d 0%, #1a472a 100%); 
@@ -21,7 +20,6 @@
         .pot-display h2 { font-size: 48px; color: var(--gold); margin: 0; text-shadow: 2px 4px 6px #000; }
         .current-bet-info { font-size: 18px; color: #fff; opacity: 0.8; }
 
-        /* Игроки */
         .player-block { position: absolute; width: 160px; text-align: center; transition: all 0.4s ease; padding: 10px; border-radius: 20px; }
         .player-active { background: rgba(241, 196, 15, 0.15); box-shadow: 0 0 25px var(--gold); transform: scale(1.05); }
         .player-folded { opacity: 0.4; filter: grayscale(0.8); }
@@ -33,7 +31,6 @@
 
         .chips-count { background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 10px; color: var(--gold); font-weight: bold; border: 1px solid var(--gold); margin-top: 5px; display: inline-block; }
 
-        /* Карты */
         .card-slot { display: flex; justify-content: center; gap: 5px; margin-top: 10px; height: 75px; }
         .card { 
             width: 50px; height: 70px; background: var(--card-white); border-radius: 6px; 
@@ -45,7 +42,6 @@
         .card.hidden { background: linear-gradient(135deg, #2c3e50 25%, #34495e 100%); border: 2px solid #fff; color: transparent; }
         .card.joker { background: #f1c40f; color: #000; border: 2px solid #fff; font-size: 26px; }
 
-        /* Панель управления */
         .controls { margin-top: 20px; display: flex; gap: 12px; background: #1a1a1a; padding: 18px; border-radius: 15px; border: 2px solid #333; z-index: 100; flex-wrap: wrap; justify-content: center; }
 
         .btn { padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
@@ -60,16 +56,18 @@
 
         .raise-group { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; }
 
-        /* КРАСИВЫЙ ТАЙМЕР КОНА */
-        #kon-timer {
-            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
-            width: 180px; height: 180px; z-index: 150;
+        /* Таймеры */
+        .timer-container {
+            position: absolute; top: 40px; left: 50%; transform: translateX(-50%);
+            width: 220px; height: 220px; z-index: 160; pointer-events: none;
         }
-        #kon-timer svg { width: 100%; height: 100%; }
-        .timer-circle-bg { fill: none; stroke: #333; stroke-width: 14; }
-        .timer-circle { fill: none; stroke: #f1c40f; stroke-width: 14; stroke-linecap: round; transition: stroke-dashoffset 0.3s linear; }
-        .timer-text { font-size: 42px; font-weight: bold; fill: #fff; text-anchor: middle; dominant-baseline: middle; text-shadow: 0 0 10px #f1c40f; }
-        .timer-label { font-size: 14px; fill: #aaa; text-anchor: middle; dominant-baseline: middle; }
+        .timer-container.hidden { display: none; }
+
+        .timer-svg { width: 100%; height: 100%; }
+        .timer-bg { fill: none; stroke: #333; stroke-width: 16; }
+        .timer-progress { fill: none; stroke: #27ae60; stroke-width: 16; stroke-linecap: round; transition: stroke-dashoffset 0.4s linear; }
+        .timer-text { font-size: 52px; font-weight: bold; fill: #fff; text-anchor: middle; dominant-baseline: middle; text-shadow: 0 0 12px #27ae60; }
+        .timer-label { font-size: 16px; fill: #ddd; text-anchor: middle; dominant-baseline: middle; }
 
         #log { position: fixed; right: 20px; top: 20px; width: 280px; height: 220px; background: rgba(0,0,0,0.8); border: 1px solid #444; padding: 10px; font-size: 13px; overflow-y: auto; color: #bbb; border-radius: 10px; }
         .log-win { color: var(--gold); font-weight: bold; }
@@ -95,17 +93,29 @@
     <div style="font-size:12px;">Баланс контракта: <span id="contract-balance">0</span> токенов</div>
 </div>
 
-<div id="kon-timer">
-    <svg viewBox="0 0 200 200">
-        <circle class="timer-circle-bg" cx="100" cy="100" r="82"></circle>
-        <circle id="progress-circle" class="timer-circle" cx="100" cy="100" r="82" 
-                stroke-dasharray="515" stroke-dashoffset="515"></circle>
-        <text id="timer-countdown" x="100" y="92" class="timer-text">30</text>
-        <text x="100" y="122" class="timer-label">СЕК ДЛЯ КОН</text>
+<!-- Таймер для фазы кон -->
+<div id="kon-timer" class="timer-container">
+    <svg class="timer-svg" viewBox="0 0 220 220">
+        <circle class="timer-bg" cx="110" cy="110" r="95"></circle>
+        <circle id="kon-progress" class="timer-progress" cx="110" cy="110" r="95" 
+                stroke-dasharray="597" stroke-dashoffset="597"></circle>
+        <text id="kon-countdown" x="110" y="100" class="timer-text">60</text>
+        <text x="110" y="135" class="timer-label">СЕК ДЛЯ КОН</text>
     </svg>
 </div>
 
-<div id="log">Добро пожаловать в Seka Elite (Polygon)! Нажми «Внести Кон» — все участники должны внести кон. Раздача начнётся автоматически. Сначала подключи кошелёк!</div>
+<!-- Таймер для твоего хода -->
+<div id="turn-timer" class="timer-container hidden">
+    <svg class="timer-svg" viewBox="0 0 220 220">
+        <circle class="timer-bg" cx="110" cy="110" r="95"></circle>
+        <circle id="turn-progress" class="timer-progress" cx="110" cy="110" r="95" 
+                stroke-dasharray="597" stroke-dashoffset="597"></circle>
+        <text id="turn-countdown" x="110" y="100" class="timer-text">60</text>
+        <text x="110" y="135" class="timer-label">ТВОЙ ХОД</text>
+    </svg>
+</div>
+
+<div id="log">Добро пожаловать в Seka Elite! 60 секунд на кон и 60 секунд на ход. Подключи кошелёк и начинай!</div>
 
 <div class="table">
     <div class="pot-display">
@@ -161,12 +171,15 @@
     let walletConnected = false;
     let userGameId = null;
     let contractBal = 0;
+
+    // Таймеры
     let konTimerInterval = null;
-    let timeLeft = 30;
+    let turnTimerInterval = null;
+    const KON_TIME = 60;
+    const TURN_TIME = 60;
 
     function addLog(msg, type='') {
-        const log = document.getElementById('log');
-        log.innerHTML = `<div class="\( {type}"> \){msg}</div>` + log.innerHTML;
+        document.getElementById('log').innerHTML = `<div class="\( {type}"> \){msg}</div>` + document.getElementById('log').innerHTML;
     }
 
     function calculatePoints(hand) {
@@ -185,101 +198,71 @@
         return Math.max(maxSuit, triplet);
     }
 
-    // ==================== РЕАЛЬНОЕ ПОДКЛЮЧЕНИЕ КОШЕЛЬКА (MetaMask + Polygon) ====================
     async function connectWallet() {
         if (walletConnected) return;
-
-        if (!window.ethereum) {
-            alert("❌ MetaMask не найден!\n\nУстановите MetaMask: https://metamask.io/download/");
-            return;
-        }
-
+        if (!window.ethereum) return alert("MetaMask не найден! Установите: https://metamask.io");
         try {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            if (!accounts || accounts.length === 0) {
-                addLog("❌ Подключение отклонено");
-                return;
-            }
-
-            const address = accounts[0];
+            if (!accounts?.length) return addLog("❌ Подключение отклонено");
+            const addr = accounts[0];
             userGameId = Math.floor(100000 + Math.random() * 900000);
-
-            const shortAddr = address.slice(0, 6) + '...' + address.slice(-4);
-
-            document.getElementById('wallet-status').innerText = shortAddr;
+            const short = addr.slice(0,6) + '...' + addr.slice(-4);
+            document.getElementById('wallet-status').innerText = short;
             document.getElementById('game-id').innerText = userGameId;
             document.getElementById('connect-btn').style.display = 'none';
             document.getElementById('deposit-btn').style.display = 'block';
             document.getElementById('wallet-panel').classList.add('compact');
-
             walletConnected = true;
-
-            addLog(`✅ Кошелёк подключён! Адрес: ${shortAddr} | Игровой ID: ${userGameId}`);
-
-            // Автоматическое переключение на Polygon Mainnet
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0x89' }]
-                });
-            } catch (switchError) {
-                if (switchError.code === 4902) {
-                    await window.ethereum.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: '0x89',
-                            chainName: 'Polygon Mainnet',
-                            nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
-                            rpcUrls: ['https://polygon-rpc.com'],
-                            blockExplorerUrls: ['https://polygonscan.com']
-                        }]
-                    });
-                    addLog("✅ Сеть Polygon Mainnet добавлена автоматически");
-                }
-            }
-
-        } catch (error) {
-            console.error(error);
-            addLog("❌ Ошибка подключения: " + (error.message || "Неизвестная ошибка"));
-        }
+            addLog(`✅ Подключён: ${short} | ID: ${userGameId}`);
+            try { await window.ethereum.request({method: 'wallet_switchEthereumChain', params: [{chainId: '0x89'}]}); }
+            catch (e) { if (e.code === 4902) {
+                await window.ethereum.request({method: 'wallet_addEthereumChain', params: [{
+                    chainId: '0x89', chainName: 'Polygon Mainnet', nativeCurrency: {name:'MATIC',symbol:'MATIC',decimals:18},
+                    rpcUrls: ['https://polygon-rpc.com'], blockExplorerUrls: ['https://polygonscan.com']
+                }]});
+            }}
+        } catch (e) { addLog("❌ Ошибка: " + (e.message || "неизвестно")); }
     }
 
     function depositToContract() {
-        if (!walletConnected) return alert("Сначала подключите кошелёк!");
-        let amt = prompt("Сколько токенов пополнить в смарт-контракт? (1 токен = 10 игровых очков)", "100");
-        if (!amt || isNaN(amt) || amt <= 0) return;
+        if (!walletConnected) return alert("Подключи кошелёк!");
+        let amt = prompt("Сколько токенов внести? (1 = 10 очков)", "100");
+        if (!amt || isNaN(amt) || +amt <= 0) return;
         let add = parseInt(amt);
         contractBal += add;
         players[0].chips += add * 10;
         document.getElementById('contract-balance').innerText = contractBal;
         document.getElementById('my-chips').innerText = players[0].chips;
-        addLog(`💰 Пополнено \( {add} токенов в контракт. + \){add * 10} очков!`);
+        addLog(`+\( {add} токенов → + \){add*10} очков`);
     }
 
     function startKonPhase() {
         document.getElementById('kon-btn').style.display = 'block';
         document.getElementById('game-actions').style.display = 'none';
+        document.getElementById('kon-timer').classList.remove('hidden');
+        document.getElementById('turn-timer').classList.add('hidden');
+
         pot = 0;
         players.forEach(p => { p.konReady = false; p.isFolded = false; p.show = false; p.hand = []; });
-        
-        timeLeft = 30;
-        document.getElementById('timer-countdown').textContent = '30';
-        document.getElementById('progress-circle').style.strokeDashoffset = '515';
-        
-        setTimeout(() => { players[1].konReady = true; addLog("Бот 1 внёс кон"); checkAllKon(); }, 1200);
-        setTimeout(() => { players[2].konReady = true; addLog("Бот 2 внёс кон"); checkAllKon(); }, 2800);
-        setTimeout(() => { players[3].konReady = true; addLog("Бот 3 внёс кон"); checkAllKon(); }, 4500);
+
+        let timeLeft = KON_TIME;
+        document.getElementById('kon-countdown').textContent = timeLeft;
+        document.getElementById('kon-progress').style.strokeDashoffset = 597;
+
+        setTimeout(() => { players[1].konReady = true; addLog("Бот 1 внёс кон"); checkAllKon(); }, 1800);
+        setTimeout(() => { players[2].konReady = true; addLog("Бот 2 внёс кон"); checkAllKon(); }, 3400);
+        setTimeout(() => { players[3].konReady = true; addLog("Бот 3 внёс кон"); checkAllKon(); }, 5200);
 
         konTimerInterval = setInterval(() => {
             timeLeft--;
-            document.getElementById('timer-countdown').textContent = timeLeft;
-            const offset = 515 - (515 * (30 - timeLeft) / 30);
-            document.getElementById('progress-circle').style.strokeDashoffset = offset;
-            
+            document.getElementById('kon-countdown').textContent = timeLeft;
+            const offset = 597 - (597 * (KON_TIME - timeLeft) / KON_TIME);
+            document.getElementById('kon-progress').style.strokeDashoffset = offset;
+
             if (timeLeft <= 0) {
                 clearInterval(konTimerInterval);
                 if (!players[0].konReady) {
-                    addLog("⏰ Время вышло! Вы не внесли кон — автоматический пас.");
+                    addLog("⏰ Кон: время вышло → автоматический пас");
                     players[0].isFolded = true;
                 }
                 autoDeal();
@@ -289,86 +272,119 @@
 
     function payKon() {
         if (players[0].konReady || players[0].chips < 10) return;
-        players[0].chips -= 10;
-        pot += 10;
-        players[0].konReady = true;
+        players[0].chips -= 10; pot += 10; players[0].konReady = true;
         document.getElementById('my-chips').innerText = players[0].chips;
         document.getElementById('total-pot').innerText = "💰 " + pot;
-        addLog("✅ Вы внесли кон (10 очков)");
+        addLog("Вы внесли кон (10)");
         checkAllKon();
     }
 
     function checkAllKon() {
         if (players.every(p => p.konReady)) {
             clearInterval(konTimerInterval);
-            document.getElementById('timer-countdown').textContent = 'ГОТОВО!';
-            setTimeout(autoDeal, 800);
+            document.getElementById('kon-countdown').textContent = 'ГОТОВО';
+            setTimeout(autoDeal, 1000);
         }
     }
 
     function autoDeal() {
+        document.getElementById('kon-timer').classList.add('hidden');
         document.getElementById('kon-btn').style.display = 'none';
-        
+
         let deck = [];
         suits.forEach(s => values.forEach(v => deck.push({v, s:s.s, c:s.c, p: v==='A'?11:10})));
         deck.push({v: 'JK', s: '★', c: 'black', p: 11, isJoker: true});
         deck.sort(() => Math.random() - 0.5);
 
-        players.forEach(p => {
-            p.hand = [deck.pop(), deck.pop(), deck.pop()];
-            p.isBlind = true;
-        });
+        players.forEach(p => { p.hand = [deck.pop(), deck.pop(), deck.pop()]; p.isBlind = true; });
 
         curBet = 10; activeIdx = 0; lastBetterBlind = true;
         document.getElementById('game-actions').style.display = 'flex';
-        addLog("🎴 Все внесли кон! Раздача началась автоматически.");
+        addLog("Раздача началась! Твоя очередь — 60 секунд.");
         updateUI();
+        startTurnTimer();
+    }
+
+    function startTurnTimer() {
+        if (activeIdx !== 0) return;
+        document.getElementById('turn-timer').classList.remove('hidden');
+
+        let timeLeft = TURN_TIME;
+        document.getElementById('turn-countdown').textContent = timeLeft;
+        document.getElementById('turn-progress').style.strokeDashoffset = 597;
+
+        if (turnTimerInterval) clearInterval(turnTimerInterval);
+
+        turnTimerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('turn-countdown').textContent = timeLeft;
+            const offset = 597 - (597 * (TURN_TIME - timeLeft) / TURN_TIME);
+            document.getElementById('turn-progress').style.strokeDashoffset = offset;
+
+            if (timeLeft <= 0) {
+                clearInterval(turnTimerInterval);
+                addLog("⏰ Время хода истекло → автоматический пас");
+                players[0].isFolded = true;
+                document.getElementById('turn-timer').classList.add('hidden');
+                finishRound();
+            }
+        }, 1000);
     }
 
     function gameAction(type) {
         if (activeIdx !== 0) return;
 
+        // Сбрасываем таймер при любом действии
+        if (turnTimerInterval) clearInterval(turnTimerInterval);
+        document.getElementById('turn-timer').classList.add('hidden');
+
         if (type === 'see') {
             players[0].isBlind = false;
-            addLog("Вы посмотрели карты. Теперь ставки ×2.");
+            addLog("Вы посмотрели карты → ставки ×2");
         } else if (type === 'dark') {
             let cost = curBet;
             players[0].chips -= cost; pot += cost;
             lastBetterBlind = true;
-            addLog(`Вы поддержали Тёмный (${cost})`);
+            addLog(`Тёмный ${cost}`);
             nextTurn();
         } else if (type === 'superdark') {
             curBet += raiseAmount;
             let cost = curBet;
             players[0].chips -= cost; pot += cost;
             lastBetterBlind = true;
-            addLog(`Вы сделали ПЕРЕТЁМНЫЙ до ${curBet}`);
+            addLog(`Перетёмный до ${curBet}`);
             nextTurn();
         } else if (type === 'call') {
             let cost = curBet * 2;
             players[0].chips -= cost; pot += cost;
             lastBetterBlind = false;
-            addLog(`Вы поддержали (${cost})`);
+            addLog(`Поддержка ${cost}`);
             nextTurn();
         } else if (type === 'raise') {
             curBet += raiseAmount;
             let cost = curBet * 2;
             players[0].chips -= cost; pot += cost;
             lastBetterBlind = false;
-            addLog(`Вы подняли до ${curBet}`);
+            addLog(`Подъём до ${curBet}`);
             nextTurn();
         } else if (type === 'fold') {
             players[0].isFolded = true;
             finishRound();
+            return;
         }
         updateUI();
     }
 
     function nextTurn() {
         activeIdx = (activeIdx + 1) % 4;
-        if (players[activeIdx].isFolded) { nextTurn(); return; }
+        if (players[activeIdx].isFolded) return nextTurn();
         updateUI();
-        if (activeIdx !== 0) setTimeout(botMove, 800);
+        if (activeIdx === 0) {
+            addLog("Твоя очередь — 60 секунд!");
+            startTurnTimer();
+        } else {
+            setTimeout(botMove, 600 + Math.random() * 800);
+        }
     }
 
     function botMove() {
@@ -380,7 +396,7 @@
             nextTurn();
         } else {
             b.isFolded = true;
-            addLog(`Бот ${activeIdx} спасовал`);
+            addLog(`Бот ${activeIdx} пас`);
             nextTurn();
         }
     }
@@ -410,16 +426,16 @@
             slot.innerHTML = '';
             p.hand.forEach(card => {
                 const div = document.createElement('div');
-                let visible = (i === 0 && !p.isBlind) || p.show;
-                div.className = visible ? `card ${card.c} ${card.isJoker ? 'joker' : ''}` : 'card hidden';
-                if (visible) div.innerText = card.isJoker ? '★' : card.v + card.s;
+                let vis = (i === 0 && !p.isBlind) || p.show;
+                div.className = vis ? `card ${card.c} ${card.isJoker ? 'joker' : ''}` : 'card hidden';
+                if (vis) div.innerText = card.isJoker ? '★' : card.v + card.s;
                 slot.appendChild(div);
             });
 
             const scoreEl = (i === 0) ? document.getElementById('my-score-label') : el.querySelector('.score-label');
             if (scoreEl) {
-                if (p.show) scoreEl.innerText = calculatePoints(p.hand) + " очков";
-                else if (i === 0) scoreEl.innerText = p.isBlind ? "ТЁМНАЯ" : calculatePoints(p.hand) + " очков";
+                if (p.show) scoreEl.innerText = calculatePoints(p.hand) + " очк";
+                else if (i === 0) scoreEl.innerText = p.isBlind ? "ТЁМНАЯ" : calculatePoints(p.hand) + " очк";
                 else scoreEl.innerText = "";
             }
         });
@@ -428,6 +444,9 @@
     }
 
     function finishRound() {
+        if (turnTimerInterval) clearInterval(turnTimerInterval);
+        document.getElementById('turn-timer').classList.add('hidden');
+
         let best = -1, winnerId = -1, winners = [];
         players.forEach((p, i) => {
             p.show = true;
@@ -440,18 +459,16 @@
 
         updateUI();
 
-        const winnerName = winnerId === 0 ? `Вы (ID: ${userGameId || '—'})` : `Бот ${winnerId}`;
         if (winners.length > 1) {
-            addLog("СВАРА! Банк остаётся на кону!", "log-win");
+            addLog("СВАРА! Банк остаётся.", "log-win");
         } else {
             players[winnerId].chips += pot;
-            addLog(`🎉 Раздачу выиграл \( {winnerName} ( \){best} очк.)! Забрал ${pot}`, "log-win");
+            const name = winnerId === 0 ? `Вы (ID:${userGameId||'—'})` : `Бот ${winnerId}`;
+            addLog(`🎉 Выиграл \( {name} ( \){best} очк) → +${pot}`, "log-win");
             pot = 0;
         }
 
-        setTimeout(() => {
-            startKonPhase();
-        }, 2200);
+        setTimeout(startKonPhase, 2800);
     }
 
     window.onload = () => {
