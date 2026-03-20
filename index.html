@@ -2,40 +2,18 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Seka Elite — BNB с кнопкой вскрытия (исправлено)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <title>Seka Elite - BNB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* (стили без изменений, как в предыдущем ответе) */
         :root {
-            --gold: #f1c40f;
-            --gold-dim: rgba(241,196,15,0.15);
-            --green: #27ae60;
-            --dark-green: #1a472a;
-            --card-white: #ffffff;
-            --bg: #0a0a0a;
-            --panel: #111;
-            --border: #2a2a2a;
+            --gold: #f1c40f; --gold-dim: rgba(241,196,15,0.15);
+            --green: #27ae60; --dark-green: #1a472a;
+            --card-white: #ffffff; --bg: #0a0a0a;
+            --panel: #111; --border: #2a2a2a;
         }
         * { box-sizing: border-box; }
-        body {
-            font-family: 'Rajdhani', sans-serif;
-            background: var(--bg);
-            color: white;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .table {
-            position: relative; width: 900px; height: 500px;
-            background: radial-gradient(circle, #2d7a4d 0%, #1a472a 100%);
-            border: 12px solid #3e2723; border-radius: 200px;
-            margin-top: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 100px #000;
-            border-bottom: 20px solid #2d1b18;
-        }
+        body { font-family: 'Rajdhani', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; height: 100vh; overflow: hidden; }
+        .table { position: relative; width: 900px; height: 500px; background: radial-gradient(circle, #2d7a4d 0%, #1a472a 100%); border: 12px solid #3e2723; border-radius: 200px; margin-top: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 100px #000; border-bottom: 20px solid #2d1b18; }
         .pot-display { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
         .pot-display h2 { font-size: 48px; color: var(--gold); margin: 0; text-shadow: 2px 4px 6px #000; font-family: 'Rajdhani', sans-serif; }
         .current-bet-info { font-size: 18px; color: #fff; opacity: 0.8; }
@@ -48,20 +26,11 @@
         .p3 { right: 20px; top: 50%; transform: translateY(-50%); }
         .chips-count { background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 10px; color: var(--gold); font-weight: bold; border: 1px solid var(--gold); margin-top: 5px; display: inline-block; font-family: 'Share Tech Mono', monospace; }
         .card-slot { display: flex; justify-content: center; gap: 5px; margin-top: 10px; height: 75px; }
-        .card {
-            width: 50px; height: 70px; background: var(--card-white); border-radius: 6px;
-            color: #333; position: relative; font-weight: bold; font-size: 18px;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 2px 3px 6px rgba(0,0,0,0.4); border: 1px solid #ccc; font-family: 'Rajdhani', sans-serif;
-        }
+        .card { width: 50px; height: 70px; background: var(--card-white); border-radius: 6px; color: #333; position: relative; font-weight: bold; font-size: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 2px 3px 6px rgba(0,0,0,0.4); border: 1px solid #ccc; font-family: 'Rajdhani', sans-serif; }
         .card.red { color: #e74c3c; }
         .card.hidden { background: linear-gradient(135deg, #2c3e50 25%, #34495e 100%); border: 2px solid #fff; color: transparent; }
         .card.joker { background: #f1c40f; color: #000; border: 2px solid #fff; font-size: 26px; }
-        .controls {
-            margin-top: 20px; display: flex; gap: 12px;
-            background: #1a1a1a; padding: 18px; border-radius: 15px;
-            border: 2px solid #333; z-index: 100; flex-wrap: wrap; justify-content: center;
-        }
+        .controls { margin-top: 20px; display: flex; gap: 12px; background: #1a1a1a; padding: 18px; border-radius: 15px; border: 2px solid #333; z-index: 100; flex-wrap: wrap; justify-content: center; }
         .btn { padding: 12px 24px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-transform: uppercase; transition: 0.2s; font-family: 'Rajdhani', sans-serif; letter-spacing: 1px; }
         .btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
         .btn-kon { background: #f1c40f; color: #000; font-size: 18px; }
@@ -71,837 +40,364 @@
         .btn-call { background: var(--green); color: white; }
         .btn-raise { background: #9b59b6; color: white; }
         .btn-fold { background: #e74c3c; color: white; }
-        .btn-showdown { background: var(--gold); color: #000; font-size: 18px; }
         .btn:disabled { background: #444; cursor: not-allowed; opacity: 0.6; transform: none; }
-        .raise-group { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; }
-        .timer-container { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); width: 220px; height: 220px; z-index: 160; pointer-events: none; }
-        .timer-container.hidden { display: none; }
-        .timer-svg { width: 100%; height: 100%; }
-        .timer-bg { fill: none; stroke: #333; stroke-width: 16; }
-        .timer-progress { fill: none; stroke: #27ae60; stroke-width: 16; stroke-linecap: round; transition: stroke-dashoffset 0.4s linear; }
-        .timer-text { font-size: 52px; font-weight: bold; fill: #fff; text-anchor: middle; dominant-baseline: middle; font-family: 'Share Tech Mono', monospace; }
-        .timer-label { font-size: 16px; fill: #ddd; text-anchor: middle; dominant-baseline: middle; font-family: 'Rajdhani', sans-serif; letter-spacing: 2px; }
         #log { position: fixed; right: 20px; top: 20px; width: 280px; height: 220px; background: rgba(0,0,0,0.8); border: 1px solid #333; padding: 10px; font-size: 13px; overflow-y: auto; color: #bbb; border-radius: 10px; font-family: 'Share Tech Mono', monospace; }
         .log-win { color: var(--gold); font-weight: bold; }
         .score-label { color: var(--gold); font-weight: bold; height: 20px; margin-bottom: 5px; text-shadow: 1px 1px 3px #000; }
-        #cabinet-btn {
-            position: absolute; top: 15px; left: 15px; z-index: 200;
-            background: rgba(15,15,15,0.97);
-            padding: 11px 18px; border-radius: 10px;
-            border: 1px solid #333;
-            color: #ccc; font-size: 14px; font-weight: bold;
-            cursor: pointer; transition: 0.25s;
-            font-family: 'Rajdhani', sans-serif;
-            letter-spacing: 1px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        #cabinet-btn:hover { border-color: var(--gold); color: var(--gold); }
-        #wallet-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; transition: 0.3s; }
+        .dealer-chip { position: absolute; background: white; color: black; font-weight: bold; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; top: -10px; right: -10px; font-size: 12px; border: 2px solid #333; }
+        
+        /* Стили Кабинета (сокращены для экономии места, логика сохранена) */
+        #cabinet-btn { position: absolute; top: 15px; left: 15px; z-index: 200; background: rgba(15,15,15,0.97); padding: 11px 18px; border-radius: 10px; border: 1px solid #333; color: #ccc; font-size: 14px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        #wallet-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; }
         #wallet-dot.connected { background: #27ae60; box-shadow: 0 0 6px #27ae60; }
-        .modal {
-            display: none; position: fixed; z-index: 300; left: 0; top: 0;
-            width: 100%; height: 100%; background-color: rgba(0,0,0,0.88);
-            align-items: center; justify-content: center;
-        }
-        .cabinet-panel {
-            background: #0f0f0f;
-            border: 1px solid #222;
-            border-radius: 18px;
-            width: 480px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 60px rgba(0,0,0,0.9);
-        }
-        .cabinet-header {
-            background: linear-gradient(135deg, #111 0%, #1a1a1a 100%);
-            border-bottom: 1px solid #222;
-            padding: 22px 28px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .cabinet-header h2 {
-            margin: 0; font-size: 22px; color: #fff;
-            font-family: 'Rajdhani', sans-serif; letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-        .close-btn { color: #444; font-size: 26px; font-weight: bold; cursor: pointer; transition: 0.2s; line-height: 1; }
-        .close-btn:hover { color: #fff; }
-        .cabinet-body { padding: 24px 28px; }
-        .wallet-card {
-            background: #161616;
-            border: 1px solid #222;
-            border-radius: 12px;
-            padding: 18px 20px;
-            margin-bottom: 16px;
-            position: relative;
-            overflow: hidden;
-        }
-        .wallet-card::before {
-            content: '';
-            position: absolute; top: 0; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
-            opacity: 0;
-            transition: 0.4s;
-        }
-        .wallet-card.active::before { opacity: 1; }
-        .wallet-label { font-size: 11px; color: #555; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; font-family: 'Share Tech Mono', monospace; }
-        .wallet-value { font-size: 15px; color: #888; font-family: 'Share Tech Mono', monospace; word-break: break-all; }
-        .wallet-value.gold { color: var(--gold); }
-        .wallet-row { display: flex; gap: 12px; margin-bottom: 16px; }
-        .wallet-mini { flex: 1; background: #161616; border: 1px solid #1e1e1e; border-radius: 10px; padding: 14px 16px; }
-        .mini-label { font-size: 10px; color: #444; letter-spacing: 2px; text-transform: uppercase; font-family: 'Share Tech Mono', monospace; margin-bottom: 4px; }
-        .mini-value { font-size: 22px; font-weight: 700; color: var(--gold); font-family: 'Share Tech Mono', monospace; }
-        .mini-sub { font-size: 11px; color: #444; margin-top: 2px; font-family: 'Share Tech Mono', monospace; }
-        .converter-row {
-            display: flex; align-items: center; gap: 10px;
-            background: #111; border: 1px solid #1e1e1e;
-            border-radius: 10px; padding: 10px 14px;
-            margin-bottom: 16px;
-        }
-        .converter-input {
-            flex: 1; background: transparent; border: none; outline: none;
-            color: #fff; font-size: 20px; font-family: 'Share Tech Mono', monospace;
-        }
-        .converter-unit { color: #555; font-size: 13px; font-family: 'Share Tech Mono', monospace; }
-        .converter-arrow { color: #333; font-size: 18px; }
-        .converter-result { color: var(--gold); font-size: 20px; font-family: 'Share Tech Mono', monospace; min-width: 80px; text-align: right; }
-        .cab-actions { display: flex; gap: 10px; margin-bottom: 20px; }
-        .cab-btn {
-            flex: 1; padding: 12px; border: none; border-radius: 10px;
-            font-size: 14px; font-weight: 700; cursor: pointer;
-            font-family: 'Rajdhani', sans-serif; letter-spacing: 1px;
-            text-transform: uppercase; transition: 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-        }
-        .cab-btn:hover:not(:disabled) { filter: brightness(1.15); transform: translateY(-1px); }
-        .cab-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-        .cab-btn-connect { background: #27ae60; color: #fff; }
-        .cab-btn-deposit { background: #8e44ad; color: #fff; }
-        .cab-btn-withdraw { background: #e67e22; color: #fff; }
-        .cab-btn-bonus { background: var(--gold); color: #000; }
-        .tx-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-        .tx-title { font-size: 11px; color: #444; letter-spacing: 2px; text-transform: uppercase; font-family: 'Share Tech Mono', monospace; }
-        .tx-clear { font-size: 11px; color: #333; cursor: pointer; transition: 0.2s; font-family: 'Share Tech Mono', monospace; }
-        .tx-clear:hover { color: #888; }
-        .tx-list { max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
-        .tx-list::-webkit-scrollbar { width: 4px; }
-        .tx-list::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
-        .tx-item {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #0d0d0d; border-radius: 8px; padding: 9px 12px;
-            border-left: 3px solid #222;
-            font-family: 'Share Tech Mono', monospace;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-        .tx-item.deposit { border-left-color: #27ae60; }
-        .tx-item.withdraw { border-left-color: #e67e22; }
-        .tx-item.bonus { border-left-color: var(--gold); }
-        .tx-item.win { border-left-color: var(--gold); }
-        .tx-label { font-size: 12px; color: #777; }
-        .tx-amount { font-size: 13px; font-weight: bold; }
-        .tx-amount.plus { color: #27ae60; }
-        .tx-amount.minus { color: #e67e22; }
-        .tx-time { font-size: 10px; color: #333; }
-        .tx-empty { text-align: center; color: #333; font-size: 12px; padding: 20px; font-family: 'Share Tech Mono', monospace; }
-        .amount-picker { display: none; flex-direction: column; gap: 10px; background: #111; border: 1px solid #1e1e1e; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-        .amount-picker.visible { display: flex; }
-        .amount-picker-title { font-size: 12px; color: #555; letter-spacing: 1px; font-family: 'Share Tech Mono', monospace; margin-bottom: 4px; }
-        .amount-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .amount-chip {
-            padding: 8px; background: #1a1a1a; border: 1px solid #2a2a2a;
-            border-radius: 7px; text-align: center; cursor: pointer;
-            font-size: 13px; color: #888; transition: 0.2s;
-            font-family: 'Share Tech Mono', monospace;
-        }
-        .amount-chip:hover { border-color: var(--gold); color: var(--gold); }
-        .amount-chip.selected { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
-        .amount-confirm { display: flex; gap: 8px; }
-        .amount-confirm .cab-btn { flex: 1; }
+        .modal { display: none; position: fixed; z-index: 300; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.88); align-items: center; justify-content: center; }
+        .cabinet-panel { background: #0f0f0f; border: 1px solid #222; border-radius: 18px; width: 480px; position: relative; padding: 20px; }
+        .cab-btn { padding: 10px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; font-family: 'Rajdhani'; font-weight: bold; text-transform: uppercase;}
+        .cab-btn-deposit { background: #8e44ad; } .cab-btn-withdraw { background: #e67e22; } .cab-btn-connect { background: #27ae60; }
     </style>
 </head>
 <body>
-    <!-- Кнопка кабинета -->
-    <div id="cabinet-btn">
-        <span id="wallet-dot"></span>
-        <span id="btn-label">👤 КАБИНЕТ</span>
-    </div>
 
-    <!-- Модал кабинета -->
+    <button id="cabinet-btn" onclick="openCabinet()">
+        <div id="wallet-dot"></div> <span id="btn-label">👤 КАБИНЕТ (BNB)</span>
+    </button>
+
     <div id="cabinet-modal" class="modal">
         <div class="cabinet-panel">
-            <div class="cabinet-header">
-                <h2>⬡ Личный кабинет</h2>
-                <span class="close-btn" onclick="closeCabinet()">✕</span>
-            </div>
-            <div class="cabinet-body">
-                <div id="wallet-card" class="wallet-card">
-                    <div class="wallet-label">BNB Chain Wallet</div>
-                    <div id="wallet-status" class="wallet-value">Не подключён</div>
-                </div>
-                <div class="wallet-row">
-                    <div class="wallet-mini">
-                        <div class="mini-label">Смарт-контракт</div>
-                        <div id="contract-balance" class="mini-value">0.00</div>
-                        <div class="mini-sub">BNB</div>
-                    </div>
-                    <div class="wallet-mini">
-                        <div class="mini-label">Игровые очки</div>
-                        <div id="cabinet-chips" class="mini-value">0</div>
-                        <div class="mini-sub">=<span id="chips-in-matic">0.00</span> BNB</div>
-                    </div>
-                    <div class="wallet-mini">
-                        <div class="mini-label">Игровой ID</div>
-                        <div id="game-id" class="mini-value">—</div>
-                        <div class="mini-sub">сессия</div>
-                    </div>
-                </div>
-                <div id="converter-block" style="display: none;" class="converter-row">
-                    <input type="number" id="conv-input" class="converter-input" placeholder="0.00" value="0.01" step="0.01" min="0" oninput="updateConverter(this.value)">
-                    <span class="converter-unit">BNB</span>
-                    <span class="converter-arrow">→</span>
-                    <span id="conv-result" class="converter-result">1000</span>
-                    <span class="converter-unit">очков</span>
-                </div>
-                <div id="cab-actions" class="cab-actions">
-                    <button id="connect-btn" class="cab-btn cab-btn-connect" onclick="connectWallet()">🔗 Подключить</button>
-                    <button id="deposit-btn" class="cab-btn cab-btn-deposit" onclick="openPicker('deposit')" disabled>↓ Внести</button>
-                    <button id="withdraw-btn" class="cab-btn cab-btn-withdraw" onclick="openPicker('withdraw')" disabled>↑ Вывести</button>
-                    <button id="bonus-btn" class="cab-btn cab-btn-bonus" onclick="getBonus()">🎁 Бонус</button>
-                </div>
-                <div id="amount-picker" class="amount-picker">
-                    <div id="picker-title" class="amount-picker-title">Выберите сумму</div>
-                    <div id="picker-grid" class="amount-grid"></div>
-                    <div class="amount-confirm">
-                        <button class="cab-btn" onclick="cancelPicker()">Отмена</button>
-                        <button id="confirm-btn" class="cab-btn cab-btn-deposit" onclick="confirmAction()">Подтвердить</button>
-                    </div>
-                </div>
-                <div>
-                    <div class="tx-header">
-                        <span class="tx-title">История транзакций</span>
-                        <span class="tx-clear" onclick="clearHistory()">очистить</span>
-                    </div>
-                    <div id="tx-list" class="tx-list">
-                        <div class="tx-empty">транзакций пока нет</div>
-                    </div>
-                </div>
+            <h2 style="margin-top:0;">Личный кабинет <span style="float:right; cursor:pointer;" onclick="closeCabinet()">✕</span></h2>
+            <p>Wallet: <span id="wallet-status" style="color:#888;">Не подключён</span></p>
+            <p>Контракт: <span id="contract-balance" style="color:var(--gold); font-size: 18px;">0.0000</span> BNB</p>
+            <p>Очки: <span id="cabinet-chips" style="color:var(--gold); font-size: 18px;">0</span> (= <span id="chips-in-bnb">0.0000</span> BNB)</p>
+            
+            <div id="cab-actions" style="display:flex; gap:10px; margin-top:20px;">
+                <button id="connect-btn" class="cab-btn cab-btn-connect" onclick="connectWallet()">Подключить BNB</button>
+                <button id="deposit-btn" class="cab-btn cab-btn-deposit" onclick="promptDeposit()" disabled>Внести BNB</button>
+                <button id="withdraw-btn" class="cab-btn cab-btn-withdraw" onclick="promptWithdraw()" disabled>Вывести</button>
+                <button id="bonus-btn" class="cab-btn" onclick="getBonus()">Бонус</button>
             </div>
         </div>
     </div>
 
-    <!-- Таймеры -->
-    <div id="kon-timer" class="timer-container hidden">
-        <svg viewBox="0 0 220 220" class="timer-svg">
-            <circle cx="110" cy="110" r="95" class="timer-bg" />
-            <circle id="kon-progress" cx="110" cy="110" r="95" class="timer-progress" stroke-dasharray="597" stroke-dashoffset="597" transform="rotate(-90 110 110)" />
-            <text x="110" y="120" class="timer-text" id="kon-countdown">60</text>
-            <text x="110" y="160" class="timer-label">СЕК ДЛЯ КОН</text>
-        </svg>
-    </div>
-    <div id="turn-timer" class="timer-container hidden">
-        <svg viewBox="0 0 220 220" class="timer-svg">
-            <circle cx="110" cy="110" r="95" class="timer-bg" />
-            <circle id="turn-progress" cx="110" cy="110" r="95" class="timer-progress" stroke-dasharray="597" stroke-dashoffset="597" transform="rotate(-90 110 110)" />
-            <text x="110" y="120" class="timer-text" id="turn-countdown">60</text>
-            <text x="110" y="160" class="timer-label">ТВОЙ ХОД</text>
-        </svg>
-    </div>
-    <div id="showdown-timer" class="timer-container hidden">
-        <svg viewBox="0 0 220 220" class="timer-svg">
-            <circle cx="110" cy="110" r="95" class="timer-bg" />
-            <circle id="showdown-progress" cx="110" cy="110" r="95" class="timer-progress" stroke-dasharray="597" stroke-dashoffset="597" transform="rotate(-90 110 110)" />
-            <text x="110" y="120" class="timer-text" id="showdown-countdown">30</text>
-            <text x="110" y="160" class="timer-label">ВСКРЫТИЕ</text>
-        </svg>
-    </div>
-
-    <!-- Лог -->
-    <div id="log">Добро пожаловать в Seka Elite!<br>Откройте кабинет, чтобы пополнить баланс.</div>
-
-    <!-- Стол -->
     <div class="table">
         <div class="pot-display">
             <h2 id="total-pot">💰 0</h2>
             <div class="current-bet-info">Ставка: <span id="current-bet">10</span></div>
+            <div class="current-bet-info" id="svara-info" style="color:#e74c3c; display:none;">СВАРА НА КОНУ</div>
         </div>
-        <div id="player-1" class="player-block p1"><div>Бот 1</div><span class="chips-count">1000</span><div class="card-slot"></div><div class="score-label"></div></div>
-        <div id="player-2" class="player-block p2"><div>Бот 2</div><span class="chips-count">1000</span><div class="card-slot"></div><div class="score-label"></div></div>
-        <div id="player-3" class="player-block p3"><div>Бот 3</div><span class="chips-count">1000</span><div class="card-slot"></div><div class="score-label"></div></div>
-        <div id="player-0" class="player-block p0"><div>ВЫ</div><span id="my-chips" class="chips-count">1000</span><div class="card-slot"></div><div id="my-score-label" class="score-label"></div></div>
+
+        <div id="player-1" class="player-block p1"><div class="score-label"></div><div>Бот 1</div><div class="chips-count">1000</div><div class="card-slot"></div></div>
+        <div id="player-2" class="player-block p2"><div class="score-label"></div><div>Бот 2</div><div class="chips-count">1000</div><div class="card-slot"></div></div>
+        <div id="player-3" class="player-block p3"><div class="score-label"></div><div>Бот 3</div><div class="chips-count">1000</div><div class="card-slot"></div></div>
+        <div id="player-0" class="player-block p0"><div class="score-label" id="my-score-label"></div><div>ВЫ</div><div class="chips-count" id="my-chips">1000</div><div class="card-slot"></div></div>
     </div>
 
-    <!-- Панель управления -->
     <div class="controls">
-        <button id="kon-btn" class="btn btn-kon" onclick="payKon()" style="display: block;">💰 ВНЕСТИ КОН (10 очков)</button>
-        <div id="game-actions" style="display: none; gap: 12px; flex-wrap: wrap; align-items: center;">
-            <button id="btn-see" class="btn btn-see" onclick="gameAction('see')">👀 Глаза</button>
-            <button id="btn-dark" class="btn btn-dark" onclick="gameAction('dark')" style="display: none;">Тёмный</button>
-            <div id="superdark-group" class="raise-group" style="display: none;">
-                <button class="btn btn-superdark" onclick="gameAction('superdark')">Перетёмный</button>
-                <span>+<span id="raise-amount-display">20</span></span>
-            </div>
-            <button id="btn-call" class="btn btn-call" onclick="gameAction('call')" style="display: none;">Поддержать</button>
-            <div id="normal-raise-group" class="raise-group" style="display: none;">
-                <button class="btn btn-raise" onclick="gameAction('raise')">Поднять</button>
-                <span>+<span id="raise-amount-display2">20</span></span>
-            </div>
-            <button class="btn btn-fold" onclick="gameAction('fold')">Пас</button>
-            <button id="btn-showdown" class="btn btn-showdown" onclick="showdown()" style="display: none;">🃏 Открыть карты</button>
-        </div>
-        <div class="raise-group">
-            <span>+<span id="raise-amount-display">20</span></span>
-            <input type="range" min="10" max="200" step="10" value="20" oninput="updateRaiseAmount(this.value)">
+        <button id="kon-btn" class="btn btn-kon" onclick="payKon()">Внести КОН (10)</button>
+        <div id="game-actions" style="display:none; gap:10px;">
+            <button class="btn btn-see" id="btn-see" onclick="gameAction('see')">👀 Карты</button>
+            <button class="btn btn-dark" id="btn-dark" onclick="gameAction('dark')">Тёмная</button>
+            <button class="btn btn-superdark" id="btn-superdark" onclick="gameAction('superdark')">Перетёмная</button>
+            <button class="btn btn-call" id="btn-call" onclick="gameAction('call')">Поддержать</button>
+            <button class="btn btn-raise" id="btn-raise" onclick="gameAction('raise')">Поднять (+20)</button>
+            <button class="btn btn-fold" id="btn-fold" onclick="gameAction('fold')">Пас</button>
         </div>
     </div>
+
+    <div id="log">Добро пожаловать в Seka Elite (BSC Testnet)!<br>Кон = 0.0001 BNB (10 очков).</div>
 
     <script>
-        // ==================== ИГРОВОЕ СОСТОЯНИЕ ====================
         const suits = [{s:'♥', c:'red'}, {s:'♦', c:'red'}, {s:'♣', c:'black'}, {s:'♠', c:'black'}];
         const values = ['10', 'J', 'Q', 'K', 'A'];
+        
         let players = [
-            {id: 0, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false},
-            {id: 1, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false},
-            {id: 2, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false},
-            {id: 3, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false}
+            {id: 0, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false, isSvaraEligible: true},
+            {id: 1, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false, isSvaraEligible: true},
+            {id: 2, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false, isSvaraEligible: true},
+            {id: 3, chips: 1000, hand: [], isFolded: false, isBlind: true, show: false, konReady: false, isSvaraEligible: true}
         ];
-        let pot = 0;
+
+        let pot = 0, svaraPot = 0, svaraFee = 0;
         let curBet = 10;
-        let activeIdx = 0;          // текущий игрок, чья очередь
-        let dealer = 0;             // кто сдаёт (первый ход после кона)
-        let raiseAmount = 20;
-        let konTimerInterval = null, turnTimerInterval = null, showdownTimerInterval = null;
-        const KON_TIME = 60, TURN_TIME = 60, SHOWDOWN_TIME = 30;
-        let showdownActive = false;  // фаза вскрытия
+        let activeIdx = 0, dealerIdx = 3; // По умолчанию сдаёт Бот 3, ходит Игрок 0
+        let actionsInRound = 0;
+        
+        // 1 BNB = 100,000 очков (0.0001 BNB = 10 очков = 1 Кон)
+        const RATE = 100000; 
+        let walletConnected = false, contractBal = 0.00;
 
-        // ==================== КАБИНЕТ (BNB) ====================
-        let walletConnected = false;
-        let walletAddress = null;
-        let userGameId = null;
-        let contractBal = 0.00;
-        let bonusReceived = false;
-        let txHistory = [];
-        let pickerMode = null;
-        let pickerSelected = null;
-        const RATE = 100000; // 1 BNB = 100 000 очков
-
-        const DEPOSIT_PRESETS = [0.0001, 0.001, 0.01, 0.1, 0.5, 1, 2, 5];
-        const WITHDRAW_PRESETS_PTS = [1000, 5000, 10000, 50000, 100000, 200000];
-
-        // ==================== ФУНКЦИИ КАБИНЕТА ====================
-        function openCabinet() {
-            document.getElementById('cabinet-modal').style.display = 'flex';
-            refreshCabinetUI();
-        }
-        function closeCabinet() {
-            document.getElementById('cabinet-modal').style.display = 'none';
-            cancelPicker();
-        }
-        function refreshCabinetUI() {
+        // --- ЛОГИКА КАБИНЕТА ---
+        function openCabinet() { document.getElementById('cabinet-modal').style.display = 'flex'; updateCabUI(); }
+        function closeCabinet() { document.getElementById('cabinet-modal').style.display = 'none'; }
+        
+        function updateCabUI() {
             document.getElementById('contract-balance').innerText = contractBal.toFixed(4);
-            document.getElementById('cabinet-chips').innerText = players[0].chips.toLocaleString();
-            let bnbFromChips = (players[0].chips / RATE).toFixed(4);
-            document.getElementById('chips-in-matic').innerText = bnbFromChips;
-            const conv = document.getElementById('conv-input');
-            if (conv.value) updateConverter(conv.value);
-            renderTxHistory();
+            document.getElementById('cabinet-chips').innerText = players[0].chips;
+            document.getElementById('chips-in-bnb').innerText = (players[0].chips / RATE).toFixed(4);
         }
-        function updateConverter(val) {
-            const bnb = parseFloat(val) || 0;
-            const pts = Math.floor(bnb * RATE);
-            document.getElementById('conv-result').innerText = pts.toLocaleString();
-        }
+
         async function connectWallet() {
-            if (walletConnected) return;
-            if (!window.ethereum) { alert("MetaMask не найден!"); return; }
+            if (!window.ethereum) return alert("Установите MetaMask!");
             try {
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                if (!accounts?.length) { addLog("❌ Подключение отклонено"); return; }
-                walletAddress = accounts[0];
-                userGameId = Math.floor(100000 + Math.random() * 900000);
-                const short = walletAddress.slice(0,6) + '...' + walletAddress.slice(-4);
-                document.getElementById('wallet-status').innerText = short;
+                const walletAddress = accounts[0];
+                
+                // Переключение на BSC Testnet (0x61)
+                try {
+                    await window.ethereum.request({method: 'wallet_switchEthereumChain', params: [{chainId: '0x61'}]});
+                } catch (e) {
+                    if (e.code === 4902) {
+                        await window.ethereum.request({method: 'wallet_addEthereumChain', params: [{
+                            chainId: '0x61', chainName: 'BSC Testnet',
+                            nativeCurrency: {name:'BNB', symbol:'BNB', decimals:18},
+                            rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545/']
+                        }]});
+                    }
+                }
+                
+                document.getElementById('wallet-status').innerText = walletAddress.slice(0,6) + '...' + walletAddress.slice(-4);
                 document.getElementById('wallet-status').style.color = 'var(--gold)';
-                document.getElementById('game-id').innerText = '#' + userGameId;
-                document.getElementById('wallet-card').classList.add('active');
                 document.getElementById('wallet-dot').classList.add('connected');
-                document.getElementById('btn-label').innerText = short;
-                document.getElementById('converter-block').style.display = 'flex';
                 document.getElementById('connect-btn').style.display = 'none';
                 document.getElementById('deposit-btn').disabled = false;
                 document.getElementById('withdraw-btn').disabled = false;
                 walletConnected = true;
-                addLog(`✅ Кошелёк подключён: ${short}`);
-                addTx('connect', `Подключён: ${short}`, 0, 0);
-                try {
-                    await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] });
-                } catch (e) {
-                    if (e.code === 4902) {
-                        await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{
-                            chainId: '0x38', chainName: 'BNB Smart Chain',
-                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                            blockExplorerUrls: ['https://bscscan.com/']
-                        }] });
-                    }
-                }
-                refreshCabinetUI();
-            } catch (e) { addLog("❌ Ошибка: " + (e.message || "неизвестно")); }
+                addLog(`✅ Подключен BSC кошелек`);
+            } catch (e) { addLog("❌ Ошибка подключения: " + e.message); }
         }
-        function openPicker(mode) {
-            if (!walletConnected) { alert("Сначала подключите кошелёк!"); return; }
-            pickerMode = mode; pickerSelected = null;
-            const picker = document.getElementById('amount-picker');
-            const grid = document.getElementById('picker-grid');
-            const title = document.getElementById('picker-title');
-            const confirmBtn = document.getElementById('confirm-btn');
-            grid.innerHTML = '';
-            if (mode === 'deposit') {
-                title.innerText = 'Сумма для внесения (BNB) → очки';
-                confirmBtn.className = 'cab-btn cab-btn-deposit'; confirmBtn.innerText = '↓ Внести';
-                DEPOSIT_PRESETS.forEach(v => {
-                    const chip = document.createElement('div');
-                    chip.className = 'amount-chip';
-                    chip.innerHTML = `<div>${v} BNB</div><div style="font-size:9px;color:#555;">=&nbsp;${v*RATE} очк</div>`;
-                    chip.onclick = () => selectChip(chip, v);
-                    grid.appendChild(chip);
-                });
-            } else {
-                const maxWithdraw = players[0].chips;
-                title.innerText = `Вывести очки (доступно: ${maxWithdraw.toLocaleString()})`;
-                confirmBtn.className = 'cab-btn cab-btn-withdraw'; confirmBtn.innerText = '↑ Вывести';
-                WITHDRAW_PRESETS_PTS.filter(v => v <= maxWithdraw + 1).forEach(v => {
-                    const bnb = (v / RATE).toFixed(4);
-                    const chip = document.createElement('div');
-                    chip.className = 'amount-chip' + (v > maxWithdraw ? ' disabled' : '');
-                    chip.innerHTML = `<div>${v.toLocaleString()} оч</div><div style="font-size:9px;color:#555;">→&nbsp;${bnb}&nbsp;BNB</div>`;
-                    if (v <= maxWithdraw) chip.onclick = () => selectChip(chip, v);
-                    else chip.style.opacity = '0.3';
-                    grid.appendChild(chip);
-                });
+
+        function promptDeposit() {
+            let val = prompt("Введите сумму депозита в BNB (например 0.01):", "0.01");
+            if(val && !isNaN(val)) {
+                let pts = parseFloat(val) * RATE;
+                contractBal += parseFloat(val);
+                players[0].chips += pts;
+                addLog(`💰 Внесено ${val} BNB -> +${pts} очков`);
+                updateCabUI(); updateUI();
             }
-            document.getElementById('cab-actions').style.display = 'none';
-            picker.classList.add('visible');
         }
-        function selectChip(el, val) {
-            document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected'); pickerSelected = val;
+
+        function promptWithdraw() {
+            let pts = prompt("Сколько очков вывести? (100 000 = 1 BNB)", players[0].chips);
+            if(pts && !isNaN(pts) && pts <= players[0].chips) {
+                let bnb = pts / RATE;
+                players[0].chips -= pts;
+                contractBal = Math.max(0, contractBal - bnb);
+                addLog(`💸 Выведено ${pts} очков -> ${bnb.toFixed(4)} BNB`);
+                updateCabUI(); updateUI();
+            } else { alert("Некорректная сумма!"); }
         }
-        function cancelPicker() {
-            document.getElementById('amount-picker').classList.remove('visible');
-            document.getElementById('cab-actions').style.display = 'flex';
-            pickerMode = null; pickerSelected = null;
-        }
-        function confirmAction() {
-            if (!pickerSelected) { alert("Выберите сумму!"); return; }
-            if (pickerMode === 'deposit') doDeposit(pickerSelected);
-            else if (pickerMode === 'withdraw') doWithdraw(pickerSelected);
-            cancelPicker();
-        }
-        function doDeposit(bnbAmount) {
-            const pointsEarned = Math.floor(bnbAmount * RATE);
-            contractBal += bnbAmount;
-            players[0].chips += pointsEarned;
-            addTx('deposit', `Внесено ${bnbAmount} BNB`, bnbAmount, pointsEarned);
-            addLog(`💰 Внесено ${bnbAmount} BNB → +${pointsEarned} очков`);
-            refreshCabinetUI(); updateUI();
-        }
-        function doWithdraw(withdrawPoints) {
-            if (withdrawPoints > players[0].chips) { alert("Недостаточно очков!"); return; }
-            const bnbOut = withdrawPoints / RATE;
-            players[0].chips -= withdrawPoints;
-            contractBal = Math.max(0, contractBal - bnbOut);
-            addTx('withdraw', `Выведено ${withdrawPoints} очк`, bnbOut, -withdrawPoints);
-            addLog(`💸 ${withdrawPoints} очков → ${bnbOut.toFixed(4)} BNB на кошелёк`);
-            refreshCabinetUI(); updateUI();
-        }
+
         function getBonus() {
-            if (bonusReceived) { alert("Вы уже получали приветственный бонус!"); return; }
-            players[0].chips += 500;
-            bonusReceived = true;
+            players[0].chips += 1000; 
             document.getElementById('bonus-btn').disabled = true;
-            document.getElementById('bonus-btn').innerText = '✓ Получен';
-            addTx('bonus', 'Приветственный бонус', 0, 500);
-            addLog("🎁 Приветственный бонус: +500 очков!");
-            refreshCabinetUI(); updateUI();
-        }
-        function addTx(type, label, bnb, pts) {
-            const now = new Date();
-            const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
-            txHistory.unshift({type, label, bnb, pts, time});
-            if (txHistory.length > 50) txHistory.pop();
-            renderTxHistory();
-        }
-        function renderTxHistory() {
-            const list = document.getElementById('tx-list');
-            if (!txHistory.length) { list.innerHTML = '<div class="tx-empty">транзакций пока нет</div>'; return; }
-            list.innerHTML = txHistory.map(tx => {
-                let amountHtml = '';
-                if (tx.type === 'deposit') amountHtml = `<span class="tx-amount plus">+${tx.pts} оч</span>`;
-                else if (tx.type === 'withdraw') amountHtml = `<span class="tx-amount minus">-${Math.abs(tx.pts)} оч</span>`;
-                else if (tx.type === 'bonus') amountHtml = `<span class="tx-amount plus">+${tx.pts} оч</span>`;
-                else if (tx.type === 'win') amountHtml = `<span class="tx-amount plus">+${tx.pts} оч</span>`;
-                else if (tx.type === 'connect') amountHtml = `<span class="tx-amount" style="color:#555;">—</span>`;
-                return `<div class="tx-item ${tx.type}"><span class="tx-label">${tx.label}</span><span style="display:flex;align-items:center;gap:10px;">${amountHtml}<span class="tx-time">${tx.time}</span></span></div>`;
-            }).join('');
-        }
-        function clearHistory() { txHistory = []; renderTxHistory(); }
-        function addLog(msg, type = '') {
-            document.getElementById('log').innerHTML = `<div class="${type}">${msg}</div>` + document.getElementById('log').innerHTML;
+            addLog("🎁 Бонус 1000 очков получен!");
+            updateCabUI(); updateUI();
         }
 
-        // ==================== ИГРОВЫЕ ФУНКЦИИ ====================
+        function addLog(msg, cls='') {
+            const l = document.getElementById('log');
+            l.innerHTML = `<div class="${cls}">${msg}</div>` + l.innerHTML;
+        }
+
+        // --- ПРАВИЛА И ОЧКИ ---
         function calculatePoints(hand) {
-            let hasJoker = hand.some(c => c.isJoker);
             let pure = hand.filter(c => !c.isJoker);
-            let aces = pure.filter(c => c.v === 'A').length;
-            if (aces === 3 || (aces === 2 && hasJoker)) return 33;
-            if (aces === 2 || (aces === 1 && hasJoker)) return 22;
-            let suitsSum = {'♥':0, '♦':0, '♣':0, '♠':0, '★':0};
+            let jokers = hand.length - pure.length;
+
+            // Проверка на Тройку
+            let isTriplet = false;
+            if (hand.length === 3) {
+                if (pure.length <= 1) isTriplet = true;
+                else if (pure.every(c => c.v === pure[0].v)) isTriplet = true;
+            }
+
+            if (isTriplet) {
+                let val = pure.length > 0 ? pure[0].v : 'A';
+                return (val === 'A') ? 33 : 30; // 3 Туза = 33, остальные тройки = 30
+            }
+
+            // Масти (Сумма очков одной масти)
+            let suitsSum = {'♥':0, '♦':0, '♣':0, '♠':0};
             pure.forEach(c => suitsSum[c.s] += c.p);
-            let maxSuit = Math.max(...Object.values(suitsSum)) + (hasJoker ? 11 : 0);
-            let counts = {};
-            pure.forEach(c => counts[c.v] = (counts[c.v] || 0) + 1);
-            let triplet = 0;
-            for (let v in counts) if (counts[v] === 3 || (counts[v] === 2 && hasJoker)) triplet = 30;
-            return Math.max(maxSuit, triplet);
-        }
-        function hasThreeAces(hand) {
-            let hasJoker = hand.some(c => c.isJoker);
-            let pure = hand.filter(c => !c.isJoker);
-            let aces = pure.filter(c => c.v === 'A').length;
-            return aces === 3 || (aces === 2 && hasJoker);
+            let maxSuit = Math.max(...Object.values(suitsSum));
+            
+            return maxSuit + (jokers * 11);
         }
 
-        // ==================== ФАЗА КОНА ====================
+        // --- ИГРОВОЙ ЦИКЛ ---
         function startKonPhase() {
-            showdownActive = false;
             document.getElementById('kon-btn').style.display = 'block';
             document.getElementById('game-actions').style.display = 'none';
-            document.getElementById('kon-timer').classList.remove('hidden');
-            document.getElementById('turn-timer').classList.add('hidden');
-            document.getElementById('showdown-timer').classList.add('hidden');
-            document.getElementById('btn-showdown').style.display = 'none';
-            // Если pot не 0 (например, после ничьи), мы не должны сюда попадать — но для безопасности обнулим?
-            // В нашей логике после ничьи вызывается continueAfterDraw, а не startKonPhase. Поэтому здесь pot всегда 0.
-            players.forEach(p => { p.konReady = false; p.isFolded = false; p.show = false; p.hand = []; });
-            let timeLeft = KON_TIME;
-            document.getElementById('kon-countdown').textContent = timeLeft;
-            document.getElementById('kon-progress').style.strokeDashoffset = 597;
-            setTimeout(() => { if (!players[1].konReady) { players[1].konReady = true; addLog("Бот 1 внёс кон"); checkAllKon(); } }, 1800);
-            setTimeout(() => { if (!players[2].konReady) { players[2].konReady = true; addLog("Бот 2 внёс кон"); checkAllKon(); } }, 3400);
-            setTimeout(() => { if (!players[3].konReady) { players[3].konReady = true; addLog("Бот 3 внёс кон"); checkAllKon(); } }, 5200);
-            konTimerInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('kon-countdown').textContent = timeLeft;
-                const offset = 597 - (597 * (KON_TIME - timeLeft) / KON_TIME);
-                document.getElementById('kon-progress').style.strokeDashoffset = offset;
-                if (timeLeft <= 0) {
-                    clearInterval(konTimerInterval);
-                    if (!players[0].konReady) { addLog("⏰ Время кона вышло → автопас"); players[0].isFolded = true; }
-                    autoDeal();
+            pot = 0;
+            actionsInRound = 0;
+            
+            if (svaraPot > 0) {
+                document.getElementById('svara-info').style.display = 'block';
+                document.getElementById('kon-btn').innerText = `Оплатить Свару (${svaraFee} очк)`;
+            } else {
+                document.getElementById('svara-info').style.display = 'none';
+                document.getElementById('kon-btn').innerText = `Внести КОН (10)`;
+            }
+
+            players.forEach(p => { 
+                p.isFolded = false; p.show = false; p.hand = []; 
+                if (svaraPot > 0 && !p.isSvaraEligible) {
+                    p.konReady = false; // Должны оплатить вход
+                } else {
+                    p.konReady = false; // Обычный кон
                 }
+            });
+
+            // Боты вносят кон автоматически
+            setTimeout(() => {
+                for(let i=1; i<4; i++) {
+                    let cost = (svaraPot > 0 && !players[i].isSvaraEligible) ? svaraFee : 10;
+                    if(players[i].chips >= cost) {
+                        players[i].chips -= cost;
+                        pot += cost;
+                        players[i].konReady = true;
+                    } else {
+                        players[i].isFolded = true; // Бот не тянет
+                    }
+                }
+                checkAllKon();
             }, 1000);
         }
+
         function payKon() {
             if (players[0].konReady) return;
-            if (players[0].chips < 10) { alert("Недостаточно очков! Пополните баланс."); return; }
-            players[0].chips -= 10; pot += 10; players[0].konReady = true;
-            document.getElementById('total-pot').innerText = "💰 " + pot;
-            updateUI(); addLog("Вы внесли кон (10 очков)");
+            let cost = (svaraPot > 0 && !players[0].isSvaraEligible) ? svaraFee : 10;
+            if (players[0].chips < cost) return alert("Пополните баланс в кабинете!");
+            
+            players[0].chips -= cost;
+            pot += cost;
+            players[0].konReady = true;
+            players[0].isSvaraEligible = true;
+            addLog(`Вы внесли ${cost} очков`);
+            updateUI();
             checkAllKon();
         }
+
         function checkAllKon() {
-            if (players.every(p => p.konReady)) {
-                clearInterval(konTimerInterval);
-                document.getElementById('kon-countdown').textContent = '✓';
-                setTimeout(autoDeal, 1000);
-            }
+            if (players.every(p => p.konReady || p.isFolded)) setTimeout(autoDeal, 1000);
         }
 
-        // ==================== РАЗДАЧА ====================
         function autoDeal() {
-            document.getElementById('kon-timer').classList.add('hidden');
             document.getElementById('kon-btn').style.display = 'none';
             let deck = [];
             suits.forEach(s => values.forEach(v => deck.push({v, s:s.s, c:s.c, p: v==='A'?11:10})));
             deck.push({v:'JK', s:'★', c:'black', p:11, isJoker:true});
             deck.sort(() => Math.random() - 0.5);
-            players.forEach(p => {
-                if (!p.isFolded) p.hand = [deck.pop(), deck.pop(), deck.pop()];
-                else p.hand = [];
-                p.isBlind = true; p.show = false;
+            
+            players.forEach(p => { 
+                if(!p.isFolded) { p.hand = [deck.pop(), deck.pop(), deck.pop()]; p.isBlind = true; }
             });
-            curBet = 10;
-            activeIdx = dealer;
+
+            curBet = 10; 
+            activeIdx = (dealerIdx + 1) % 4; // Ход переходит к следующему после дилера
+            
             document.getElementById('game-actions').style.display = 'flex';
-            addLog("Раздача! Твой ход — 60 секунд.");
+            addLog("Раздача! Дилер: Игрок " + (dealerIdx===0?"Вы":dealerIdx));
             updateUI();
-            startTurnTimer();
+            if (activeIdx !== 0) setTimeout(botMove, 1000);
         }
 
-        // ==================== ТАЙМЕР ХОДА ====================
-        function startTurnTimer() {
-            if (activeIdx !== 0) return;
-            document.getElementById('turn-timer').classList.remove('hidden');
-            let timeLeft = TURN_TIME;
-            document.getElementById('turn-countdown').textContent = timeLeft;
-            document.getElementById('turn-progress').style.strokeDashoffset = 597;
-            if (turnTimerInterval) clearInterval(turnTimerInterval);
-            turnTimerInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('turn-countdown').textContent = timeLeft;
-                const offset = 597 - (597 * (TURN_TIME - timeLeft) / TURN_TIME);
-                document.getElementById('turn-progress').style.strokeDashoffset = offset;
-                if (timeLeft <= 0) {
-                    clearInterval(turnTimerInterval);
-                    addLog("⏰ Время хода вышло → автопас");
-                    players[0].isFolded = true;
-                    document.getElementById('turn-timer').classList.add('hidden');
-                    afterPlayerAction(); // проверяем, что делать после фолда
-                }
-            }, 1000);
-        }
-
-        // ==================== ДЕЙСТВИЯ ИГРОКА ====================
         function gameAction(type) {
-            if (activeIdx !== 0 || showdownActive) return;
-            if (turnTimerInterval) clearInterval(turnTimerInterval);
-            document.getElementById('turn-timer').classList.add('hidden');
+            if (activeIdx !== 0) return;
+            
             if (type === 'see') {
                 players[0].isBlind = false;
-                addLog("Вы посмотрели карты → ставки ×2");
-                nextTurn();
-            } else if (type === 'dark') {
-                let cost = curBet;
+                addLog("Вы открыли карты. Ставки х2.");
+            } 
+            else if (type === 'dark' || type === 'superdark') {
+                let cost = (type === 'superdark') ? curBet + 10 : curBet;
+                curBet = cost;
                 if (players[0].chips < cost) return alert("Мало очков!");
                 players[0].chips -= cost; pot += cost;
-                addLog(`Тёмный ${cost}`);
+                addLog(type === 'dark' ? "Вы: Тёмная" : "Вы: Перетёмная");
                 nextTurn();
-            } else if (type === 'superdark') {
-                curBet += raiseAmount;
-                let cost = curBet;
+            } 
+            else if (type === 'call') {
+                let cost = players[0].isBlind ? curBet : curBet * 2;
                 if (players[0].chips < cost) return alert("Мало очков!");
                 players[0].chips -= cost; pot += cost;
-                addLog(`Перетёмный до ${curBet}`);
+                addLog(`Вы поддержали (${cost})`);
                 nextTurn();
-            } else if (type === 'call') {
-                let cost = curBet * 2;
+            } 
+            else if (type === 'raise') {
+                curBet += 20;
+                let cost = players[0].isBlind ? curBet : curBet * 2;
                 if (players[0].chips < cost) return alert("Мало очков!");
                 players[0].chips -= cost; pot += cost;
-                addLog(`Поддержка ${cost}`);
+                addLog(`Вы подняли до ${curBet}`);
                 nextTurn();
-            } else if (type === 'raise') {
-                curBet += raiseAmount;
-                let cost = curBet * 2;
-                if (players[0].chips < cost) return alert("Мало очков!");
-                players[0].chips -= cost; pot += cost;
-                addLog(`Подъём до ${curBet}`);
-                nextTurn();
-            } else if (type === 'fold') {
+            } 
+            else if (type === 'fold') {
                 players[0].isFolded = true;
-                afterPlayerAction();
-                return;
-            }
-            updateUI();
-        }
-
-        // ==================== ПЕРЕХОД ХОДА ====================
-        function nextTurn() {
-            // Ищем следующего активного игрока
-            let next = (activeIdx + 1) % 4;
-            let start = next;
-            while (players[next].isFolded && next !== activeIdx) {
-                next = (next + 1) % 4;
-                if (next === start) break; // все пасанули
-            }
-            if (next === activeIdx) {
-                // все пасанули, кроме текущего? Если текущий не пасанул, то он остался один — он выигрывает
-                let activeCount = players.filter(p => !p.isFolded).length;
-                if (activeCount === 1) {
-                    let winnerIdx = players.findIndex(p => !p.isFolded);
-                    players[winnerIdx].chips += pot;
-                    addLog(`Игрок ${winnerIdx} выигрывает банк (все пасанули)`);
-                    if (winnerIdx === 0) addTx('win', `Победа без вскрытия +${pot}`, 0, pot);
-                    pot = 0;
-                    dealer = winnerIdx;
-                    updateUI();
-                    setTimeout(startKonPhase, 2000);
-                } else {
-                    // больше одного активного, но ход зациклился — пора вскрываться
-                    startShowdownPhase();
-                }
-                return;
-            }
-            activeIdx = next;
-            updateUI();
-            if (activeIdx === 0) {
-                addLog("Твоя очередь — 60 секунд!");
-                startTurnTimer();
-            } else {
-                setTimeout(botMove, 600 + Math.random() * 800);
-            }
-        }
-
-        // ==================== ХОД БОТА ====================
-        function botMove() {
-            if (showdownActive) return;
-            let b = players[activeIdx];
-            if (Math.random() > 0.35 && b.chips >= curBet) {
-                let cost = curBet;
-                b.chips -= cost; pot += cost;
-                addLog(`Бот ${activeIdx} поставил ${cost}`);
+                addLog("Вы спасовали");
                 nextTurn();
+            }
+            updateUI();
+        }
+
+        function nextTurn() {
+            actionsInRound++;
+            let activeCount = players.filter(p => !p.isFolded).length;
+            if (activeCount <= 1) return finishRound();
+
+            activeIdx = (activeIdx + 1) % 4;
+            if (players[activeIdx].isFolded) return nextTurn();
+            
+            updateUI();
+            if (activeIdx !== 0) setTimeout(botMove, 1000);
+        }
+
+        function botMove() {
+            let b = players[activeIdx];
+            let cost = b.isBlind ? curBet : curBet * 2;
+            
+            if (Math.random() > 0.2 && b.chips >= cost) {
+                b.chips -= cost; pot += cost;
+                if (b.isBlind && actionsInRound < 4 && Math.random() > 0.5) {
+                    addLog(`Бот ${activeIdx} втёмную`);
+                } else {
+                    b.isBlind = false;
+                    addLog(`Бот ${activeIdx} поддержал (${cost})`);
+                }
             } else {
                 b.isFolded = true;
                 addLog(`Бот ${activeIdx} пас`);
-                afterPlayerAction();
             }
-        }
-
-        // ==================== ПОСЛЕ ДЕЙСТВИЯ (ПРОВЕРКА НА ВСКРЫТИЕ) ====================
-        function afterPlayerAction() {
-            let activePlayers = players.filter(p => !p.isFolded);
-            if (activePlayers.length === 1) {
-                let winnerIdx = players.findIndex(p => !p.isFolded);
-                players[winnerIdx].chips += pot;
-                addLog(`Игрок ${winnerIdx} выигрывает банк (все пасанули)`);
-                if (winnerIdx === 0) addTx('win', `Победа без вскрытия +${pot}`, 0, pot);
-                pot = 0;
-                dealer = winnerIdx;
-                updateUI();
-                setTimeout(startKonPhase, 2000);
-            } else if (activePlayers.length > 1) {
-                // Проверяем, все ли активные сделали ход? Упростим: будем считать, что если очередь дошла до начального игрока и все сделали ставки, то пора вскрываться.
-                // Но проще: после каждого хода вызываем nextTurn, и если ход зациклился (nextTurn определит), то там запустится шоудаун.
-                // Поэтому здесь ничего не делаем, просто продолжаем.
-            }
-        }
-
-        // ==================== ФАЗА ВСКРЫТИЯ ====================
-        function startShowdownPhase() {
-            if (showdownActive) return;
-            showdownActive = true;
-            document.getElementById('turn-timer').classList.add('hidden');
-            document.getElementById('showdown-timer').classList.remove('hidden');
-            document.getElementById('btn-showdown').style.display = 'inline-block';
-            // Скрываем кнопки действий
-            document.getElementById('btn-dark').style.display = 'none';
-            document.getElementById('superdark-group').style.display = 'none';
-            document.getElementById('btn-call').style.display = 'none';
-            document.getElementById('normal-raise-group').style.display = 'none';
-            document.getElementById('btn-see').style.display = 'none';
-            document.getElementById('btn-fold').style.display = 'none';
-
-            let timeLeft = SHOWDOWN_TIME;
-            document.getElementById('showdown-countdown').textContent = timeLeft;
-            document.getElementById('showdown-progress').style.strokeDashoffset = 597;
-            if (showdownTimerInterval) clearInterval(showdownTimerInterval);
-            showdownTimerInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById('showdown-countdown').textContent = timeLeft;
-                const offset = 597 - (597 * (SHOWDOWN_TIME - timeLeft) / SHOWDOWN_TIME);
-                document.getElementById('showdown-progress').style.strokeDashoffset = offset;
-                if (timeLeft <= 0) {
-                    clearInterval(showdownTimerInterval);
-                    addLog("⏰ Время вскрытия истекло — карты открываются автоматически");
-                    showdown();
-                }
-            }, 1000);
-        }
-
-        function showdown() {
-            if (!showdownActive) return;
-            clearInterval(showdownTimerInterval);
-            document.getElementById('showdown-timer').classList.add('hidden');
-            document.getElementById('btn-showdown').style.display = 'none';
-            showdownActive = false;
-
-            // Вскрываем карты всех активных игроков
-            players.forEach(p => { if (!p.isFolded) p.show = true; });
-
-            // Определяем победителя(ей)
-            let best = -1;
-            let winners = [];
-            players.forEach((p, i) => {
-                if (!p.isFolded) {
-                    let pts = calculatePoints(p.hand);
-                    if (pts > best) { best = pts; winners = [i]; }
-                    else if (pts === best) winners.push(i);
-                }
-            });
-
-            // Бонус за трёх тузов
-            let threeAcesPlayers = [];
-            players.forEach((p, i) => {
-                if (!p.isFolded && hasThreeAces(p.hand)) threeAcesPlayers.push(i);
-            });
-            if (threeAcesPlayers.length > 0) {
-                const BONUS_AMOUNT = 1000;
-                for (let winnerId of threeAcesPlayers) {
-                    for (let i = 0; i < players.length; i++) {
-                        if (i === winnerId || players[i].isFolded) continue;
-                        let deduct = Math.min(players[i].chips, BONUS_AMOUNT);
-                        if (deduct > 0) {
-                            players[i].chips -= deduct;
-                            players[winnerId].chips += deduct;
-                            addLog(`🎁 Бонус за трёх тузов: игрок ${winnerId} получает ${deduct} от игрока ${i}`);
-                        }
-                    }
-                }
-            }
-
-            updateUI();
-
-            if (winners.length > 1) {
-                // Ничья — банк остаётся, новый раунд с теми же активными
-                addLog("⚖️ СВАРА! Банк остаётся. Новый раунд торгов.", "log-win");
-                // Скрываем карты и начинаем новый круг с dealer
-                players.forEach(p => {
-                    if (!p.isFolded) { p.show = false; p.isBlind = true; }
-                });
-                activeIdx = dealer;
-                addLog(`Новый раунд торгов. Текущая ставка: ${curBet}`);
-                updateUI();
-                if (activeIdx === 0) startTurnTimer();
-                else setTimeout(botMove, 600);
-            } else {
-                let winnerId = winners[0];
-                players[winnerId].chips += pot;
-                const name = winnerId === 0 ? `Вы` : `Бот ${winnerId}`;
-                addLog(`🎉 Выиграл ${name} (${best} очк) → +${pot}`, "log-win");
-                if (winnerId === 0) addTx('win', `Победа! +${pot} очков`, 0, pot);
-                dealer = winnerId;
-                pot = 0;
-                updateUI();
-                setTimeout(startKonPhase, 2800);
-            }
-        }
-
-        // ==================== ВСПОМОГАТЕЛЬНЫЕ ====================
-        function updateRaiseAmount(val) {
-            raiseAmount = parseInt(val);
-            document.getElementById('raise-amount-display').innerText = '+' + raiseAmount;
-            document.getElementById('raise-amount-display2').innerText = '+' + raiseAmount;
+            nextTurn();
         }
 
         function updateUI() {
-            document.getElementById('total-pot').innerText = "💰 " + pot;
+            document.getElementById('total-pot').innerText = "💰 " + (pot + svaraPot);
             document.getElementById('current-bet').innerText = curBet;
             document.getElementById('my-chips').innerText = players[0].chips;
-            const isBlind = players[0].isBlind && !showdownActive;
-            document.getElementById('btn-dark').style.display = (isBlind && !showdownActive) ? 'inline-block' : 'none';
-            document.getElementById('superdark-group').style.display = (isBlind && !showdownActive) ? 'flex' : 'none';
-            document.getElementById('btn-call').style.display = (!isBlind && !showdownActive) ? 'inline-block' : 'none';
-            document.getElementById('normal-raise-group').style.display = (!isBlind && !showdownActive) ? 'flex' : 'none';
-            document.getElementById('btn-see').style.display = (players[0].isBlind && !showdownActive && activeIdx === 0) ? 'inline-block' : 'none';
-            document.getElementById('btn-fold').style.display = (activeIdx === 0 && !showdownActive) ? 'inline-block' : 'none';
+            
+            // Логика кнопок
+            const isBlind = players[0].isBlind;
+            const isFirstToAct = (actionsInRound === 0 && activeIdx === (dealerIdx + 1) % 4);
+            const isSecondToAct = (actionsInRound === 1 && activeIdx === (dealerIdx + 2) % 4);
 
+            document.getElementById('btn-dark').style.display = (isBlind && isFirstToAct) ? 'inline-block' : 'none';
+            document.getElementById('btn-superdark').style.display = (isBlind && isSecondToAct) ? 'inline-block' : 'none';
+            document.getElementById('btn-call').style.display = (!isFirstToAct && !isSecondToAct) || !isBlind ? 'inline-block' : 'none';
+
+            // Карты и иконки дилера
+            document.querySelectorAll('.dealer-chip').forEach(e => e.remove());
             players.forEach((p, i) => {
                 const el = document.getElementById(`player-${i}`);
                 el.className = `player-block p${i} ${i === activeIdx ? 'player-active' : ''} ${p.isFolded ? 'player-folded' : ''}`;
                 el.querySelector('.chips-count').innerText = p.chips;
-                const slot = el.querySelector('.card-slot');
-                slot.innerHTML = '';
+                
+                if(i === dealerIdx) {
+                    let d = document.createElement('div'); d.className = 'dealer-chip'; d.innerText = 'D';
+                    el.appendChild(d);
+                }
+
+                const slot = el.querySelector('.card-slot'); slot.innerHTML = '';
                 p.hand.forEach(card => {
                     const div = document.createElement('div');
                     let vis = (i === 0 && !p.isBlind) || p.show;
@@ -909,25 +405,68 @@
                     if (vis) div.innerText = card.isJoker ? '★' : card.v + card.s;
                     slot.appendChild(div);
                 });
+                
                 const scoreEl = (i === 0) ? document.getElementById('my-score-label') : el.querySelector('.score-label');
                 if (scoreEl) {
                     if (p.show) scoreEl.innerText = calculatePoints(p.hand) + " очк";
-                    else if (i === 0) scoreEl.innerText = p.isBlind ? "ТЁМНАЯ" : calculatePoints(p.hand) + " очк";
+                    else if (i === 0) scoreEl.innerText = p.isBlind ? "ВТЁМНУЮ" : calculatePoints(p.hand) + " очк";
                     else scoreEl.innerText = "";
                 }
             });
-            document.getElementById('btn-see').disabled = !players[0].isBlind || showdownActive || activeIdx !== 0;
-            if (document.getElementById('cabinet-modal').style.display === 'flex') refreshCabinetUI();
         }
 
-        // ==================== СТАРТ ====================
-        window.onload = () => {
-            document.getElementById('raise-amount-display').innerText = '+20';
-            document.getElementById('raise-amount-display2').innerText = '+20';
-            dealer = 0;
-            startKonPhase();
-            document.getElementById('cabinet-btn').addEventListener('click', openCabinet);
-        };
+        function finishRound() {
+            let best = -1, winners = [];
+            players.forEach((p, i) => {
+                if (!p.isFolded) {
+                    p.show = true;
+                    let pts = calculatePoints(p.hand);
+                    if (pts > best) { best = pts; winners = [i]; }
+                    else if (pts === best) winners.push(i);
+                }
+            });
+
+            updateUI();
+
+            if (winners.length > 1) {
+                // СВАРА
+                addLog(`⚖️ СВАРА (${best} очков). Банк ${pot} остаётся.`, "log-win");
+                svaraPot += pot;
+                svaraFee = curBet;
+                pot = 0;
+                
+                // Те, кто не в Сваре, теряют Eligibility
+                players.forEach((p, i) => { p.isSvaraEligible = winners.includes(i); });
+                
+                // Дилер не меняется при Сваре
+            } else {
+                let winId = winners[0];
+                let totalWin = pot + svaraPot;
+                players[winId].chips += totalWin;
+                
+                let name = winId === 0 ? `Вы` : `Бот ${winId}`;
+                addLog(`🎉 Выиграл ${name} (${best} очк) -> +${totalWin}`, "log-win");
+
+                // Бонус за 3 Туза (33 очка)
+                if (best === 33) {
+                    addLog(`🔥 БОНУС! 3 Туза. С остальных по 10 очков.`, "log-win");
+                    players.forEach((p, i) => {
+                        if (i !== winId && !p.isFolded && p.chips >= 10) {
+                            p.chips -= 10;
+                            players[winId].chips += 10;
+                        }
+                    });
+                }
+
+                pot = 0; svaraPot = 0; svaraFee = 0;
+                players.forEach(p => p.isSvaraEligible = true);
+                dealerIdx = winId; // Победитель сдает в следующем раунде
+            }
+            
+            setTimeout(startKonPhase, 3500);
+        }
+
+        window.onload = startKonPhase;
     </script>
 </body>
 </html>
