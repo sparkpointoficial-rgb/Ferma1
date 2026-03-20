@@ -17,251 +17,110 @@
             --btn-green: #2ecc71;
             --btn-purple: #9b59b6;
             --btn-red: #e74c3c;
-            --btn-orange: #f39c12; /* Для кнопки Вскрыть */
+            --btn-orange: #f39c12;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-light); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-light);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Header / Wallet */
-        .header {
-            padding: 10px;
-            display: flex;
-            justify-content: flex-start;
-        }
-
+        .header { padding: 10px; display: flex; justify-content: flex-start; }
         .wallet-badge {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 5px 12px; border-radius: 20px; font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer; transition: 0.2s;
         }
+        .wallet-badge:hover { background: rgba(255, 255, 255, 0.2); }
+        .wallet-badge::before { content: ''; display: block; width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; }
 
-        .wallet-badge::before {
-            content: '';
-            display: block;
-            width: 8px;
-            height: 8px;
-            background-color: #2ecc71;
-            border-radius: 50%;
-        }
-
-        /* Game Table Area */
-        .game-area {
-            flex-grow: 1;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
+        .game-area { flex-grow: 1; position: relative; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .table {
-            width: 100%;
-            max-width: 600px;
-            height: 350px;
-            background: var(--table-green);
-            border: 15px solid var(--table-border);
-            border-radius: 180px;
-            position: relative;
+            width: 100%; max-width: 600px; height: 350px; background: var(--table-green);
+            border: 15px solid var(--table-border); border-radius: 180px; position: relative;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.5);
         }
 
-        /* Center Pot */
-        .center-pot {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
-        
-        .pot-amount {
-            background: rgba(0,0,0,0.5);
-            padding: 5px 15px;
-            border-radius: 10px;
-            color: var(--gold);
-            font-weight: bold;
-            font-size: 14px;
-            border: 1px solid var(--gold);
-            margin-bottom: 5px;
-        }
+        .center-pot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+        .pot-amount { background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 10px; color: var(--gold); font-weight: bold; font-size: 14px; border: 1px solid var(--gold); margin-bottom: 5px; }
+        .bet-info { font-size: 12px; color: #ddd; }
 
-        .bet-info {
-            font-size: 12px;
-            color: #ddd;
-        }
-
-        /* Players */
-        .player {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
+        .player { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .player-name { font-size: 12px; font-weight: bold; }
-        .player-balance { 
-            background: rgba(0,0,0,0.6); 
-            color: var(--gold); 
-            font-size: 11px; 
-            padding: 2px 8px; 
-            border-radius: 10px; 
-            border: 1px solid var(--gold);
-        }
-
-        .cards {
-            display: flex;
-            gap: 2px;
-        }
-
-        .card {
-            width: 30px;
-            height: 45px;
-            background: #2c3e50;
-            border: 1px solid #bdc3c7;
-            border-radius: 4px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 14px;
-            font-weight: bold;
-            background-color: white;
-        }
-
-        .card.hidden { background: #34495e; border-color: #7f8c8d; }
+        .player-balance { background: rgba(0,0,0,0.6); color: var(--gold); font-size: 11px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--gold); }
+        .cards { display: flex; gap: 2px; }
+        .card { width: 30px; height: 45px; background: #2c3e50; border: 1px solid #bdc3c7; border-radius: 4px; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; background-color: white; }
+        .card.hidden { background: #34495e; border-color: #7f8c8d; color: transparent; }
         .card.red { color: #e74c3c; }
         .card.black { color: #2c3e50; }
 
-        /* Positions */
         .player-bot-1 { top: 30%; left: -10px; }
         .player-bot-2 { top: -20px; left: 50%; transform: translateX(-50%); }
         .player-bot-3 { top: 30%; right: -10px; }
-        .player-main { 
-            bottom: -30px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            z-index: 10;
-        }
-
-        /* Active Player Glow */
-        .player-main .cards-container {
-            box-shadow: 0 0 25px rgba(251, 192, 45, 0.6);
-            padding: 10px;
-            border-radius: 10px;
-            background: rgba(251, 192, 45, 0.1);
-        }
-
+        .player-main { bottom: -30px; left: 50%; transform: translateX(-50%); z-index: 10; }
+        .player-main .cards-container { box-shadow: 0 0 25px rgba(251, 192, 45, 0.6); padding: 10px; border-radius: 10px; background: rgba(251, 192, 45, 0.1); }
         .player-main .card { width: 40px; height: 60px; font-size: 18px; }
 
-        /* Timer */
-        .timer-container {
-            position: absolute;
-            top: -25px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
+        .timer-container { position: absolute; top: -25px; width: 100%; display: flex; flex-direction: column; align-items: center; }
         .timer-text { font-size: 12px; color: var(--gold); font-weight: bold; margin-bottom: 3px; }
-        .timer-bar {
-            width: 80%;
-            height: 4px;
-            background: #333;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        .timer-progress {
-            width: 100%;
-            height: 100%;
-            background: #2ecc71;
-            transition: width 1s linear;
-        }
+        .timer-bar { width: 80%; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
+        .timer-progress { width: 100%; height: 100%; background: #2ecc71; transition: width 1s linear; }
 
-        /* Controls Area */
-        .controls-wrapper {
-            padding: 10px;
-            background: #1a1a1a;
-            border-top: 1px solid #333;
-        }
-
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-weight: bold;
-            font-size: 11px;
-            text-transform: uppercase;
-            cursor: pointer;
-            flex: 1 1 calc(20% - 8px); /* 5 кнопок в ряд или перенос */
-            min-width: 85px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
-        }
-
+        .controls-wrapper { padding: 10px; background: #1a1a1a; border-top: 1px solid #333; }
+        .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 15px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 11px; text-transform: uppercase; cursor: pointer; flex: 1 1 calc(20% - 8px); min-width: 85px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s; }
         .btn:active { transform: translateY(2px); box-shadow: 0 2px 3px rgba(0,0,0,0.3); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .btn-cards { background: var(--btn-blue); }
         .btn-call { background: var(--btn-green); }
         .btn-raise { background: var(--btn-purple); }
-        .btn-reveal { background: var(--btn-orange); } /* Новая кнопка */
+        .btn-reveal { background: var(--btn-orange); }
         .btn-fold { background: var(--btn-red); }
 
-        /* Game Log Area (Moved to bottom) */
-        .log-area {
-            background: #000;
-            border: 1px solid #333;
-            border-radius: 8px;
-            height: 120px;
-            overflow-y: auto;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 11px;
-            color: #a0a0a0;
-        }
-
+        .log-area { background: #000; border: 1px solid #333; border-radius: 8px; height: 120px; overflow-y: auto; padding: 10px; font-family: monospace; font-size: 11px; color: #a0a0a0; }
         .log-area p { margin-bottom: 4px; line-height: 1.3; }
         .log-area .highlight { color: #2ecc71; }
+
+        /* === НОВЫЕ СТИЛИ (Не ломают старые) === */
+        .raise-slider-container { display: none; width: 100%; background: #222; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: center; border: 1px solid #444; }
+        .raise-slider-container input[type="range"] { width: 70%; vertical-align: middle; margin: 0 10px; accent-color: var(--btn-purple); }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #1e1e1e; padding: 25px; border-radius: 12px; border: 2px solid var(--gold); width: 320px; text-align: center; color: white; }
+        .modal-content h3 { color: var(--gold); margin-bottom: 15px; }
+        .modal-input { width: 100%; padding: 10px; margin-bottom: 15px; background: #121212; border: 1px solid #444; color: white; border-radius: 6px; text-align: center; font-size: 16px; }
+        .modal-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .modal-btn { flex: 1; padding: 10px; border: none; border-radius: 6px; color: white; font-weight: bold; cursor: pointer; }
+        .m-dep { background: var(--btn-green); }
+        .m-wit { background: var(--btn-orange); }
+        .m-bon { background: var(--btn-blue); width: 100%; }
+        .m-close { background: #555; width: 100%; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="wallet-badge">КАБИНЕТ (BNB)</div>
+        <div class="wallet-badge" onclick="openCabinet()">КАБИНЕТ (BNB)</div>
+    </div>
+
+    <div class="modal-overlay" id="cabinetModal">
+        <div class="modal-content">
+            <h3>Личный Кабинет</h3>
+            <p style="margin-bottom: 15px; font-size: 14px;">Ваш баланс: <span id="cab-balance" style="color:var(--gold); font-weight:bold;">970</span> очков</p>
+            
+            <input type="number" id="cabinet-amount" class="modal-input" placeholder="Введите сумму...">
+            
+            <div class="modal-buttons">
+                <button class="modal-btn m-dep" onclick="cabinetAction('deposit')">ВНЕСТИ</button>
+                <button class="modal-btn m-wit" onclick="cabinetAction('withdraw')">ВЫВЕСТИ</button>
+                <button class="modal-btn m-bon" onclick="cabinetAction('bonus')">ПОЛУЧИТЬ БОНУС</button>
+                <button class="modal-btn m-close" onclick="closeCabinet()">ЗАКРЫТЬ</button>
+            </div>
+            <p id="cab-msg" style="margin-top: 10px; font-size: 12px; color: #aaa;"></p>
+        </div>
     </div>
 
     <div class="game-area">
         <div class="table">
-            <div class="player player-bot-1">
+            <div class="player player-bot-1" id="bot1">
                 <div class="player-name">Бот 1</div>
                 <div class="player-balance">980</div>
                 <div class="cards">
@@ -269,7 +128,7 @@
                 </div>
             </div>
 
-            <div class="player player-bot-2">
+            <div class="player player-bot-2" id="bot2">
                 <div class="player-name">Бот 2</div>
                 <div class="player-balance">980</div>
                 <div class="cards">
@@ -277,7 +136,7 @@
                 </div>
             </div>
 
-            <div class="player player-bot-3">
+            <div class="player player-bot-3" id="bot3">
                 <div class="player-name">Бот 3</div>
                 <div class="player-balance">990</div>
                 <div class="cards">
@@ -286,8 +145,8 @@
             </div>
 
             <div class="center-pot">
-                <div class="pot-amount">Банк: 40</div>
-                <div class="bet-info">Ставка: 10</div>
+                <div class="pot-amount" id="pot-display">Банк: 0</div>
+                <div class="bet-info" id="bet-display">Кон: 10</div>
             </div>
 
             <div class="player player-main">
@@ -295,95 +154,287 @@
                     <div class="timer-text" id="timer-text">15 сек</div>
                     <div class="timer-bar"><div class="timer-progress" id="timer-progress"></div></div>
                 </div>
-                <div class="player-name">Вы (20 очк)</div>
-                <div class="player-balance">970</div>
+                <div class="player-name" id="my-name">Вы (0 очк)</div>
+                <div class="player-balance" id="my-balance">970</div>
                 <div class="cards-container">
-                    <div class="cards">
-                        <div class="card red">10♥</div>
-                        <div class="card red">J♥</div>
-                        <div class="card black">K♣</div>
-                    </div>
+                    <div class="cards" id="my-cards">
+                        </div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="controls-wrapper">
+        <div class="raise-slider-container" id="raise-box">
+            <span style="color: white; font-weight: bold;">Сумма: </span>
+            <input type="range" id="raise-slider" min="10" max="200" step="10" value="20" oninput="document.getElementById('raise-val').innerText = this.value">
+            <span id="raise-val" style="color: var(--gold); font-weight: bold; width: 30px; display: inline-block;">20</span>
+            <button class="btn btn-purple" style="padding: 5px 10px; margin-left: 10px;" onclick="confirmRaise()">Подтвердить</button>
+        </div>
+
         <div class="controls">
-            <button class="btn btn-cards" onclick="addLog('Вы смотрите карты')">👀 КАРТЫ</button>
-            <button class="btn btn-call" onclick="action('поддержал', 10)">ПОДДЕРЖАТЬ</button>
-            <button class="btn btn-raise" onclick="action('поднял', 20)">ПОДНЯТЬ (+20)</button>
-            <button class="btn btn-reveal" onclick="addLog('🔥 Вы вскрыли карты!')">ВСКРЫТЬ КАРТЫ</button>
-            <button class="btn btn-fold" onclick="addLog('Вы спасовали')">ПАС</button>
+            <button class="btn btn-cards" onclick="startNewRound()" id="btn-deal">РАЗДАТЬ</button>
+            <button class="btn btn-call" onclick="playerCall()" id="btn-call" disabled>ПОДДЕРЖАТЬ</button>
+            <button class="btn btn-raise" onclick="toggleRaise()" id="btn-raise" disabled>ПОДНЯТЬ</button>
+            <button class="btn btn-reveal" onclick="revealCards()" id="btn-reveal" disabled>ВСКРЫТЬ</button>
+            <button class="btn btn-fold" onclick="playerFold()" id="btn-fold" disabled>ПАС</button>
         </div>
 
         <div class="log-area" id="game-log">
-            <p>✅ Подключен BSC кошелек</p>
-            <p>Добро пожаловать в Seka Elite (BSC Testnet)!</p>
-            <p>Кон = 0.0001 BNB (10 очков).</p>
-            <p>Раздача! Дилер: Игрок 3</p>
-            <p>Вы внесли 10 очков</p>
-            <p>Бот 1 поддержал (10)</p>
-            <p>Бот 2 поддержал (10)</p>
-            <p>Бот 3 пас</p>
-            <p class="highlight">Ваш ход...</p>
+            <p>✅ Подключен BSC кошелек (Смарт-контракт готов)</p>
+            <p>Добро пожаловать в Seka Elite!</p>
+            <p>Нажмите «РАЗДАТЬ» для начала игры.</p>
         </div>
     </div>
 
     <script>
-        // Логика добавления текста в лог
-        const logArea = document.getElementById('game-log');
+        // --- СОСТОЯНИЕ ИГРЫ ---
+        let balances = { player: 970, bot1: 980, bot2: 980, bot3: 990 };
+        let pot = 0;
+        let currentBet = 10;
+        let isPlaying = false;
+        let playerPoints = 0;
+        let botCardsData = {};
         
+        const suits = ['♥', '♦', '♣', '♠'];
+        const values = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+
+        // --- ЛОГИКА КАБИНЕТА ---
+        function openCabinet() {
+            document.getElementById('cab-balance').innerText = balances.player;
+            document.getElementById('cabinetModal').style.display = 'flex';
+            document.getElementById('cab-msg').innerText = '';
+        }
+        function closeCabinet() {
+            document.getElementById('cabinetModal').style.display = 'none';
+            document.getElementById('cabinet-amount').value = '';
+        }
+        function cabinetAction(type) {
+            const input = document.getElementById('cabinet-amount');
+            const amount = parseInt(input.value);
+            const msg = document.getElementById('cab-msg');
+
+            if (type === 'bonus') {
+                balances.player += 100;
+                msg.innerText = "✅ Вы получили бонус 100 очков!";
+                msg.style.color = "#2ecc71";
+                updateUI();
+                return;
+            }
+
+            if (isNaN(amount) || amount <= 0) {
+                msg.innerText = "❌ Введите корректную сумму.";
+                msg.style.color = "#e74c3c";
+                return;
+            }
+
+            if (type === 'deposit') {
+                // Имитация внесения (BNB -> Очки)
+                balances.player += amount;
+                msg.innerText = `✅ Внесено ${amount} очков со смарт-контракта.`;
+                msg.style.color = "#2ecc71";
+            } else if (type === 'withdraw') {
+                if (amount > balances.player) {
+                    msg.innerText = "❌ Недостаточно очков для вывода.";
+                    msg.style.color = "#e74c3c";
+                    return;
+                }
+                balances.player -= amount;
+                msg.innerText = `✅ Выведено ${amount} очков на ваш кошелек.`;
+                msg.style.color = "#2ecc71";
+            }
+            updateUI();
+            input.value = '';
+        }
+
+        // --- ЛОГИКА ИГРЫ ---
+        function getRandomCard() {
+            const suit = suits[Math.floor(Math.random() * suits.length)];
+            const val = values[Math.floor(Math.random() * values.length)];
+            const isRed = suit === '♥' || suit === '♦';
+            let points = isNaN(val) ? (val === 'A' ? 11 : 10) : parseInt(val);
+            return { html: `<div class="card ${isRed ? 'red' : 'black'}">${val}${suit}</div>`, points: points };
+        }
+
+        function updateUI() {
+            document.getElementById('my-balance').innerText = balances.player;
+            document.getElementById('bot1').querySelector('.player-balance').innerText = balances.bot1;
+            document.getElementById('bot2').querySelector('.player-balance').innerText = balances.bot2;
+            document.getElementById('bot3').querySelector('.player-balance').innerText = balances.bot3;
+            document.getElementById('pot-display').innerText = `Банк: ${pot}`;
+            document.getElementById('cab-balance').innerText = balances.player;
+        }
+
+        function toggleButtons(active) {
+            document.getElementById('btn-deal').disabled = active;
+            document.getElementById('btn-call').disabled = !active;
+            document.getElementById('btn-raise').disabled = !active;
+            document.getElementById('btn-reveal').disabled = !active;
+            document.getElementById('btn-fold').disabled = !active;
+        }
+
+        function startNewRound() {
+            if (balances.player < 10) { addLog("❌ Недостаточно очков для кона!"); return; }
+            isPlaying = true;
+            pot = 0; currentBet = 10;
+            toggleButtons(true);
+            document.getElementById('raise-box').style.display = 'none';
+
+            // Кон 10 со всех
+            balances.player -= 10; balances.bot1 -= 10; balances.bot2 -= 10; balances.bot3 -= 10;
+            pot = 40;
+            updateUI();
+
+            // Раздача игроку
+            let myCardsDiv = document.getElementById('my-cards');
+            myCardsDiv.innerHTML = '';
+            playerPoints = 0;
+            for(let i=0; i<3; i++) {
+                let c = getRandomCard();
+                myCardsDiv.innerHTML += c.html;
+                playerPoints += c.points; // Упрощенный подсчет для симуляции
+            }
+            document.getElementById('my-name').innerText = `Вы (${playerPoints} очк)`;
+
+            // Закрытые карты ботам
+            ['bot1', 'bot2', 'bot3'].forEach(bot => {
+                botCardsData[bot] = [getRandomCard(), getRandomCard(), getRandomCard()];
+                document.getElementById(bot).querySelector('.cards').innerHTML = '<div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div>';
+            });
+
+            addLog("🃏 Раздача! Все внесли кон (10).");
+            addLog('<span class="highlight">Ваш ход!</span>');
+            startTimer();
+        }
+
+        function botActions() {
+            clearInterval(timerInterval);
+            if(!isPlaying) return;
+            
+            setTimeout(() => {
+                let b1Action = Math.random() > 0.2 ? "поддержал" : "пас";
+                if(b1Action === "поддержал") { balances.bot1 -= currentBet; pot += currentBet; addLog(`🤖 Бот 1 ${b1Action} (${currentBet})`); }
+                else { addLog("🤖 Бот 1 пас"); }
+                updateUI();
+                
+                setTimeout(() => {
+                    let b2Action = Math.random() > 0.2 ? "поддержал" : "пас";
+                    if(b2Action === "поддержал") { balances.bot2 -= currentBet; pot += currentBet; addLog(`🤖 Бот 2 ${b2Action} (${currentBet})`); }
+                    else { addLog("🤖 Бот 2 пас"); }
+                    updateUI();
+
+                    setTimeout(() => {
+                        let b3Action = Math.random() > 0.2 ? "поддержал" : "пас";
+                        if(b3Action === "поддержал") { balances.bot3 -= currentBet; pot += currentBet; addLog(`🤖 Бот 3 ${b3Action} (${currentBet})`); }
+                        else { addLog("🤖 Бот 3 пас"); }
+                        updateUI();
+                        
+                        addLog('<span class="highlight">Ваш ход!</span>');
+                        startTimer();
+                    }, 1000);
+                }, 1000);
+            }, 1000);
+        }
+
+        function playerCall() {
+            if(balances.player < currentBet) return;
+            balances.player -= currentBet;
+            pot += currentBet;
+            addLog(`Вы поддержали (${currentBet})`);
+            updateUI();
+            botActions();
+        }
+
+        function toggleRaise() {
+            const box = document.getElementById('raise-box');
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function confirmRaise() {
+            const raiseAmt = parseInt(document.getElementById('raise-slider').value);
+            if(balances.player < raiseAmt) { addLog("❌ Недостаточно средств!"); return; }
+            currentBet = raiseAmt;
+            balances.player -= raiseAmt;
+            pot += raiseAmt;
+            document.getElementById('bet-display').innerText = `Ставка: ${currentBet}`;
+            document.getElementById('raise-box').style.display = 'none';
+            addLog(`Вы ПОДНЯЛИ ставку до (${currentBet})`);
+            updateUI();
+            botActions();
+        }
+
+        function playerFold() {
+            isPlaying = false;
+            clearInterval(timerInterval);
+            addLog("🏳️ Вы спасовали. Раунд окончен.");
+            toggleButtons(false);
+        }
+
+        function revealCards() {
+            isPlaying = false;
+            clearInterval(timerInterval);
+            addLog("🔥 ВСКРЫТИЕ КАРТ!");
+
+            let bestBotPoints = 0;
+            let bestBot = "";
+
+            // Вскрываем ботов
+            ['bot1', 'bot2', 'bot3'].forEach(bot => {
+                let pts = 0;
+                let cardsHtml = '';
+                botCardsData[bot].forEach(c => { pts += c.points; cardsHtml += c.html; });
+                document.getElementById(bot).querySelector('.cards').innerHTML = cardsHtml;
+                if(pts > bestBotPoints) { bestBotPoints = pts; bestBot = bot; }
+            });
+
+            setTimeout(() => {
+                if (playerPoints > bestBotPoints) {
+                    addLog(`🏆 Вы выиграли с ${playerPoints} очками! Забрали банк: ${pot}`);
+                    balances.player += pot;
+                } else {
+                    addLog(`💀 Выиграл ${bestBot} с ${bestBotPoints} очками. У вас ${playerPoints}.`);
+                    balances[bestBot] += pot;
+                }
+                pot = 0;
+                updateUI();
+                toggleButtons(false);
+                addLog("Нажмите РАЗДАТЬ для новой игры.");
+            }, 1000);
+        }
+
+        // --- ЛОГИРОВАНИЕ И ТАЙМЕР ---
+        const logArea = document.getElementById('game-log');
         function addLog(message) {
-            const p = document.createElement('p');
-            p.innerHTML = message;
-            logArea.appendChild(p);
-            logArea.scrollTop = logArea.scrollHeight; // Автоскролл вниз
+            const p = document.createElement('p'); p.innerHTML = message;
+            logArea.appendChild(p); logArea.scrollTop = logArea.scrollHeight;
         }
 
-        function action(type, amount) {
-            addLog(`Вы ${type} (${amount})`);
-            resetTimer(); // Сброс таймера при действии
-        }
-
-        // Логика Таймера
         let timeLeft = 15;
-        const timerText = document.getElementById('timer-text');
-        const timerProgress = document.getElementById('timer-progress');
         let timerInterval;
-
         function startTimer() {
             clearInterval(timerInterval);
             timeLeft = 15;
-            timerProgress.style.width = '100%';
-            timerProgress.style.backgroundColor = '#2ecc71';
+            document.getElementById('timer-progress').style.width = '100%';
+            document.getElementById('timer-progress').style.backgroundColor = '#2ecc71';
             
             timerInterval = setInterval(() => {
                 timeLeft--;
-                timerText.innerText = timeLeft + ' сек';
-                
-                // Обновляем полоску (100% / 15 = 6.66%)
-                const percentage = (timeLeft / 15) * 100;
-                timerProgress.style.width = percentage + '%';
-
-                // Меняем цвет если времени мало
-                if(timeLeft <= 5) timerProgress.style.backgroundColor = '#e74c3c';
-                else if(timeLeft <= 10) timerProgress.style.backgroundColor = '#f39c12';
+                document.getElementById('timer-text').innerText = timeLeft + ' сек';
+                let percentage = (timeLeft / 15) * 100;
+                document.getElementById('timer-progress').style.width = percentage + '%';
+                if(timeLeft <= 5) document.getElementById('timer-progress').style.backgroundColor = '#e74c3c';
+                else if(timeLeft <= 10) document.getElementById('timer-progress').style.backgroundColor = '#f39c12';
 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    timerText.innerText = 'Время вышло!';
-                    addLog('Авто-пас (время вышло)');
+                    document.getElementById('timer-text').innerText = 'Время вышло!';
+                    playerFold();
                 }
             }, 1000);
         }
 
-        function resetTimer() {
-            startTimer();
-        }
-
-        // Запускаем таймер при загрузке
-        window.onload = startTimer;
+        // Инициализация
+        updateUI();
     </script>
 </body>
 </html>
