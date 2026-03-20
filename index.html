@@ -2,9 +2,10 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Seka Elite — BNB с кнопкой вскрытия</title>
+    <title>Seka Elite — BNB с кнопкой вскрытия (исправлено)</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
+        /* (стили без изменений, как в предыдущем ответе) */
         :root {
             --gold: #f1c40f;
             --gold-dim: rgba(241,196,15,0.15);
@@ -27,7 +28,6 @@
             height: 100vh;
             overflow: hidden;
         }
-        /* ─── СТОЛ ─── */
         .table {
             position: relative; width: 900px; height: 500px;
             background: radial-gradient(circle, #2d7a4d 0%, #1a472a 100%);
@@ -57,7 +57,6 @@
         .card.red { color: #e74c3c; }
         .card.hidden { background: linear-gradient(135deg, #2c3e50 25%, #34495e 100%); border: 2px solid #fff; color: transparent; }
         .card.joker { background: #f1c40f; color: #000; border: 2px solid #fff; font-size: 26px; }
-        /* ─── УПРАВЛЕНИЕ ─── */
         .controls {
             margin-top: 20px; display: flex; gap: 12px;
             background: #1a1a1a; padding: 18px; border-radius: 15px;
@@ -75,7 +74,6 @@
         .btn-showdown { background: var(--gold); color: #000; font-size: 18px; }
         .btn:disabled { background: #444; cursor: not-allowed; opacity: 0.6; transform: none; }
         .raise-group { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; }
-        /* ─── ТАЙМЕРЫ ─── */
         .timer-container { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); width: 220px; height: 220px; z-index: 160; pointer-events: none; }
         .timer-container.hidden { display: none; }
         .timer-svg { width: 100%; height: 100%; }
@@ -83,11 +81,9 @@
         .timer-progress { fill: none; stroke: #27ae60; stroke-width: 16; stroke-linecap: round; transition: stroke-dashoffset 0.4s linear; }
         .timer-text { font-size: 52px; font-weight: bold; fill: #fff; text-anchor: middle; dominant-baseline: middle; font-family: 'Share Tech Mono', monospace; }
         .timer-label { font-size: 16px; fill: #ddd; text-anchor: middle; dominant-baseline: middle; font-family: 'Rajdhani', sans-serif; letter-spacing: 2px; }
-        /* ─── ЛОГ ─── */
         #log { position: fixed; right: 20px; top: 20px; width: 280px; height: 220px; background: rgba(0,0,0,0.8); border: 1px solid #333; padding: 10px; font-size: 13px; overflow-y: auto; color: #bbb; border-radius: 10px; font-family: 'Share Tech Mono', monospace; }
         .log-win { color: var(--gold); font-weight: bold; }
         .score-label { color: var(--gold); font-weight: bold; height: 20px; margin-bottom: 5px; text-shadow: 1px 1px 3px #000; }
-        /* ─── КНОПКА ЛИЧНОГО КАБИНЕТА ─── */
         #cabinet-btn {
             position: absolute; top: 15px; left: 15px; z-index: 200;
             background: rgba(15,15,15,0.97);
@@ -102,13 +98,11 @@
         #cabinet-btn:hover { border-color: var(--gold); color: var(--gold); }
         #wallet-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; transition: 0.3s; }
         #wallet-dot.connected { background: #27ae60; box-shadow: 0 0 6px #27ae60; }
-        /* ─── МОДАЛ ОВЕРЛЕЙ ─── */
         .modal {
             display: none; position: fixed; z-index: 300; left: 0; top: 0;
             width: 100%; height: 100%; background-color: rgba(0,0,0,0.88);
             align-items: center; justify-content: center;
         }
-        /* ─── ЛИЧНЫЙ КАБИНЕТ ─── */
         .cabinet-panel {
             background: #0f0f0f;
             border: 1px solid #222;
@@ -132,7 +126,6 @@
         .close-btn { color: #444; font-size: 26px; font-weight: bold; cursor: pointer; transition: 0.2s; line-height: 1; }
         .close-btn:hover { color: #fff; }
         .cabinet-body { padding: 24px 28px; }
-        /* Статус кошелька */
         .wallet-card {
             background: #161616;
             border: 1px solid #222;
@@ -158,7 +151,6 @@
         .mini-label { font-size: 10px; color: #444; letter-spacing: 2px; text-transform: uppercase; font-family: 'Share Tech Mono', monospace; margin-bottom: 4px; }
         .mini-value { font-size: 22px; font-weight: 700; color: var(--gold); font-family: 'Share Tech Mono', monospace; }
         .mini-sub { font-size: 11px; color: #444; margin-top: 2px; font-family: 'Share Tech Mono', monospace; }
-        /* Конвертер */
         .converter-row {
             display: flex; align-items: center; gap: 10px;
             background: #111; border: 1px solid #1e1e1e;
@@ -172,7 +164,6 @@
         .converter-unit { color: #555; font-size: 13px; font-family: 'Share Tech Mono', monospace; }
         .converter-arrow { color: #333; font-size: 18px; }
         .converter-result { color: var(--gold); font-size: 20px; font-family: 'Share Tech Mono', monospace; min-width: 80px; text-align: right; }
-        /* Кнопки кабинета */
         .cab-actions { display: flex; gap: 10px; margin-bottom: 20px; }
         .cab-btn {
             flex: 1; padding: 12px; border: none; border-radius: 10px;
@@ -187,7 +178,6 @@
         .cab-btn-deposit { background: #8e44ad; color: #fff; }
         .cab-btn-withdraw { background: #e67e22; color: #fff; }
         .cab-btn-bonus { background: var(--gold); color: #000; }
-        /* Транзакции */
         .tx-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
         .tx-title { font-size: 11px; color: #444; letter-spacing: 2px; text-transform: uppercase; font-family: 'Share Tech Mono', monospace; }
         .tx-clear { font-size: 11px; color: #333; cursor: pointer; transition: 0.2s; font-family: 'Share Tech Mono', monospace; }
@@ -213,7 +203,6 @@
         .tx-amount.minus { color: #e67e22; }
         .tx-time { font-size: 10px; color: #333; }
         .tx-empty { text-align: center; color: #333; font-size: 12px; padding: 20px; font-family: 'Share Tech Mono', monospace; }
-        /* Deposit/Withdraw форма */
         .amount-picker { display: none; flex-direction: column; gap: 10px; background: #111; border: 1px solid #1e1e1e; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
         .amount-picker.visible { display: flex; }
         .amount-picker-title { font-size: 12px; color: #555; letter-spacing: 1px; font-family: 'Share Tech Mono', monospace; margin-bottom: 4px; }
@@ -245,13 +234,10 @@
                 <span class="close-btn" onclick="closeCabinet()">✕</span>
             </div>
             <div class="cabinet-body">
-                <!-- Кошелек BNB -->
                 <div id="wallet-card" class="wallet-card">
                     <div class="wallet-label">BNB Chain Wallet</div>
                     <div id="wallet-status" class="wallet-value">Не подключён</div>
                 </div>
-
-                <!-- Балансы -->
                 <div class="wallet-row">
                     <div class="wallet-mini">
                         <div class="mini-label">Смарт-контракт</div>
@@ -269,8 +255,6 @@
                         <div class="mini-sub">сессия</div>
                     </div>
                 </div>
-
-                <!-- Конвертер BNB → очки -->
                 <div id="converter-block" style="display: none;" class="converter-row">
                     <input type="number" id="conv-input" class="converter-input" placeholder="0.00" value="0.01" step="0.01" min="0" oninput="updateConverter(this.value)">
                     <span class="converter-unit">BNB</span>
@@ -278,16 +262,12 @@
                     <span id="conv-result" class="converter-result">1000</span>
                     <span class="converter-unit">очков</span>
                 </div>
-
-                <!-- Кнопки действий кабинета -->
                 <div id="cab-actions" class="cab-actions">
                     <button id="connect-btn" class="cab-btn cab-btn-connect" onclick="connectWallet()">🔗 Подключить</button>
                     <button id="deposit-btn" class="cab-btn cab-btn-deposit" onclick="openPicker('deposit')" disabled>↓ Внести</button>
                     <button id="withdraw-btn" class="cab-btn cab-btn-withdraw" onclick="openPicker('withdraw')" disabled>↑ Вывести</button>
                     <button id="bonus-btn" class="cab-btn cab-btn-bonus" onclick="getBonus()">🎁 Бонус</button>
                 </div>
-
-                <!-- Пинкер суммы -->
                 <div id="amount-picker" class="amount-picker">
                     <div id="picker-title" class="amount-picker-title">Выберите сумму</div>
                     <div id="picker-grid" class="amount-grid"></div>
@@ -296,8 +276,6 @@
                         <button id="confirm-btn" class="cab-btn cab-btn-deposit" onclick="confirmAction()">Подтвердить</button>
                     </div>
                 </div>
-
-                <!-- История транзакций -->
                 <div>
                     <div class="tx-header">
                         <span class="tx-title">История транзакций</span>
@@ -342,40 +320,14 @@
 
     <!-- Стол -->
     <div class="table">
-        <!-- Пот и текущая ставка -->
         <div class="pot-display">
             <h2 id="total-pot">💰 0</h2>
             <div class="current-bet-info">Ставка: <span id="current-bet">10</span></div>
         </div>
-
-        <!-- Бот 1 -->
-        <div id="player-1" class="player-block p1">
-            <div>Бот 1</div>
-            <span class="chips-count">1000</span>
-            <div class="card-slot"></div>
-            <div class="score-label"></div>
-        </div>
-        <!-- Бот 2 -->
-        <div id="player-2" class="player-block p2">
-            <div>Бот 2</div>
-            <span class="chips-count">1000</span>
-            <div class="card-slot"></div>
-            <div class="score-label"></div>
-        </div>
-        <!-- Бот 3 -->
-        <div id="player-3" class="player-block p3">
-            <div>Бот 3</div>
-            <span class="chips-count">1000</span>
-            <div class="card-slot"></div>
-            <div class="score-label"></div>
-        </div>
-        <!-- Игрок (внизу) -->
-        <div id="player-0" class="player-block p0">
-            <div>ВЫ</div>
-            <span id="my-chips" class="chips-count">1000</span>
-            <div class="card-slot"></div>
-            <div id="my-score-label" class="score-label"></div>
-        </div>
+        <div id="player-1" class="player-block p1"><div>Бот 1</div><span class="chips-count">1000</span><div class="card-slot"></div><div class="score-label"></div></div>
+        <div id="player-2" class="player-block p2"><div>Бот 2</div><span class="chips-count">1000</span><div class="card-slot"></div><div class="score-label"></div></div>
+        <div id="player-3" class="player-block p3"><div>Бот 3</div><span class="chips-count">1000</span><div class="card-slot"></div><div class="score-label"></div></div>
+        <div id="player-0" class="player-block p0"><div>ВЫ</div><span id="my-chips" class="chips-count">1000</span><div class="card-slot"></div><div id="my-score-label" class="score-label"></div></div>
     </div>
 
     <!-- Панель управления -->
@@ -403,7 +355,7 @@
     </div>
 
     <script>
-        // ─── ИГРОВОЕ СОСТОЯНИЕ ───
+        // ==================== ИГРОВОЕ СОСТОЯНИЕ ====================
         const suits = [{s:'♥', c:'red'}, {s:'♦', c:'red'}, {s:'♣', c:'black'}, {s:'♠', c:'black'}];
         const values = ['10', 'J', 'Q', 'K', 'A'];
         let players = [
@@ -416,28 +368,26 @@
         let curBet = 10;
         let activeIdx = 0;          // текущий игрок, чья очередь
         let dealer = 0;             // кто сдаёт (первый ход после кона)
-        let lastBetterBlind = true;
         let raiseAmount = 20;
         let konTimerInterval = null, turnTimerInterval = null, showdownTimerInterval = null;
         const KON_TIME = 60, TURN_TIME = 60, SHOWDOWN_TIME = 30;
         let showdownActive = false;  // фаза вскрытия
 
-        // ─── СОСТОЯНИЕ КАБИНЕТА (BNB) ───
+        // ==================== КАБИНЕТ (BNB) ====================
         let walletConnected = false;
         let walletAddress = null;
         let userGameId = null;
-        let contractBal = 0.00;      // BNB на смарт-контракте
+        let contractBal = 0.00;
         let bonusReceived = false;
-        let txHistory = [];           // [{type, label, amount, pts, time}]
-        let pickerMode = null;        // 'deposit' | 'withdraw'
+        let txHistory = [];
+        let pickerMode = null;
         let pickerSelected = null;
-        const RATE = 100000;           // 1 BNB = 100 000 очков (кон = 10 очков = 0.0001 BNB)
+        const RATE = 100000; // 1 BNB = 100 000 очков
 
-        // Пресеты для пикера
-        const DEPOSIT_PRESETS = [0.0001, 0.001, 0.01, 0.1, 0.5, 1, 2, 5]; // BNB
-        const WITHDRAW_PRESETS_PTS = [1000, 5000, 10000, 50000, 100000, 200000]; // очки
+        const DEPOSIT_PRESETS = [0.0001, 0.001, 0.01, 0.1, 0.5, 1, 2, 5];
+        const WITHDRAW_PRESETS_PTS = [1000, 5000, 10000, 50000, 100000, 200000];
 
-        // ─── КАБИНЕТ: ОТКРЫТЬ / ЗАКРЫТЬ ───
+        // ==================== ФУНКЦИИ КАБИНЕТА ====================
         function openCabinet() {
             document.getElementById('cabinet-modal').style.display = 'flex';
             refreshCabinetUI();
@@ -446,8 +396,6 @@
             document.getElementById('cabinet-modal').style.display = 'none';
             cancelPicker();
         }
-
-        // ─── ОБНОВИТЬ КАБИНЕТ ───
         function refreshCabinetUI() {
             document.getElementById('contract-balance').innerText = contractBal.toFixed(4);
             document.getElementById('cabinet-chips').innerText = players[0].chips.toLocaleString();
@@ -457,20 +405,14 @@
             if (conv.value) updateConverter(conv.value);
             renderTxHistory();
         }
-
         function updateConverter(val) {
             const bnb = parseFloat(val) || 0;
             const pts = Math.floor(bnb * RATE);
             document.getElementById('conv-result').innerText = pts.toLocaleString();
         }
-
-        // ─── ПОДКЛЮЧЕНИЕ КОШЕЛЬКА (BNB Chain) ───
         async function connectWallet() {
             if (walletConnected) return;
-            if (!window.ethereum) {
-                alert("MetaMask не найден! Установите расширение для браузера.");
-                return;
-            }
+            if (!window.ethereum) { alert("MetaMask не найден!"); return; }
             try {
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 if (!accounts?.length) { addLog("❌ Подключение отклонено"); return; }
@@ -490,38 +432,24 @@
                 walletConnected = true;
                 addLog(`✅ Кошелёк подключён: ${short}`);
                 addTx('connect', `Подключён: ${short}`, 0, 0);
-
-                // Переключение на BNB Chain (Mainnet)
                 try {
-                    await window.ethereum.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: '0x38' }] // BSC Mainnet
-                    });
+                    await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x38' }] });
                 } catch (e) {
                     if (e.code === 4902) {
-                        await window.ethereum.request({
-                            method: 'wallet_addEthereumChain',
-                            params: [{
-                                chainId: '0x38',
-                                chainName: 'BNB Smart Chain',
-                                nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-                                rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                                blockExplorerUrls: ['https://bscscan.com/']
-                            }]
-                        });
+                        await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{
+                            chainId: '0x38', chainName: 'BNB Smart Chain',
+                            nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                            rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                            blockExplorerUrls: ['https://bscscan.com/']
+                        }] });
                     }
                 }
                 refreshCabinetUI();
-            } catch (e) {
-                addLog("❌ Ошибка: " + (e.message || "неизвестно"));
-            }
+            } catch (e) { addLog("❌ Ошибка: " + (e.message || "неизвестно")); }
         }
-
-        // ─── ПИКЕР СУММЫ ───
         function openPicker(mode) {
             if (!walletConnected) { alert("Сначала подключите кошелёк!"); return; }
-            pickerMode = mode;
-            pickerSelected = null;
+            pickerMode = mode; pickerSelected = null;
             const picker = document.getElementById('amount-picker');
             const grid = document.getElementById('picker-grid');
             const title = document.getElementById('picker-title');
@@ -529,8 +457,7 @@
             grid.innerHTML = '';
             if (mode === 'deposit') {
                 title.innerText = 'Сумма для внесения (BNB) → очки';
-                confirmBtn.className = 'cab-btn cab-btn-deposit';
-                confirmBtn.innerText = '↓ Внести';
+                confirmBtn.className = 'cab-btn cab-btn-deposit'; confirmBtn.innerText = '↓ Внести';
                 DEPOSIT_PRESETS.forEach(v => {
                     const chip = document.createElement('div');
                     chip.className = 'amount-chip';
@@ -541,8 +468,7 @@
             } else {
                 const maxWithdraw = players[0].chips;
                 title.innerText = `Вывести очки (доступно: ${maxWithdraw.toLocaleString()})`;
-                confirmBtn.className = 'cab-btn cab-btn-withdraw';
-                confirmBtn.innerText = '↑ Вывести';
+                confirmBtn.className = 'cab-btn cab-btn-withdraw'; confirmBtn.innerText = '↑ Вывести';
                 WITHDRAW_PRESETS_PTS.filter(v => v <= maxWithdraw + 1).forEach(v => {
                     const bnb = (v / RATE).toFixed(4);
                     const chip = document.createElement('div');
@@ -556,56 +482,38 @@
             document.getElementById('cab-actions').style.display = 'none';
             picker.classList.add('visible');
         }
-
         function selectChip(el, val) {
             document.querySelectorAll('.amount-chip').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            pickerSelected = val;
+            el.classList.add('selected'); pickerSelected = val;
         }
-
         function cancelPicker() {
             document.getElementById('amount-picker').classList.remove('visible');
             document.getElementById('cab-actions').style.display = 'flex';
             pickerMode = null; pickerSelected = null;
         }
-
         function confirmAction() {
             if (!pickerSelected) { alert("Выберите сумму!"); return; }
-            if (pickerMode === 'deposit') {
-                doDeposit(pickerSelected);
-            } else if (pickerMode === 'withdraw') {
-                doWithdraw(pickerSelected);
-            }
+            if (pickerMode === 'deposit') doDeposit(pickerSelected);
+            else if (pickerMode === 'withdraw') doWithdraw(pickerSelected);
             cancelPicker();
         }
-
-        // ─── ВНЕСТИ BNB → очки ───
         function doDeposit(bnbAmount) {
             const pointsEarned = Math.floor(bnbAmount * RATE);
             contractBal += bnbAmount;
             players[0].chips += pointsEarned;
             addTx('deposit', `Внесено ${bnbAmount} BNB`, bnbAmount, pointsEarned);
             addLog(`💰 Внесено ${bnbAmount} BNB → +${pointsEarned} очков`);
-            refreshCabinetUI();
-            updateUI();
+            refreshCabinetUI(); updateUI();
         }
-
-        // ─── ВЫВЕСТИ очки → BNB ───
         function doWithdraw(withdrawPoints) {
-            if (withdrawPoints > players[0].chips) {
-                alert("Недостаточно очков!");
-                return;
-            }
+            if (withdrawPoints > players[0].chips) { alert("Недостаточно очков!"); return; }
             const bnbOut = withdrawPoints / RATE;
             players[0].chips -= withdrawPoints;
             contractBal = Math.max(0, contractBal - bnbOut);
             addTx('withdraw', `Выведено ${withdrawPoints} очк`, bnbOut, -withdrawPoints);
             addLog(`💸 ${withdrawPoints} очков → ${bnbOut.toFixed(4)} BNB на кошелёк`);
-            refreshCabinetUI();
-            updateUI();
+            refreshCabinetUI(); updateUI();
         }
-
-        // ─── БОНУС ───
         function getBonus() {
             if (bonusReceived) { alert("Вы уже получали приветственный бонус!"); return; }
             players[0].chips += 500;
@@ -614,11 +522,8 @@
             document.getElementById('bonus-btn').innerText = '✓ Получен';
             addTx('bonus', 'Приветственный бонус', 0, 500);
             addLog("🎁 Приветственный бонус: +500 очков!");
-            refreshCabinetUI();
-            updateUI();
+            refreshCabinetUI(); updateUI();
         }
-
-        // ─── ИСТОРИЯ ТРАНЗАКЦИЙ ───
         function addTx(type, label, bnb, pts) {
             const now = new Date();
             const time = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
@@ -626,13 +531,9 @@
             if (txHistory.length > 50) txHistory.pop();
             renderTxHistory();
         }
-
         function renderTxHistory() {
             const list = document.getElementById('tx-list');
-            if (!txHistory.length) {
-                list.innerHTML = '<div class="tx-empty">транзакций пока нет</div>';
-                return;
-            }
+            if (!txHistory.length) { list.innerHTML = '<div class="tx-empty">транзакций пока нет</div>'; return; }
             list.innerHTML = txHistory.map(tx => {
                 let amountHtml = '';
                 if (tx.type === 'deposit') amountHtml = `<span class="tx-amount plus">+${tx.pts} оч</span>`;
@@ -640,34 +541,20 @@
                 else if (tx.type === 'bonus') amountHtml = `<span class="tx-amount plus">+${tx.pts} оч</span>`;
                 else if (tx.type === 'win') amountHtml = `<span class="tx-amount plus">+${tx.pts} оч</span>`;
                 else if (tx.type === 'connect') amountHtml = `<span class="tx-amount" style="color:#555;">—</span>`;
-                return `
-                    <div class="tx-item ${tx.type}">
-                        <span class="tx-label">${tx.label}</span>
-                        <span style="display:flex;align-items:center;gap:10px;">
-                            ${amountHtml}
-                            <span class="tx-time">${tx.time}</span>
-                        </span>
-                    </div>`;
+                return `<div class="tx-item ${tx.type}"><span class="tx-label">${tx.label}</span><span style="display:flex;align-items:center;gap:10px;">${amountHtml}<span class="tx-time">${tx.time}</span></span></div>`;
             }).join('');
         }
-
-        function clearHistory() {
-            txHistory = [];
-            renderTxHistory();
-        }
-
-        // ─── ЛОГ ───
+        function clearHistory() { txHistory = []; renderTxHistory(); }
         function addLog(msg, type = '') {
-            document.getElementById('log').innerHTML =
-                `<div class="${type}">${msg}</div>` + document.getElementById('log').innerHTML;
+            document.getElementById('log').innerHTML = `<div class="${type}">${msg}</div>` + document.getElementById('log').innerHTML;
         }
 
-        // ─── ИГРОВЫЕ ФУНКЦИИ ───
+        // ==================== ИГРОВЫЕ ФУНКЦИИ ====================
         function calculatePoints(hand) {
             let hasJoker = hand.some(c => c.isJoker);
             let pure = hand.filter(c => !c.isJoker);
             let aces = pure.filter(c => c.v === 'A').length;
-            if (aces === 3 || (aces === 2 && hasJoker)) return 33;  // три туза
+            if (aces === 3 || (aces === 2 && hasJoker)) return 33;
             if (aces === 2 || (aces === 1 && hasJoker)) return 22;
             let suitsSum = {'♥':0, '♦':0, '♣':0, '♠':0, '★':0};
             pure.forEach(c => suitsSum[c.s] += c.p);
@@ -678,8 +565,6 @@
             for (let v in counts) if (counts[v] === 3 || (counts[v] === 2 && hasJoker)) triplet = 30;
             return Math.max(maxSuit, triplet);
         }
-
-        // Проверка на трёх тузов (для бонуса)
         function hasThreeAces(hand) {
             let hasJoker = hand.some(c => c.isJoker);
             let pure = hand.filter(c => !c.isJoker);
@@ -687,6 +572,7 @@
             return aces === 3 || (aces === 2 && hasJoker);
         }
 
+        // ==================== ФАЗА КОНА ====================
         function startKonPhase() {
             showdownActive = false;
             document.getElementById('kon-btn').style.display = 'block';
@@ -695,48 +581,35 @@
             document.getElementById('turn-timer').classList.add('hidden');
             document.getElementById('showdown-timer').classList.add('hidden');
             document.getElementById('btn-showdown').style.display = 'none';
-
-            if (pot === 0) {
-                players.forEach(p => { p.konReady = false; p.isFolded = false; p.show = false; p.hand = []; });
-                let timeLeft = KON_TIME;
+            // Если pot не 0 (например, после ничьи), мы не должны сюда попадать — но для безопасности обнулим?
+            // В нашей логике после ничьи вызывается continueAfterDraw, а не startKonPhase. Поэтому здесь pot всегда 0.
+            players.forEach(p => { p.konReady = false; p.isFolded = false; p.show = false; p.hand = []; });
+            let timeLeft = KON_TIME;
+            document.getElementById('kon-countdown').textContent = timeLeft;
+            document.getElementById('kon-progress').style.strokeDashoffset = 597;
+            setTimeout(() => { if (!players[1].konReady) { players[1].konReady = true; addLog("Бот 1 внёс кон"); checkAllKon(); } }, 1800);
+            setTimeout(() => { if (!players[2].konReady) { players[2].konReady = true; addLog("Бот 2 внёс кон"); checkAllKon(); } }, 3400);
+            setTimeout(() => { if (!players[3].konReady) { players[3].konReady = true; addLog("Бот 3 внёс кон"); checkAllKon(); } }, 5200);
+            konTimerInterval = setInterval(() => {
+                timeLeft--;
                 document.getElementById('kon-countdown').textContent = timeLeft;
-                document.getElementById('kon-progress').style.strokeDashoffset = 597;
-
-                setTimeout(() => { if (!players[1].konReady) { players[1].konReady = true; addLog("Бот 1 внёс кон"); checkAllKon(); } }, 1800);
-                setTimeout(() => { if (!players[2].konReady) { players[2].konReady = true; addLog("Бот 2 внёс кон"); checkAllKon(); } }, 3400);
-                setTimeout(() => { if (!players[3].konReady) { players[3].konReady = true; addLog("Бот 3 внёс кон"); checkAllKon(); } }, 5200);
-
-                konTimerInterval = setInterval(() => {
-                    timeLeft--;
-                    document.getElementById('kon-countdown').textContent = timeLeft;
-                    const offset = 597 - (597 * (KON_TIME - timeLeft) / KON_TIME);
-                    document.getElementById('kon-progress').style.strokeDashoffset = offset;
-                    if (timeLeft <= 0) {
-                        clearInterval(konTimerInterval);
-                        if (!players[0].konReady) { addLog("⏰ Время кона вышло → автопас"); players[0].isFolded = true; }
-                        autoDeal();
-                    }
-                }, 1000);
-            } else {
-                console.warn("startKonPhase вызван с ненулевым pot");
-            }
+                const offset = 597 - (597 * (KON_TIME - timeLeft) / KON_TIME);
+                document.getElementById('kon-progress').style.strokeDashoffset = offset;
+                if (timeLeft <= 0) {
+                    clearInterval(konTimerInterval);
+                    if (!players[0].konReady) { addLog("⏰ Время кона вышло → автопас"); players[0].isFolded = true; }
+                    autoDeal();
+                }
+            }, 1000);
         }
-
         function payKon() {
             if (players[0].konReady) return;
-            if (players[0].chips < 10) {
-                alert("Недостаточно очков! Откройте кабинет и пополните баланс.");
-                return;
-            }
-            players[0].chips -= 10;
-            pot += 10;
-            players[0].konReady = true;
+            if (players[0].chips < 10) { alert("Недостаточно очков! Пополните баланс."); return; }
+            players[0].chips -= 10; pot += 10; players[0].konReady = true;
             document.getElementById('total-pot').innerText = "💰 " + pot;
-            updateUI();
-            addLog("Вы внесли кон (10 очков)");
+            updateUI(); addLog("Вы внесли кон (10 очков)");
             checkAllKon();
         }
-
         function checkAllKon() {
             if (players.every(p => p.konReady)) {
                 clearInterval(konTimerInterval);
@@ -745,35 +618,28 @@
             }
         }
 
+        // ==================== РАЗДАЧА ====================
         function autoDeal() {
             document.getElementById('kon-timer').classList.add('hidden');
             document.getElementById('kon-btn').style.display = 'none';
-
             let deck = [];
             suits.forEach(s => values.forEach(v => deck.push({v, s:s.s, c:s.c, p: v==='A'?11:10})));
             deck.push({v:'JK', s:'★', c:'black', p:11, isJoker:true});
             deck.sort(() => Math.random() - 0.5);
-
             players.forEach(p => {
-                if (!p.isFolded) {
-                    p.hand = [deck.pop(), deck.pop(), deck.pop()];
-                } else {
-                    p.hand = [];
-                }
-                p.isBlind = true;
-                p.show = false;
+                if (!p.isFolded) p.hand = [deck.pop(), deck.pop(), deck.pop()];
+                else p.hand = [];
+                p.isBlind = true; p.show = false;
             });
-
             curBet = 10;
             activeIdx = dealer;
-            lastBetterBlind = true;
-
             document.getElementById('game-actions').style.display = 'flex';
             addLog("Раздача! Твой ход — 60 секунд.");
             updateUI();
             startTurnTimer();
         }
 
+        // ==================== ТАЙМЕР ХОДА ====================
         function startTurnTimer() {
             if (activeIdx !== 0) return;
             document.getElementById('turn-timer').classList.remove('hidden');
@@ -791,17 +657,16 @@
                     addLog("⏰ Время хода вышло → автопас");
                     players[0].isFolded = true;
                     document.getElementById('turn-timer').classList.add('hidden');
-                    // после фолда проверяем, надо ли переходить к шоудауну
-                    checkRoundEnd();
+                    afterPlayerAction(); // проверяем, что делать после фолда
                 }
             }, 1000);
         }
 
+        // ==================== ДЕЙСТВИЯ ИГРОКА ====================
         function gameAction(type) {
             if (activeIdx !== 0 || showdownActive) return;
             if (turnTimerInterval) clearInterval(turnTimerInterval);
             document.getElementById('turn-timer').classList.add('hidden');
-
             if (type === 'see') {
                 players[0].isBlind = false;
                 addLog("Вы посмотрели карты → ставки ×2");
@@ -809,74 +674,63 @@
             } else if (type === 'dark') {
                 let cost = curBet;
                 if (players[0].chips < cost) return alert("Мало очков!");
-                players[0].chips -= cost;
-                pot += cost;
-                lastBetterBlind = true;
+                players[0].chips -= cost; pot += cost;
                 addLog(`Тёмный ${cost}`);
                 nextTurn();
             } else if (type === 'superdark') {
                 curBet += raiseAmount;
                 let cost = curBet;
                 if (players[0].chips < cost) return alert("Мало очков!");
-                players[0].chips -= cost;
-                pot += cost;
-                lastBetterBlind = true;
+                players[0].chips -= cost; pot += cost;
                 addLog(`Перетёмный до ${curBet}`);
                 nextTurn();
             } else if (type === 'call') {
                 let cost = curBet * 2;
                 if (players[0].chips < cost) return alert("Мало очков!");
-                players[0].chips -= cost;
-                pot += cost;
-                lastBetterBlind = false;
+                players[0].chips -= cost; pot += cost;
                 addLog(`Поддержка ${cost}`);
                 nextTurn();
             } else if (type === 'raise') {
                 curBet += raiseAmount;
                 let cost = curBet * 2;
                 if (players[0].chips < cost) return alert("Мало очков!");
-                players[0].chips -= cost;
-                pot += cost;
-                lastBetterBlind = false;
+                players[0].chips -= cost; pot += cost;
                 addLog(`Подъём до ${curBet}`);
                 nextTurn();
             } else if (type === 'fold') {
                 players[0].isFolded = true;
-                checkRoundEnd();
+                afterPlayerAction();
                 return;
             }
             updateUI();
         }
 
+        // ==================== ПЕРЕХОД ХОДА ====================
         function nextTurn() {
             // Ищем следующего активного игрока
             let next = (activeIdx + 1) % 4;
             let start = next;
             while (players[next].isFolded && next !== activeIdx) {
                 next = (next + 1) % 4;
-                if (next === start) break; // все пасанули, кроме текущего?
+                if (next === start) break; // все пасанули
             }
             if (next === activeIdx) {
-                // все пасанули, остался только текущий? Тогда он выиграл?
-                // Но может быть случай, когда все, кроме одного, пасанули — тогда он автоматически побеждает без вскрытия.
+                // все пасанули, кроме текущего? Если текущий не пасанул, то он остался один — он выигрывает
                 let activeCount = players.filter(p => !p.isFolded).length;
                 if (activeCount === 1) {
-                    // единственный активный — текущий? Проверим.
-                    // Можно просто вызвать автоматическое завершение
-                    addLog("Остался один игрок — он выигрывает без вскрытия.");
                     let winnerIdx = players.findIndex(p => !p.isFolded);
                     players[winnerIdx].chips += pot;
+                    addLog(`Игрок ${winnerIdx} выигрывает банк (все пасанули)`);
                     if (winnerIdx === 0) addTx('win', `Победа без вскрытия +${pot}`, 0, pot);
                     pot = 0;
                     dealer = winnerIdx;
                     updateUI();
                     setTimeout(startKonPhase, 2000);
-                    return;
                 } else {
                     // больше одного активного, но ход зациклился — пора вскрываться
                     startShowdownPhase();
-                    return;
                 }
+                return;
             }
             activeIdx = next;
             updateUI();
@@ -888,41 +742,42 @@
             }
         }
 
+        // ==================== ХОД БОТА ====================
         function botMove() {
             if (showdownActive) return;
             let b = players[activeIdx];
             if (Math.random() > 0.35 && b.chips >= curBet) {
                 let cost = curBet;
-                b.chips -= cost;
-                pot += cost;
+                b.chips -= cost; pot += cost;
                 addLog(`Бот ${activeIdx} поставил ${cost}`);
                 nextTurn();
             } else {
                 b.isFolded = true;
                 addLog(`Бот ${activeIdx} пас`);
-                checkRoundEnd(); // после паса проверяем, не пора ли вскрываться
+                afterPlayerAction();
             }
         }
 
-        // Проверка, нужно ли переходить к шоудауну
-        function checkRoundEnd() {
+        // ==================== ПОСЛЕ ДЕЙСТВИЯ (ПРОВЕРКА НА ВСКРЫТИЕ) ====================
+        function afterPlayerAction() {
             let activePlayers = players.filter(p => !p.isFolded);
             if (activePlayers.length === 1) {
-                // один активный — он выигрывает
                 let winnerIdx = players.findIndex(p => !p.isFolded);
                 players[winnerIdx].chips += pot;
-                if (winnerIdx === 0) addTx('win', `Победа (все пасанули) +${pot}`, 0, pot);
                 addLog(`Игрок ${winnerIdx} выигрывает банк (все пасанули)`);
+                if (winnerIdx === 0) addTx('win', `Победа без вскрытия +${pot}`, 0, pot);
                 pot = 0;
                 dealer = winnerIdx;
                 updateUI();
                 setTimeout(startKonPhase, 2000);
             } else if (activePlayers.length > 1) {
-                // больше одного — нужно вскрытие, если ход зациклился (это проверится в nextTurn)
-                // но можно инициировать вскрытие, если все сделали ходы? Упростим: будем вызывать startShowdownPhase из nextTurn при зацикливании.
+                // Проверяем, все ли активные сделали ход? Упростим: будем считать, что если очередь дошла до начального игрока и все сделали ставки, то пора вскрываться.
+                // Но проще: после каждого хода вызываем nextTurn, и если ход зациклился (nextTurn определит), то там запустится шоудаун.
+                // Поэтому здесь ничего не делаем, просто продолжаем.
             }
         }
 
+        // ==================== ФАЗА ВСКРЫТИЯ ====================
         function startShowdownPhase() {
             if (showdownActive) return;
             showdownActive = true;
@@ -964,27 +819,21 @@
             // Вскрываем карты всех активных игроков
             players.forEach(p => { if (!p.isFolded) p.show = true; });
 
-            // Определяем победителя(ей) среди не пасанувших
+            // Определяем победителя(ей)
             let best = -1;
             let winners = [];
             players.forEach((p, i) => {
                 if (!p.isFolded) {
                     let pts = calculatePoints(p.hand);
-                    if (pts > best) {
-                        best = pts;
-                        winners = [i];
-                    } else if (pts === best) {
-                        winners.push(i);
-                    }
+                    if (pts > best) { best = pts; winners = [i]; }
+                    else if (pts === best) winners.push(i);
                 }
             });
 
             // Бонус за трёх тузов
             let threeAcesPlayers = [];
             players.forEach((p, i) => {
-                if (!p.isFolded && hasThreeAces(p.hand)) {
-                    threeAcesPlayers.push(i);
-                }
+                if (!p.isFolded && hasThreeAces(p.hand)) threeAcesPlayers.push(i);
             });
             if (threeAcesPlayers.length > 0) {
                 const BONUS_AMOUNT = 1000;
@@ -1006,29 +855,16 @@
             if (winners.length > 1) {
                 // Ничья — банк остаётся, новый раунд с теми же активными
                 addLog("⚖️ СВАРА! Банк остаётся. Новый раунд торгов.", "log-win");
-                // Продолжаем с dealer, но активные те же, folded остаются folded
-                // Сбрасываем isBlind? После вскрытия все видят карты, но новый раунд тёмный? В секе обычно после ничьей карты не открывают, а идёт новый круг тёмных ставок. Упростим: оставим карты открытыми.
-                // Можно скрыть карты снова? Пока оставим открытыми для простоты.
-                // Ход начинается с dealer
-                activeIdx = dealer;
-                // Ставка не меняется
-                addLog(`Новый раунд торгов. Текущая ставка: ${curBet}`);
-                // Скрываем карты? В классике после ничьей карты остаются открытыми? Сложно. Для простоты оставим открытыми.
-                // Но тогда все знают карты, и торги бессмысленны. Лучше скрыть карты снова и начать тёмный раунд.
-                // Реализуем скрытие карт для всех, кроме игрока (если он не пасанул), но isBlind = true.
+                // Скрываем карты и начинаем новый круг с dealer
                 players.forEach(p => {
-                    if (!p.isFolded) {
-                        p.show = false;
-                        p.isBlind = true;
-                    }
+                    if (!p.isFolded) { p.show = false; p.isBlind = true; }
                 });
-                updateUI();
-                // Запускаем ход с dealer
                 activeIdx = dealer;
+                addLog(`Новый раунд торгов. Текущая ставка: ${curBet}`);
+                updateUI();
                 if (activeIdx === 0) startTurnTimer();
                 else setTimeout(botMove, 600);
             } else {
-                // Единственный победитель
                 let winnerId = winners[0];
                 players[winnerId].chips += pot;
                 const name = winnerId === 0 ? `Вы` : `Бот ${winnerId}`;
@@ -1041,6 +877,7 @@
             }
         }
 
+        // ==================== ВСПОМОГАТЕЛЬНЫЕ ====================
         function updateRaiseAmount(val) {
             raiseAmount = parseInt(val);
             document.getElementById('raise-amount-display').innerText = '+' + raiseAmount;
@@ -1083,13 +920,12 @@
             if (document.getElementById('cabinet-modal').style.display === 'flex') refreshCabinetUI();
         }
 
-        // Инициализация
+        // ==================== СТАРТ ====================
         window.onload = () => {
             document.getElementById('raise-amount-display').innerText = '+20';
             document.getElementById('raise-amount-display2').innerText = '+20';
             dealer = 0;
             startKonPhase();
-
             document.getElementById('cabinet-btn').addEventListener('click', openCabinet);
         };
     </script>
