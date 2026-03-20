@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Seka Elite — BNB Edition</title>
+    <title>Seka Elite — BNB с кнопкой вскрытия</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -72,6 +72,7 @@
         .btn-call { background: var(--green); color: white; }
         .btn-raise { background: #9b59b6; color: white; }
         .btn-fold { background: #e74c3c; color: white; }
+        .btn-showdown { background: var(--gold); color: #000; font-size: 18px; }
         .btn:disabled { background: #444; cursor: not-allowed; opacity: 0.6; transform: none; }
         .raise-group { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; }
         /* ─── ТАЙМЕРЫ ─── */
@@ -327,6 +328,14 @@
             <text x="110" y="160" class="timer-label">ТВОЙ ХОД</text>
         </svg>
     </div>
+    <div id="showdown-timer" class="timer-container hidden">
+        <svg viewBox="0 0 220 220" class="timer-svg">
+            <circle cx="110" cy="110" r="95" class="timer-bg" />
+            <circle id="showdown-progress" cx="110" cy="110" r="95" class="timer-progress" stroke-dasharray="597" stroke-dashoffset="597" transform="rotate(-90 110 110)" />
+            <text x="110" y="120" class="timer-text" id="showdown-countdown">30</text>
+            <text x="110" y="160" class="timer-label">ВСКРЫТИЕ</text>
+        </svg>
+    </div>
 
     <!-- Лог -->
     <div id="log">Добро пожаловать в Seka Elite!<br>Откройте кабинет, чтобы пополнить баланс.</div>
@@ -385,6 +394,7 @@
                 <span>+<span id="raise-amount-display2">20</span></span>
             </div>
             <button class="btn btn-fold" onclick="gameAction('fold')">Пас</button>
+            <button id="btn-showdown" class="btn btn-showdown" onclick="showdown()" style="display: none;">🃏 Открыть карты</button>
         </div>
         <div class="raise-group">
             <span>+<span id="raise-amount-display">20</span></span>
@@ -408,8 +418,9 @@
         let dealer = 0;             // кто сдаёт (первый ход после кона)
         let lastBetterBlind = true;
         let raiseAmount = 20;
-        let konTimerInterval = null, turnTimerInterval = null;
-        const KON_TIME = 60, TURN_TIME = 60;
+        let konTimerInterval = null, turnTimerInterval = null, showdownTimerInterval = null;
+        const KON_TIME = 60, TURN_TIME = 60, SHOWDOWN_TIME = 30;
+        let showdownActive = false;  // фаза вскрытия
 
         // ─── СОСТОЯНИЕ КАБИНЕТА (BNB) ───
         let walletConnected = false;
@@ -677,28 +688,20 @@
         }
 
         function startKonPhase() {
+            showdownActive = false;
             document.getElementById('kon-btn').style.display = 'block';
             document.getElementById('game-actions').style.display = 'none';
             document.getElementById('kon-timer').classList.remove('hidden');
             document.getElementById('turn-timer').classList.add('hidden');
-
-            // Важно: pot НЕ обнуляем, если он остался после ничьей. Но в новой фазе кона игроки должны внести кон заново.
-            // В классике при ничьей банк остаётся и начинается новый круг ставок, но кон не вносится повторно.
-            // У нас сейчас startKonPhase вызывается либо после окончания раздачи (с выигрышем/ничьей), либо в начале игры.
-            // При ничьей мы вызываем continueAfterDraw, а не startKonPhase. Поэтому здесь pot может быть уже каким-то.
-            // При нормальной раздаче pot обнуляется в finishRound. При ничьей pot остаётся, и вызывается continueAfterDraw.
-            // Поэтому здесь просто сбрасываем konReady и folded для всех игроков, если pot==0 (начало игры) или pot>0 (после ничьей мы не вызываем startKonPhase).
-            // Но в случае начала игры pot=0, все должны внести кон. А после ничьей мы вызываем другую функцию.
-            // Убедимся, что startKonPhase вызывается только когда pot=0 (начало игры или после выигрыша).
+            document.getElementById('showdown-timer').classList.add('hidden');
+            document.getElementById('btn-showdown').style.display = 'none';
 
             if (pot === 0) {
-                // Новый кон: все игроки должны внести кон
                 players.forEach(p => { p.konReady = false; p.isFolded = false; p.show = false; p.hand = []; });
                 let timeLeft = KON_TIME;
                 document.getElementById('kon-countdown').textContent = timeLeft;
                 document.getElementById('kon-progress').style.strokeDashoffset = 597;
 
-                // Боты вносят кон с задержкой
                 setTimeout(() => { if (!players[1].konReady) { players[1].konReady = true; addLog("Бот 1 внёс кон"); checkAllKon(); } }, 1800);
                 setTimeout(() => { if (!players[2].konReady) { players[2].konReady = true; addLog("Бот 2 внёс кон"); checkAllKon(); } }, 3400);
                 setTimeout(() => { if (!players[3].konReady) { players[3].konReady = true; addLog("Бот 3 внёс кон"); checkAllKon(); } }, 5200);
@@ -715,8 +718,7 @@
                     }
                 }, 1000);
             } else {
-                // Если pot не 0, значит мы не должны сюда попадать. На всякий случай.
-                console.warn("startKonPhase вызван с ненулевым pot, возможно ошибка");
+                console.warn("startKonPhase вызван с ненулевым pot");
             }
         }
 
@@ -747,26 +749,22 @@
             document.getElementById('kon-timer').classList.add('hidden');
             document.getElementById('kon-btn').style.display = 'none';
 
-            // Создаём колоду
             let deck = [];
             suits.forEach(s => values.forEach(v => deck.push({v, s:s.s, c:s.c, p: v==='A'?11:10})));
             deck.push({v:'JK', s:'★', c:'black', p:11, isJoker:true});
             deck.sort(() => Math.random() - 0.5);
 
-            // Раздаём карты только тем, кто не пасанул (isFolded = false)
             players.forEach(p => {
                 if (!p.isFolded) {
                     p.hand = [deck.pop(), deck.pop(), deck.pop()];
                 } else {
                     p.hand = [];
                 }
-                p.isBlind = true;   // все карты скрыты
+                p.isBlind = true;
                 p.show = false;
             });
 
-            // Текущая ставка = 10 (начальная)
             curBet = 10;
-            // Первый ход - за dealer
             activeIdx = dealer;
             lastBetterBlind = true;
 
@@ -777,7 +775,7 @@
         }
 
         function startTurnTimer() {
-            if (activeIdx !== 0) return; // таймер только для игрока
+            if (activeIdx !== 0) return;
             document.getElementById('turn-timer').classList.remove('hidden');
             let timeLeft = TURN_TIME;
             document.getElementById('turn-countdown').textContent = timeLeft;
@@ -793,20 +791,20 @@
                     addLog("⏰ Время хода вышло → автопас");
                     players[0].isFolded = true;
                     document.getElementById('turn-timer').classList.add('hidden');
-                    finishRound();
+                    // после фолда проверяем, надо ли переходить к шоудауну
+                    checkRoundEnd();
                 }
             }, 1000);
         }
 
         function gameAction(type) {
-            if (activeIdx !== 0) return;
+            if (activeIdx !== 0 || showdownActive) return;
             if (turnTimerInterval) clearInterval(turnTimerInterval);
             document.getElementById('turn-timer').classList.add('hidden');
 
             if (type === 'see') {
                 players[0].isBlind = false;
                 addLog("Вы посмотрели карты → ставки ×2");
-                // после просмотра ход переходит к следующему (боты будут ходить)
                 nextTurn();
             } else if (type === 'dark') {
                 let cost = curBet;
@@ -844,22 +842,41 @@
                 nextTurn();
             } else if (type === 'fold') {
                 players[0].isFolded = true;
-                finishRound();
+                checkRoundEnd();
                 return;
             }
             updateUI();
         }
 
         function nextTurn() {
-            // Ищем следующего активного игрока (не folded)
+            // Ищем следующего активного игрока
             let next = (activeIdx + 1) % 4;
+            let start = next;
             while (players[next].isFolded && next !== activeIdx) {
                 next = (next + 1) % 4;
+                if (next === start) break; // все пасанули, кроме текущего?
             }
             if (next === activeIdx) {
-                // все пасанули, кроме текущего? но такого не должно быть
-                finishRound();
-                return;
+                // все пасанули, остался только текущий? Тогда он выиграл?
+                // Но может быть случай, когда все, кроме одного, пасанули — тогда он автоматически побеждает без вскрытия.
+                let activeCount = players.filter(p => !p.isFolded).length;
+                if (activeCount === 1) {
+                    // единственный активный — текущий? Проверим.
+                    // Можно просто вызвать автоматическое завершение
+                    addLog("Остался один игрок — он выигрывает без вскрытия.");
+                    let winnerIdx = players.findIndex(p => !p.isFolded);
+                    players[winnerIdx].chips += pot;
+                    if (winnerIdx === 0) addTx('win', `Победа без вскрытия +${pot}`, 0, pot);
+                    pot = 0;
+                    dealer = winnerIdx;
+                    updateUI();
+                    setTimeout(startKonPhase, 2000);
+                    return;
+                } else {
+                    // больше одного активного, но ход зациклился — пора вскрываться
+                    startShowdownPhase();
+                    return;
+                }
             }
             activeIdx = next;
             updateUI();
@@ -872,8 +889,8 @@
         }
 
         function botMove() {
+            if (showdownActive) return;
             let b = players[activeIdx];
-            // Простой бот: с вероятностью 65% ставит (если хватает), иначе пас
             if (Math.random() > 0.35 && b.chips >= curBet) {
                 let cost = curBet;
                 b.chips -= cost;
@@ -883,7 +900,144 @@
             } else {
                 b.isFolded = true;
                 addLog(`Бот ${activeIdx} пас`);
-                nextTurn();
+                checkRoundEnd(); // после паса проверяем, не пора ли вскрываться
+            }
+        }
+
+        // Проверка, нужно ли переходить к шоудауну
+        function checkRoundEnd() {
+            let activePlayers = players.filter(p => !p.isFolded);
+            if (activePlayers.length === 1) {
+                // один активный — он выигрывает
+                let winnerIdx = players.findIndex(p => !p.isFolded);
+                players[winnerIdx].chips += pot;
+                if (winnerIdx === 0) addTx('win', `Победа (все пасанули) +${pot}`, 0, pot);
+                addLog(`Игрок ${winnerIdx} выигрывает банк (все пасанули)`);
+                pot = 0;
+                dealer = winnerIdx;
+                updateUI();
+                setTimeout(startKonPhase, 2000);
+            } else if (activePlayers.length > 1) {
+                // больше одного — нужно вскрытие, если ход зациклился (это проверится в nextTurn)
+                // но можно инициировать вскрытие, если все сделали ходы? Упростим: будем вызывать startShowdownPhase из nextTurn при зацикливании.
+            }
+        }
+
+        function startShowdownPhase() {
+            if (showdownActive) return;
+            showdownActive = true;
+            document.getElementById('turn-timer').classList.add('hidden');
+            document.getElementById('showdown-timer').classList.remove('hidden');
+            document.getElementById('btn-showdown').style.display = 'inline-block';
+            // Скрываем кнопки действий
+            document.getElementById('btn-dark').style.display = 'none';
+            document.getElementById('superdark-group').style.display = 'none';
+            document.getElementById('btn-call').style.display = 'none';
+            document.getElementById('normal-raise-group').style.display = 'none';
+            document.getElementById('btn-see').style.display = 'none';
+            document.getElementById('btn-fold').style.display = 'none';
+
+            let timeLeft = SHOWDOWN_TIME;
+            document.getElementById('showdown-countdown').textContent = timeLeft;
+            document.getElementById('showdown-progress').style.strokeDashoffset = 597;
+            if (showdownTimerInterval) clearInterval(showdownTimerInterval);
+            showdownTimerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('showdown-countdown').textContent = timeLeft;
+                const offset = 597 - (597 * (SHOWDOWN_TIME - timeLeft) / SHOWDOWN_TIME);
+                document.getElementById('showdown-progress').style.strokeDashoffset = offset;
+                if (timeLeft <= 0) {
+                    clearInterval(showdownTimerInterval);
+                    addLog("⏰ Время вскрытия истекло — карты открываются автоматически");
+                    showdown();
+                }
+            }, 1000);
+        }
+
+        function showdown() {
+            if (!showdownActive) return;
+            clearInterval(showdownTimerInterval);
+            document.getElementById('showdown-timer').classList.add('hidden');
+            document.getElementById('btn-showdown').style.display = 'none';
+            showdownActive = false;
+
+            // Вскрываем карты всех активных игроков
+            players.forEach(p => { if (!p.isFolded) p.show = true; });
+
+            // Определяем победителя(ей) среди не пасанувших
+            let best = -1;
+            let winners = [];
+            players.forEach((p, i) => {
+                if (!p.isFolded) {
+                    let pts = calculatePoints(p.hand);
+                    if (pts > best) {
+                        best = pts;
+                        winners = [i];
+                    } else if (pts === best) {
+                        winners.push(i);
+                    }
+                }
+            });
+
+            // Бонус за трёх тузов
+            let threeAcesPlayers = [];
+            players.forEach((p, i) => {
+                if (!p.isFolded && hasThreeAces(p.hand)) {
+                    threeAcesPlayers.push(i);
+                }
+            });
+            if (threeAcesPlayers.length > 0) {
+                const BONUS_AMOUNT = 1000;
+                for (let winnerId of threeAcesPlayers) {
+                    for (let i = 0; i < players.length; i++) {
+                        if (i === winnerId || players[i].isFolded) continue;
+                        let deduct = Math.min(players[i].chips, BONUS_AMOUNT);
+                        if (deduct > 0) {
+                            players[i].chips -= deduct;
+                            players[winnerId].chips += deduct;
+                            addLog(`🎁 Бонус за трёх тузов: игрок ${winnerId} получает ${deduct} от игрока ${i}`);
+                        }
+                    }
+                }
+            }
+
+            updateUI();
+
+            if (winners.length > 1) {
+                // Ничья — банк остаётся, новый раунд с теми же активными
+                addLog("⚖️ СВАРА! Банк остаётся. Новый раунд торгов.", "log-win");
+                // Продолжаем с dealer, но активные те же, folded остаются folded
+                // Сбрасываем isBlind? После вскрытия все видят карты, но новый раунд тёмный? В секе обычно после ничьей карты не открывают, а идёт новый круг тёмных ставок. Упростим: оставим карты открытыми.
+                // Можно скрыть карты снова? Пока оставим открытыми для простоты.
+                // Ход начинается с dealer
+                activeIdx = dealer;
+                // Ставка не меняется
+                addLog(`Новый раунд торгов. Текущая ставка: ${curBet}`);
+                // Скрываем карты? В классике после ничьей карты остаются открытыми? Сложно. Для простоты оставим открытыми.
+                // Но тогда все знают карты, и торги бессмысленны. Лучше скрыть карты снова и начать тёмный раунд.
+                // Реализуем скрытие карт для всех, кроме игрока (если он не пасанул), но isBlind = true.
+                players.forEach(p => {
+                    if (!p.isFolded) {
+                        p.show = false;
+                        p.isBlind = true;
+                    }
+                });
+                updateUI();
+                // Запускаем ход с dealer
+                activeIdx = dealer;
+                if (activeIdx === 0) startTurnTimer();
+                else setTimeout(botMove, 600);
+            } else {
+                // Единственный победитель
+                let winnerId = winners[0];
+                players[winnerId].chips += pot;
+                const name = winnerId === 0 ? `Вы` : `Бот ${winnerId}`;
+                addLog(`🎉 Выиграл ${name} (${best} очк) → +${pot}`, "log-win");
+                if (winnerId === 0) addTx('win', `Победа! +${pot} очков`, 0, pot);
+                dealer = winnerId;
+                pot = 0;
+                updateUI();
+                setTimeout(startKonPhase, 2800);
             }
         }
 
@@ -897,11 +1051,13 @@
             document.getElementById('total-pot').innerText = "💰 " + pot;
             document.getElementById('current-bet').innerText = curBet;
             document.getElementById('my-chips').innerText = players[0].chips;
-            const isBlind = players[0].isBlind;
-            document.getElementById('btn-dark').style.display = isBlind ? 'inline-block' : 'none';
-            document.getElementById('superdark-group').style.display = isBlind ? 'flex' : 'none';
-            document.getElementById('btn-call').style.display = isBlind ? 'none' : 'inline-block';
-            document.getElementById('normal-raise-group').style.display = isBlind ? 'none' : 'flex';
+            const isBlind = players[0].isBlind && !showdownActive;
+            document.getElementById('btn-dark').style.display = (isBlind && !showdownActive) ? 'inline-block' : 'none';
+            document.getElementById('superdark-group').style.display = (isBlind && !showdownActive) ? 'flex' : 'none';
+            document.getElementById('btn-call').style.display = (!isBlind && !showdownActive) ? 'inline-block' : 'none';
+            document.getElementById('normal-raise-group').style.display = (!isBlind && !showdownActive) ? 'flex' : 'none';
+            document.getElementById('btn-see').style.display = (players[0].isBlind && !showdownActive && activeIdx === 0) ? 'inline-block' : 'none';
+            document.getElementById('btn-fold').style.display = (activeIdx === 0 && !showdownActive) ? 'inline-block' : 'none';
 
             players.forEach((p, i) => {
                 const el = document.getElementById(`player-${i}`);
@@ -923,136 +1079,17 @@
                     else scoreEl.innerText = "";
                 }
             });
-            document.getElementById('btn-see').disabled = !players[0].isBlind;
+            document.getElementById('btn-see').disabled = !players[0].isBlind || showdownActive || activeIdx !== 0;
             if (document.getElementById('cabinet-modal').style.display === 'flex') refreshCabinetUI();
-        }
-
-        // Обработка бонуса за трёх тузов
-        function applyThreeAcesBonus(winnerId) {
-            const BONUS_AMOUNT = 1000; // 1000 очков (эквивалент 0.01 BNB)
-            let totalBonus = 0;
-            for (let i = 0; i < players.length; i++) {
-                if (i === winnerId || players[i].isFolded) continue;
-                let deduct = Math.min(players[i].chips, BONUS_AMOUNT);
-                if (deduct > 0) {
-                    players[i].chips -= deduct;
-                    players[winnerId].chips += deduct;
-                    totalBonus += deduct;
-                    addLog(`🎁 Бонус за трёх тузов: -${deduct} очков у игрока ${i} → +${deduct} победителю`);
-                }
-            }
-            if (totalBonus > 0) {
-                addTx('bonus', `Бонус за 3 туза`, 0, totalBonus);
-            }
-        }
-
-        function finishRound() {
-            if (turnTimerInterval) clearInterval(turnTimerInterval);
-            document.getElementById('turn-timer').classList.add('hidden');
-
-            // Определяем победителя(ей) среди не пасанувших
-            let best = -1;
-            let winners = [];
-            players.forEach((p, i) => {
-                p.show = true; // вскрываем карты
-                if (!p.isFolded) {
-                    let pts = calculatePoints(p.hand);
-                    if (pts > best) {
-                        best = pts;
-                        winners = [i];
-                    } else if (pts === best) {
-                        winners.push(i);
-                    }
-                }
-            });
-
-            // Проверка на бонус за трёх тузов среди победителей? Обычно бонус получает тот, у кого три туза, даже если не победил?
-            // По логике: если у кого-то три туза, он получает бонус с каждого игрока в игре. Применим ко всем, у кого три туза.
-            let threeAcesPlayers = [];
-            players.forEach((p, i) => {
-                if (!p.isFolded && hasThreeAces(p.hand)) {
-                    threeAcesPlayers.push(i);
-                }
-            });
-            // Если несколько игроков с тремя тузами, каждый получает бонус с остальных (кроме себя) - так редко, но реализуем.
-            if (threeAcesPlayers.length > 0) {
-                const BONUS_AMOUNT = 1000;
-                for (let winnerId of threeAcesPlayers) {
-                    for (let i = 0; i < players.length; i++) {
-                        if (i === winnerId || players[i].isFolded) continue;
-                        let deduct = Math.min(players[i].chips, BONUS_AMOUNT);
-                        if (deduct > 0) {
-                            players[i].chips -= deduct;
-                            players[winnerId].chips += deduct;
-                            addLog(`🎁 Бонус за трёх тузов: игрок ${winnerId} получает ${deduct} от игрока ${i}`);
-                        }
-                    }
-                }
-            }
-
-            updateUI();
-
-            if (winners.length > 1) {
-                // НИЧЬЯ (СЕКА) — банк остаётся, начинаем новый раунд с теми же активными игроками
-                addLog("⚖️ СВАРА! Банк остаётся. Новый раунд торгов.", "log-win");
-                // Сохраняем pot, не обнуляем
-                // Запускаем продолжение игры (новый круг ставок) с того же dealer
-                continueAfterDraw();
-            } else {
-                // Есть победитель
-                let winnerId = winners[0];
-                players[winnerId].chips += pot;
-                const name = winnerId === 0 ? `Вы` : `Бот ${winnerId}`;
-                addLog(`🎉 Выиграл ${name} (${best} очк) → +${pot}`, "log-win");
-                if (winnerId === 0) addTx('win', `Победа! +${pot} очков`, 0, pot);
-                // Обновляем dealer = победитель
-                dealer = winnerId;
-                pot = 0;
-                updateUI();
-                // Запускаем новый кон
-                setTimeout(startKonPhase, 2800);
-            }
-        }
-
-        // Новый раунд после ничьей (без обнуления банка)
-        function continueAfterDraw() {
-            // Все игроки, которые не пасанули, остаются в игре (isFolded = false).
-            // Те, кто пасанул, уже folded и не участвуют.
-            // Сбрасываем isBlind для всех (теперь все знают карты? в секе после вскрытия все видят карты, но торги продолжаются вслепую? 
-            // Обычно после ничьей все карты открыты, и дальше торги идут с открытыми? Сложно. Упростим: оставляем карты открытыми (show = true), 
-            // и игроки могут продолжать торги, зная карты оппонентов. Но тогда ставки имеют другой смысл.
-            // В классике после ничьей карты не открываются, а идёт новый круг тёмных ставок. Но у нас уже открыли.
-            // Пока оставим как есть: карты открыты (show=true), isBlind = false для всех.
-            players.forEach(p => {
-                if (!p.isFolded) {
-                    p.isBlind = false; // карты уже видны
-                    p.show = true;
-                }
-            });
-
-            // Ход начинается с dealer
-            activeIdx = dealer;
-            // Ставка не сбрасывается (curBet остаётся)
-            addLog(`Новый раунд торгов. Текущая ставка: ${curBet}`);
-            updateUI();
-
-            // Если очередь за игроком, запускаем таймер
-            if (activeIdx === 0) {
-                startTurnTimer();
-            } else {
-                setTimeout(botMove, 600);
-            }
         }
 
         // Инициализация
         window.onload = () => {
             document.getElementById('raise-amount-display').innerText = '+20';
             document.getElementById('raise-amount-display2').innerText = '+20';
-            // Первый dealer = 0 (игрок)
             dealer = 0;
             startKonPhase();
 
-            // Кнопка кабинета
             document.getElementById('cabinet-btn').addEventListener('click', openCabinet);
         };
     </script>
