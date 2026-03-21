@@ -79,7 +79,6 @@
         .log-area p { margin-bottom: 4px; line-height: 1.3; }
         .log-area .highlight { color: #2ecc71; }
 
-        /* === НОВЫЕ СТИЛИ (Не ломают старые) === */
         .raise-slider-container { display: none; width: 100%; background: #222; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: center; border: 1px solid #444; }
         .raise-slider-container input[type="range"] { width: 70%; vertical-align: middle; margin: 0 10px; accent-color: var(--btn-purple); }
         
@@ -98,7 +97,7 @@
 <body>
 
     <div class="header">
-        <div class="wallet-badge" onclick="openCabinet()">КАБИНЕТ (BNB)</div>
+        <div class="wallet-badge" id="wallet-btn" onclick="handleWalletClick()">ПОДКЛЮЧИТЬ КОШЕЛЕК</div>
     </div>
 
     <div class="modal-overlay" id="cabinetModal">
@@ -181,13 +180,36 @@
         </div>
 
         <div class="log-area" id="game-log">
-            <p>✅ Подключен BSC кошелек (Смарт-контракт готов)</p>
             <p>Добро пожаловать в Seka Elite!</p>
-            <p>Нажмите «РАЗДАТЬ» для начала игры.</p>
+            <p>Подключите кошелек для начала.</p>
         </div>
     </div>
 
     <script>
+        // --- ПОДКЛЮЧЕНИЕ КОШЕЛЬКА ---
+        let userAddress = null;
+
+        async function handleWalletClick() {
+            if (!userAddress) {
+                if (typeof window.ethereum !== 'undefined') {
+                    try {
+                        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                        userAddress = accounts[0];
+                        document.getElementById('wallet-btn').innerText = userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4);
+                        addLog(`✅ Кошелек подключен: ${userAddress.substring(0, 6)}...`);
+                    } catch (error) {
+                        addLog("❌ Ошибка подключения кошелька.");
+                    }
+                } else {
+                    addLog("⚠️ Web3 не найден. Включаем демо-режим кошелька.");
+                    userAddress = "0xDemo...Wallet";
+                    document.getElementById('wallet-btn').innerText = "КАБИНЕТ (BNB)";
+                }
+            } else {
+                openCabinet();
+            }
+        }
+
         // --- СОСТОЯНИЕ ИГРЫ ---
         let balances = { player: 970, bot1: 980, bot2: 980, bot3: 990 };
         let pot = 0;
@@ -196,8 +218,35 @@
         let playerPoints = 0;
         let botCardsData = {};
         
-        const suits = ['♥', '♦', '♣', '♠'];
-        const values = ['6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        // --- КОЛОДА НА 21 КАРТУ ---
+        let deck = [];
+
+        function initDeck() {
+            deck = [];
+            const suits = ['♥', '♦', '♣', '♠'];
+            const values = ['10', 'J', 'Q', 'K', 'A'];
+            
+            // Собираем 20 основных карт
+            for (let v of values) {
+                for (let s of suits) {
+                    let pts = (v === 'A') ? 11 : 10;
+                    let isRed = (s === '♥' || s === '♦');
+                    deck.push({ html: `<div class="card ${isRed ? 'red' : 'black'}">${v}${s}</div>`, points: pts });
+                }
+            }
+            // Добавляем Джокера (21-я карта)
+            deck.push({ html: `<div class="card black" style="color: #9b59b6; font-size: 22px;">🃏</div>`, points: 11 });
+
+            // Перемешиваем (Алгоритм Фишера-Йетса)
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+        }
+
+        function drawCard() {
+            return deck.pop(); // Берем верхнюю карту из колоды
+        }
 
         // --- ЛОГИКА КАБИНЕТА ---
         function openCabinet() {
@@ -229,9 +278,8 @@
             }
 
             if (type === 'deposit') {
-                // Имитация внесения (BNB -> Очки)
                 balances.player += amount;
-                msg.innerText = `✅ Внесено ${amount} очков со смарт-контракта.`;
+                msg.innerText = `✅ Внесено ${amount} очков.`;
                 msg.style.color = "#2ecc71";
             } else if (type === 'withdraw') {
                 if (amount > balances.player) {
@@ -240,7 +288,7 @@
                     return;
                 }
                 balances.player -= amount;
-                msg.innerText = `✅ Выведено ${amount} очков на ваш кошелек.`;
+                msg.innerText = `✅ Выведено ${amount} очков.`;
                 msg.style.color = "#2ecc71";
             }
             updateUI();
@@ -248,14 +296,6 @@
         }
 
         // --- ЛОГИКА ИГРЫ ---
-        function getRandomCard() {
-            const suit = suits[Math.floor(Math.random() * suits.length)];
-            const val = values[Math.floor(Math.random() * values.length)];
-            const isRed = suit === '♥' || suit === '♦';
-            let points = isNaN(val) ? (val === 'A' ? 11 : 10) : parseInt(val);
-            return { html: `<div class="card ${isRed ? 'red' : 'black'}">${val}${suit}</div>`, points: points };
-        }
-
         function updateUI() {
             document.getElementById('my-balance').innerText = balances.player;
             document.getElementById('bot1').querySelector('.player-balance').innerText = balances.bot1;
@@ -275,6 +315,8 @@
 
         function startNewRound() {
             if (balances.player < 10) { addLog("❌ Недостаточно очков для кона!"); return; }
+            if (!userAddress) { addLog("⚠️ Сначала подключите кошелек (кнопка слева сверху)!"); return; }
+            
             isPlaying = true;
             pot = 0; currentBet = 10;
             toggleButtons(true);
@@ -285,20 +327,23 @@
             pot = 40;
             updateUI();
 
+            // Создаем новую перемешанную колоду на 21 карту
+            initDeck();
+
             // Раздача игроку
             let myCardsDiv = document.getElementById('my-cards');
             myCardsDiv.innerHTML = '';
             playerPoints = 0;
             for(let i=0; i<3; i++) {
-                let c = getRandomCard();
+                let c = drawCard();
                 myCardsDiv.innerHTML += c.html;
-                playerPoints += c.points; // Упрощенный подсчет для симуляции
+                playerPoints += c.points;
             }
             document.getElementById('my-name').innerText = `Вы (${playerPoints} очк)`;
 
             // Закрытые карты ботам
             ['bot1', 'bot2', 'bot3'].forEach(bot => {
-                botCardsData[bot] = [getRandomCard(), getRandomCard(), getRandomCard()];
+                botCardsData[bot] = [drawCard(), drawCard(), drawCard()];
                 document.getElementById(bot).querySelector('.cards').innerHTML = '<div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div>';
             });
 
