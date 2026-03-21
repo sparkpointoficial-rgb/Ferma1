@@ -12,7 +12,6 @@
             --text-light: #ffffff;
             --gold: #fbc02d;
             
-            /* Button Colors */
             --btn-blue: #3498db;
             --btn-green: #2ecc71;
             --btn-purple: #9b59b6;
@@ -23,13 +22,38 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-light); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        .header { padding: 10px; display: flex; justify-content: flex-start; }
+        .header { padding: 10px; display: flex; justify-content: flex-start; gap: 10px; }
         .wallet-badge {
             background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 5px 12px; border-radius: 20px; font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer; transition: 0.2s;
         }
         .wallet-badge:hover { background: rgba(255, 255, 255, 0.2); }
-        .wallet-badge::before { content: ''; display: block; width: 8px; height: 8px; background-color: #2ecc71; border-radius: 50%; }
+        .wallet-badge::before { content: ''; display: block; width: 8px; height: 8px; background-color: var(--gold); border-radius: 50%; }
+        #wallet-btn::before { background-color: #2ecc71; }
+
+        /* --- ЭКРАН ЛОББИ --- */
+        .lobby-screen {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex-grow: 1; padding: 20px; gap: 15px; overflow-y: auto;
+        }
+        .lobby-title { color: var(--gold); margin-bottom: 20px; font-size: 24px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        
+        .table-card {
+            background: #1a1a1a; border: 2px solid var(--table-border); border-radius: 12px;
+            padding: 20px; width: 100%; max-width: 320px; text-align: center; cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        }
+        .table-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 5px 20px rgba(251, 192, 45, 0.2); 
+            border-color: var(--gold); 
+        }
+        .table-card h2 { color: white; margin-bottom: 10px; font-size: 18px; }
+        .table-card p { color: var(--btn-green); font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+        .table-card span { font-size: 12px; color: #888; }
+
+        /* --- ИГРОВОЙ ЭКРАН --- */
+        #game-screen { display: none; flex-direction: column; flex-grow: 1; }
 
         .game-area { flex-grow: 1; position: relative; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .table {
@@ -97,6 +121,7 @@
 <body>
 
     <div class="header">
+        <div class="wallet-badge" id="btn-back" onclick="showLobby()" style="display: none;">⬅ СТОЛЫ</div>
         <div class="wallet-badge" id="wallet-btn" onclick="handleWalletClick()">ПОДКЛЮЧИТЬ КОШЕЛЕК</div>
     </div>
 
@@ -117,71 +142,95 @@
         </div>
     </div>
 
-    <div class="game-area">
-        <div class="table">
-            <div class="player player-bot-1" id="bot1">
-                <div class="player-name">Бот 1</div>
-                <div class="player-balance">980</div>
-                <div class="cards">
-                    <div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div>
-                </div>
-            </div>
+    <div id="lobby-screen" class="lobby-screen">
+        <h2 class="lobby-title">Выбор стола</h2>
+        
+        <div class="table-card" onclick="joinTable(10)">
+            <h2>Стол "Новичок"</h2>
+            <p>Кон: 10 очков</p>
+            <span>Примерно 1$</span>
+        </div>
 
-            <div class="player player-bot-2" id="bot2">
-                <div class="player-name">Бот 2</div>
-                <div class="player-balance">980</div>
-                <div class="cards">
-                    <div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div>
-                </div>
-            </div>
+        <div class="table-card" onclick="joinTable(50)">
+            <h2>Стол "Любитель"</h2>
+            <p>Кон: 50 очков</p>
+            <span>Примерно 5$</span>
+        </div>
 
-            <div class="player player-bot-3" id="bot3">
-                <div class="player-name">Бот 3</div>
-                <div class="player-balance">990</div>
-                <div class="cards">
-                    <div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div>
-                </div>
-            </div>
-
-            <div class="center-pot">
-                <div class="pot-amount" id="pot-display">Банк: 0</div>
-                <div class="bet-info" id="bet-display">Кон: 10</div>
-            </div>
-
-            <div class="player player-main">
-                <div class="timer-container" id="player-timer">
-                    <div class="timer-text" id="timer-text">15 сек</div>
-                    <div class="timer-bar"><div class="timer-progress" id="timer-progress"></div></div>
-                </div>
-                <div class="player-name" id="my-name">Вы (0 очк)</div>
-                <div class="player-balance" id="my-balance">970</div>
-                <div class="cards-container">
-                    <div class="cards" id="my-cards">
-                        </div>
-                </div>
-            </div>
+        <div class="table-card" onclick="joinTable(100)">
+            <h2>Стол "Элита"</h2>
+            <p>Кон: 100 очков</p>
+            <span>Примерно 10$</span>
         </div>
     </div>
 
-    <div class="controls-wrapper">
-        <div class="raise-slider-container" id="raise-box">
-            <span style="color: white; font-weight: bold;">Сумма: </span>
-            <input type="range" id="raise-slider" min="10" max="200" step="10" value="20" oninput="document.getElementById('raise-val').innerText = this.value">
-            <span id="raise-val" style="color: var(--gold); font-weight: bold; width: 30px; display: inline-block;">20</span>
-            <button class="btn btn-purple" style="padding: 5px 10px; margin-left: 10px;" onclick="confirmRaise()">Подтвердить</button>
+    <div id="game-screen">
+        <div class="game-area">
+            <div class="table">
+                <div class="player player-bot-1" id="bot1">
+                    <div class="player-name">Бот 1</div>
+                    <div class="player-balance">980</div>
+                    <div class="cards">
+                        <div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div>
+                    </div>
+                </div>
+
+                <div class="player player-bot-2" id="bot2">
+                    <div class="player-name">Бот 2</div>
+                    <div class="player-balance">980</div>
+                    <div class="cards">
+                        <div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div>
+                    </div>
+                </div>
+
+                <div class="player player-bot-3" id="bot3">
+                    <div class="player-name">Бот 3</div>
+                    <div class="player-balance">990</div>
+                    <div class="cards">
+                        <div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div>
+                    </div>
+                </div>
+
+                <div class="center-pot">
+                    <div class="pot-amount" id="pot-display">Банк: 0</div>
+                    <div class="bet-info" id="bet-display">Кон: 10</div>
+                </div>
+
+                <div class="player player-main">
+                    <div class="timer-container" id="player-timer">
+                        <div class="timer-text" id="timer-text">15 сек</div>
+                        <div class="timer-bar"><div class="timer-progress" id="timer-progress"></div></div>
+                    </div>
+                    <div class="player-name" id="my-name">Вы (0 очк)</div>
+                    <div class="player-balance" id="my-balance">970</div>
+                    <div class="cards-container">
+                        <div class="cards" id="my-cards">
+                            </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="controls">
-            <button class="btn btn-cards" onclick="startNewRound()" id="btn-deal">РАЗДАТЬ</button>
-            <button class="btn btn-call" onclick="playerCall()" id="btn-call" disabled>ПОДДЕРЖАТЬ</button>
-            <button class="btn btn-raise" onclick="toggleRaise()" id="btn-raise" disabled>ПОДНЯТЬ</button>
-            <button class="btn btn-reveal" onclick="revealCards()" id="btn-reveal" disabled>ВСКРЫТЬ</button>
-            <button class="btn btn-fold" onclick="playerFold()" id="btn-fold" disabled>ПАС</button>
-        </div>
+        <div class="controls-wrapper">
+            <div class="raise-slider-container" id="raise-box">
+                <span style="color: white; font-weight: bold;">Сумма: </span>
+                <input type="range" id="raise-slider" min="10" max="200" step="10" value="20" oninput="document.getElementById('raise-val').innerText = this.value">
+                <span id="raise-val" style="color: var(--gold); font-weight: bold; width: 40px; display: inline-block;">20</span>
+                <button class="btn btn-purple" style="padding: 5px 10px; margin-left: 10px;" onclick="confirmRaise()">Подтвердить</button>
+            </div>
 
-        <div class="log-area" id="game-log">
-            <p>Добро пожаловать в Seka Elite!</p>
-            <p>Подключите кошелек для начала.</p>
+            <div class="controls">
+                <button class="btn btn-cards" onclick="startNewRound()" id="btn-deal">РАЗДАТЬ</button>
+                <button class="btn btn-call" onclick="playerCall()" id="btn-call" disabled>ПОДДЕРЖАТЬ</button>
+                <button class="btn btn-raise" onclick="toggleRaise()" id="btn-raise" disabled>ПОДНЯТЬ</button>
+                <button class="btn btn-reveal" onclick="revealCards()" id="btn-reveal" disabled>ВСКРЫТЬ</button>
+                <button class="btn btn-fold" onclick="playerFold()" id="btn-fold" disabled>ПАС</button>
+            </div>
+
+            <div class="log-area" id="game-log">
+                <p>Добро пожаловать в Seka Elite!</p>
+                <p>Подключите кошелек и выберите стол.</p>
+            </div>
         </div>
     </div>
 
@@ -201,7 +250,7 @@
                         addLog("❌ Ошибка подключения кошелька.");
                     }
                 } else {
-                    addLog("⚠️ Web3 не найден. Включаем демо-режим кошелька.");
+                    addLog("⚠️ Web3 не найден. Демо-режим кошелька.");
                     userAddress = "0xDemo...Wallet";
                     document.getElementById('wallet-btn').innerText = "КАБИНЕТ (BNB)";
                 }
@@ -211,13 +260,57 @@
         }
 
         // --- СОСТОЯНИЕ ИГРЫ ---
-        let balances = { player: 970, bot1: 980, bot2: 980, bot3: 990 };
+        let balances = { player: 970, bot1: 1500, bot2: 1200, bot3: 2000 }; // Ботам дал больше денег для игры на крупных столах
         let pot = 0;
+        let baseKon = 10;
         let currentBet = 10;
         let isPlaying = false;
         let playerPoints = 0;
         let botCardsData = {};
         
+        // --- ЛОГИКА ЛОББИ ---
+        function joinTable(konAmount) {
+            if (!userAddress) {
+                alert("Сначала подключите кошелек!");
+                return;
+            }
+            if (balances.player < konAmount) {
+                alert("У вас недостаточно очков для этого стола. Пополните баланс в Кабинете!");
+                return;
+            }
+            
+            baseKon = konAmount;
+            currentBet = baseKon;
+            
+            // Настраиваем ползунок повышения в зависимости от стола
+            const raiseSlider = document.getElementById('raise-slider');
+            raiseSlider.min = baseKon;
+            raiseSlider.step = baseKon;
+            raiseSlider.max = baseKon * 10; // Максимальное повышение = Кон * 10
+            raiseSlider.value = baseKon * 2;
+            document.getElementById('raise-val').innerText = raiseSlider.value;
+
+            // Скрываем лобби, показываем игру
+            document.getElementById('lobby-screen').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'flex';
+            document.getElementById('btn-back').style.display = 'flex';
+            
+            document.getElementById('bet-display').innerText = `Кон: ${baseKon}`;
+            addLog(`Вы сели за стол "Кон ${baseKon}". Нажмите РАЗДАТЬ.`);
+            updateUI();
+        }
+
+        function showLobby() {
+            if (isPlaying) {
+                alert("Вы не можете покинуть стол во время раздачи!");
+                return;
+            }
+            document.getElementById('lobby-screen').style.display = 'flex';
+            document.getElementById('game-screen').style.display = 'none';
+            document.getElementById('btn-back').style.display = 'none';
+            addLog("Вы вернулись в лобби.");
+        }
+
         // --- КОЛОДА НА 21 КАРТУ ---
         let deck = [];
 
@@ -226,7 +319,6 @@
             const suits = ['♥', '♦', '♣', '♠'];
             const values = ['10', 'J', 'Q', 'K', 'A'];
             
-            // Собираем 20 основных карт
             for (let v of values) {
                 for (let s of suits) {
                     let pts = (v === 'A') ? 11 : 10;
@@ -234,10 +326,8 @@
                     deck.push({ html: `<div class="card ${isRed ? 'red' : 'black'}">${v}${s}</div>`, points: pts });
                 }
             }
-            // Добавляем Джокера (21-я карта)
             deck.push({ html: `<div class="card black" style="color: #9b59b6; font-size: 22px;">🃏</div>`, points: 11 });
 
-            // Перемешиваем (Алгоритм Фишера-Йетса)
             for (let i = deck.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -245,7 +335,7 @@
         }
 
         function drawCard() {
-            return deck.pop(); // Берем верхнюю карту из колоды
+            return deck.pop();
         }
 
         // --- ЛОГИКА КАБИНЕТА ---
@@ -311,26 +401,26 @@
             document.getElementById('btn-raise').disabled = !active;
             document.getElementById('btn-reveal').disabled = !active;
             document.getElementById('btn-fold').disabled = !active;
+            // Блокируем кнопку "Назад" во время игры
+            document.getElementById('btn-back').style.opacity = active ? "0.5" : "1";
+            document.getElementById('btn-back').style.pointerEvents = active ? "none" : "auto";
         }
 
         function startNewRound() {
-            if (balances.player < 10) { addLog("❌ Недостаточно очков для кона!"); return; }
-            if (!userAddress) { addLog("⚠️ Сначала подключите кошелек (кнопка слева сверху)!"); return; }
+            if (balances.player < baseKon) { addLog("❌ Недостаточно очков для кона!"); return; }
             
             isPlaying = true;
-            pot = 0; currentBet = 10;
+            pot = 0; currentBet = baseKon;
             toggleButtons(true);
             document.getElementById('raise-box').style.display = 'none';
 
-            // Кон 10 со всех
-            balances.player -= 10; balances.bot1 -= 10; balances.bot2 -= 10; balances.bot3 -= 10;
-            pot = 40;
+            // Кон со всех
+            balances.player -= baseKon; balances.bot1 -= baseKon; balances.bot2 -= baseKon; balances.bot3 -= baseKon;
+            pot = baseKon * 4;
             updateUI();
 
-            // Создаем новую перемешанную колоду на 21 карту
             initDeck();
 
-            // Раздача игроку
             let myCardsDiv = document.getElementById('my-cards');
             myCardsDiv.innerHTML = '';
             playerPoints = 0;
@@ -341,13 +431,12 @@
             }
             document.getElementById('my-name').innerText = `Вы (${playerPoints} очк)`;
 
-            // Закрытые карты ботам
             ['bot1', 'bot2', 'bot3'].forEach(bot => {
                 botCardsData[bot] = [drawCard(), drawCard(), drawCard()];
                 document.getElementById(bot).querySelector('.cards').innerHTML = '<div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div>';
             });
 
-            addLog("🃏 Раздача! Все внесли кон (10).");
+            addLog(`🃏 Раздача! Все внесли кон (${baseKon}).`);
             addLog('<span class="highlight">Ваш ход!</span>');
             startTimer();
         }
@@ -423,7 +512,6 @@
             let bestBotPoints = 0;
             let bestBot = "";
 
-            // Вскрываем ботов
             ['bot1', 'bot2', 'bot3'].forEach(bot => {
                 let pts = 0;
                 let cardsHtml = '';
