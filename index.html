@@ -33,14 +33,14 @@
 
         /* --- ЭКРАН ЛОББИ --- */
         .lobby-screen {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
             flex-grow: 1; padding: 20px; gap: 15px; overflow-y: auto;
         }
-        .lobby-title { color: var(--gold); margin-bottom: 20px; font-size: 24px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .lobby-title { color: var(--gold); margin-bottom: 10px; font-size: 24px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         
         .table-card {
             background: #1a1a1a; border: 2px solid var(--table-border); border-radius: 12px;
-            padding: 20px; width: 100%; max-width: 320px; text-align: center; cursor: pointer;
+            padding: 15px; width: 100%; max-width: 320px; text-align: center; cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
         }
         .table-card:hover { 
@@ -48,9 +48,11 @@
             box-shadow: 0 5px 20px rgba(251, 192, 45, 0.2); 
             border-color: var(--gold); 
         }
-        .table-card h2 { color: white; margin-bottom: 10px; font-size: 18px; }
-        .table-card p { color: var(--btn-green); font-weight: bold; font-size: 16px; margin-bottom: 5px; }
+        .table-card h2 { color: white; margin-bottom: 8px; font-size: 18px; }
+        .table-card p { color: var(--btn-green); font-weight: bold; font-size: 14px; margin-bottom: 5px; }
         .table-card span { font-size: 12px; color: #888; }
+        .private-card { border-color: var(--btn-purple); }
+        .private-card h2 { color: var(--btn-purple); }
 
         /* --- ИГРОВОЙ ЭКРАН --- */
         #game-screen { display: none; flex-direction: column; flex-grow: 1; }
@@ -142,6 +144,22 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="privateModal">
+        <div class="modal-content" style="border-color: var(--btn-purple);">
+            <h3 style="color: var(--btn-purple);">Приватный Стол 🔒</h3>
+            <p style="margin-bottom: 15px; font-size: 14px; color: #ddd;">Создайте свой стол (Ключ: 100 очков) или введите код друга для входа.</p>
+            
+            <input type="text" id="private-code-input" class="modal-input" placeholder="Введите код (например 7777)">
+            
+            <div class="modal-buttons">
+                <button class="modal-btn m-dep" onclick="createPrivate()" style="background: var(--btn-purple);">СОЗДАТЬ КЛЮЧ</button>
+                <button class="modal-btn m-bon" onclick="joinPrivate()">ВОЙТИ ПО КОДУ</button>
+                <button class="modal-btn m-close" onclick="closePrivate()">ЗАКРЫТЬ</button>
+            </div>
+            <p id="priv-msg" style="margin-top: 10px; font-size: 12px; color: #aaa;"></p>
+        </div>
+    </div>
+
     <div id="lobby-screen" class="lobby-screen">
         <h2 class="lobby-title">Выбор стола</h2>
         
@@ -161,6 +179,12 @@
             <h2>Стол "Элита"</h2>
             <p>Кон: 100 очков</p>
             <span>Примерно 10$</span>
+        </div>
+
+        <div class="table-card private-card" onclick="openPrivate()">
+            <h2>Приватный Стол 🔒</h2>
+            <p style="color: var(--btn-purple);">Ключ: 100 очков</p>
+            <span>Игра по секретному коду</span>
         </div>
     </div>
 
@@ -260,7 +284,7 @@
         }
 
         // --- СОСТОЯНИЕ ИГРЫ ---
-        let balances = { player: 970, bot1: 1500, bot2: 1200, bot3: 2000 }; // Ботам дал больше денег для игры на крупных столах
+        let balances = { player: 970, bot1: 1500, bot2: 1200, bot3: 2000 }; 
         let pot = 0;
         let baseKon = 10;
         let currentBet = 10;
@@ -268,8 +292,52 @@
         let playerPoints = 0;
         let botCardsData = {};
         
+        // --- ПРИВАТНЫЙ СТОЛ ЛОГИКА ---
+        let currentPrivateCode = null;
+
+        function openPrivate() {
+            if (!userAddress) { alert("Сначала подключите кошелек!"); return; }
+            document.getElementById('privateModal').style.display = 'flex';
+            document.getElementById('priv-msg').innerText = '';
+            document.getElementById('private-code-input').value = '';
+        }
+        function closePrivate() {
+            document.getElementById('privateModal').style.display = 'none';
+        }
+        function createPrivate() {
+            if (balances.player < 100) {
+                document.getElementById('priv-msg').innerText = "❌ Недостаточно очков (Нужно 100).";
+                document.getElementById('priv-msg').style.color = "#e74c3c";
+                return;
+            }
+            balances.player -= 100; // Плата за создание
+            currentPrivateCode = Math.floor(1000 + Math.random() * 9000).toString(); // Генерим 4 цифры
+            updateUI();
+            
+            alert(`✅ Приватный стол создан!\nВаш ключ доступа: ${currentPrivateCode}\nРаздайте его друзьям.`);
+            closePrivate();
+            
+            // Входим за стол (пусть кон на привате будет 50 очков)
+            joinTable(50, `Приватный (Код: ${currentPrivateCode})`);
+        }
+        function joinPrivate() {
+            let code = document.getElementById('private-code-input').value.trim();
+            if (code === "") {
+                document.getElementById('priv-msg').innerText = "❌ Введите код!";
+                return;
+            }
+            // Проверяем код. Для удобства теста пускаем по коду 7777 или реальному
+            if (code === currentPrivateCode || code === "7777") {
+                closePrivate();
+                joinTable(50, `Приватный (Код: ${code})`);
+            } else {
+                document.getElementById('priv-msg').innerText = "❌ Код не найден!";
+                document.getElementById('priv-msg').style.color = "#e74c3c";
+            }
+        }
+
         // --- ЛОГИКА ЛОББИ ---
-        function joinTable(konAmount) {
+        function joinTable(konAmount, customName = null) {
             if (!userAddress) {
                 alert("Сначала подключите кошелек!");
                 return;
@@ -282,21 +350,20 @@
             baseKon = konAmount;
             currentBet = baseKon;
             
-            // Настраиваем ползунок повышения в зависимости от стола
             const raiseSlider = document.getElementById('raise-slider');
             raiseSlider.min = baseKon;
             raiseSlider.step = baseKon;
-            raiseSlider.max = baseKon * 10; // Максимальное повышение = Кон * 10
+            raiseSlider.max = baseKon * 10;
             raiseSlider.value = baseKon * 2;
             document.getElementById('raise-val').innerText = raiseSlider.value;
 
-            // Скрываем лобби, показываем игру
             document.getElementById('lobby-screen').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('btn-back').style.display = 'flex';
             
-            document.getElementById('bet-display').innerText = `Кон: ${baseKon}`;
-            addLog(`Вы сели за стол "Кон ${baseKon}". Нажмите РАЗДАТЬ.`);
+            let tableNameDisplay = customName ? customName : `Кон ${baseKon}`;
+            document.getElementById('bet-display').innerText = tableNameDisplay;
+            addLog(`Вы сели за стол "${tableNameDisplay}". Нажмите РАЗДАТЬ.`);
             updateUI();
         }
 
@@ -401,7 +468,6 @@
             document.getElementById('btn-raise').disabled = !active;
             document.getElementById('btn-reveal').disabled = !active;
             document.getElementById('btn-fold').disabled = !active;
-            // Блокируем кнопку "Назад" во время игры
             document.getElementById('btn-back').style.opacity = active ? "0.5" : "1";
             document.getElementById('btn-back').style.pointerEvents = active ? "none" : "auto";
         }
