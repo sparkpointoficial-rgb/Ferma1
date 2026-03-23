@@ -23,14 +23,14 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-light); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-        .header { padding: 10px; display: flex; justify-content: flex-start; gap: 10px; }
+        .header { padding: 10px; display: flex; justify-content: flex-start; gap: 10px; flex-wrap: wrap; }
         .wallet-badge {
             background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 5px 12px; border-radius: 20px; font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer; transition: 0.2s;
         }
-        .wallet-badge:hover { background: rgba(255, 255, 255, 0.2); }
-        .wallet-badge::before { content: ''; display: block; width: 8px; height: 8px; background-color: var(--gold); border-radius: 50%; }
-        #wallet-btn::before { background-color: #2ecc71; }
+        .wallet-badge:hover { background: rgba(255, 255, 255, 0.2); border-color: var(--gold); }
+        .wallet-badge.dot::before { content: ''; display: block; width: 8px; height: 8px; background-color: var(--gold); border-radius: 50%; }
+        #wallet-btn.dot::before { background-color: #2ecc71; }
 
         /* --- ЭКРАН ЛОББИ --- */
         .lobby-screen {
@@ -56,33 +56,39 @@
 
         .game-area { flex-grow: 1; position: relative; display: flex; justify-content: center; align-items: center; padding: 20px; }
         .table {
-            width: 100%; max-width: 600px; height: 350px; background: var(--table-green);
+            width: 100%; max-width: 600px; height: 380px; background: var(--table-green);
             border: 15px solid var(--table-border); border-radius: 180px; position: relative;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,0,0,0.5);
+            margin-top: 20px;
         }
 
         .center-pot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
         .pot-amount { background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 10px; color: var(--gold); font-weight: bold; font-size: 14px; border: 1px solid var(--gold); margin-bottom: 5px; }
         .bet-info { font-size: 12px; color: #ddd; }
 
-        .player { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: opacity 0.3s; }
-        .player-name { font-size: 12px; font-weight: bold; text-align: center; }
-        .player-balance { background: rgba(0,0,0,0.6); color: var(--gold); font-size: 11px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--gold); }
-        .cards { display: flex; gap: 2px; }
-        .card { width: 30px; height: 45px; background: #2c3e50; border: 1px solid #bdc3c7; border-radius: 4px; display: flex; justify-content: center; align-items: center; font-size: 14px; font-weight: bold; background-color: white; }
+        .player { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: opacity 0.3s; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; background: #222; border: 2px solid var(--gold); display: flex; justify-content: center; align-items: center; font-size: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .player-name { font-size: 11px; font-weight: bold; text-align: center; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 6px; }
+        .player-balance { background: rgba(0,0,0,0.8); color: var(--gold); font-size: 10px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--gold); }
+        
+        .cards { display: flex; gap: 2px; margin-top: 2px; }
+        .card { width: 28px; height: 40px; background: #2c3e50; border: 1px solid #bdc3c7; border-radius: 4px; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; background-color: white; }
         .card.hidden { background: #34495e; border-color: #7f8c8d; color: transparent; }
         .card.red { color: #e74c3c; }
         .card.black { color: #2c3e50; }
 
-        .player-bot-1 { top: 30%; left: -10px; }
-        .player-bot-2 { top: -20px; left: 50%; transform: translateX(-50%); }
-        .player-bot-3 { top: 30%; right: -10px; }
-        .player-main { bottom: -30px; left: 50%; transform: translateX(-50%); z-index: 10; }
-        .player-main .cards-container { box-shadow: 0 0 25px rgba(251, 192, 45, 0.6); padding: 10px; border-radius: 10px; background: rgba(251, 192, 45, 0.1); }
-        .player-main .card { width: 40px; height: 60px; font-size: 18px; }
+        .player-bot-1 { top: 25%; left: -15px; }
+        .player-bot-2 { top: -35px; left: 50%; transform: translateX(-50%); }
+        .player-bot-3 { top: 25%; right: -15px; }
+        .player-main { bottom: -45px; left: 50%; transform: translateX(-50%); z-index: 10; }
+        
+        .player-main .avatar { width: 44px; height: 44px; font-size: 24px; cursor: pointer; transition: transform 0.2s; }
+        .player-main .avatar:hover { transform: scale(1.1); box-shadow: 0 0 10px var(--gold); }
+        .player-main .cards-container { box-shadow: 0 0 25px rgba(251, 192, 45, 0.4); padding: 8px; border-radius: 10px; background: rgba(251, 192, 45, 0.1); margin-top: 5px; }
+        .player-main .card { width: 36px; height: 54px; font-size: 16px; }
 
-        .timer-container { position: absolute; top: -25px; width: 100%; display: flex; flex-direction: column; align-items: center; }
-        .timer-text { font-size: 12px; color: var(--gold); font-weight: bold; margin-bottom: 3px; }
+        .timer-container { position: absolute; top: -20px; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .timer-text { font-size: 11px; color: var(--gold); font-weight: bold; margin-bottom: 2px; }
         .timer-bar { width: 80%; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
         .timer-progress { width: 100%; height: 100%; background: #2ecc71; transition: width 1s linear; }
 
@@ -108,6 +114,7 @@
         .raise-slider-container { display: none; width: 100%; background: #222; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: center; border: 1px solid #444; }
         .raise-slider-container input[type="range"] { width: 70%; vertical-align: middle; margin: 0 10px; accent-color: var(--btn-purple); }
         
+        /* МОДАЛКИ */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: #1e1e1e; padding: 25px; border-radius: 12px; border: 2px solid var(--gold); width: 320px; text-align: center; color: white; }
         .modal-content h3 { color: var(--gold); margin-bottom: 15px; }
@@ -118,13 +125,19 @@
         .m-wit { background: var(--btn-orange); }
         .m-bon { background: var(--btn-blue); width: 100%; }
         .m-close { background: #555; width: 100%; margin-top: 10px; }
+
+        /* ВЫБОР АВАТАРА */
+        .avatar-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 15px; }
+        .avatar-option { width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 2px solid #444; transition: 0.2s; font-size: 28px; display: flex; align-items: center; justify-content: center; background: #222; }
+        .avatar-option:hover, .avatar-option.selected { border-color: var(--gold); transform: scale(1.1); background: #333; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="wallet-badge" id="btn-back" onclick="showLobby()" style="display: none;">⬅ СТОЛЫ</div>
-        <div class="wallet-badge" id="wallet-btn" onclick="handleWalletClick()">ПОДКЛЮЧИТЬ КОШЕЛЕК</div>
+        <div class="wallet-badge dot" id="btn-back" onclick="showLobby()" style="display: none;">⬅ СТОЛЫ</div>
+        <div class="wallet-badge dot" id="wallet-btn" onclick="handleWalletClick()">ПОДКЛЮЧИТЬ КОШЕЛЕК</div>
+        <div class="wallet-badge" id="btn-avatar" onclick="openAvatarModal()">😎 ПРОФИЛЬ</div>
     </div>
 
     <div class="modal-overlay" id="cabinetModal">
@@ -141,6 +154,7 @@
             <p id="cab-msg" style="margin-top: 10px; font-size: 12px; color: #aaa;"></p>
         </div>
     </div>
+
     <div class="modal-overlay" id="privateModal">
         <div class="modal-content" style="border-color: var(--btn-purple);">
             <h3 style="color: var(--btn-purple);">Приватный Стол 🔒</h3>
@@ -152,6 +166,14 @@
                 <button class="modal-btn m-close" onclick="closePrivate()">ЗАКРЫТЬ</button>
             </div>
             <p id="priv-msg" style="margin-top: 10px; font-size: 12px; color: #aaa;"></p>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="avatarModal">
+        <div class="modal-content">
+            <h3>Выберите Аватар</h3>
+            <div class="avatar-grid" id="avatar-grid-container"></div>
+            <button class="modal-btn m-close" onclick="closeAvatarModal()">СОХРАНИТЬ</button>
         </div>
     </div>
 
@@ -183,16 +205,19 @@
         <div class="game-area">
             <div class="table">
                 <div class="player player-bot-1" id="bot1">
+                    <div class="avatar">🤖</div>
                     <div class="player-name">Бот 1</div>
                     <div class="player-balance">980</div>
                     <div class="cards"><div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div></div>
                 </div>
                 <div class="player player-bot-2" id="bot2">
+                    <div class="avatar">👾</div>
                     <div class="player-name">Бот 2</div>
                     <div class="player-balance">980</div>
                     <div class="cards"><div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div></div>
                 </div>
                 <div class="player player-bot-3" id="bot3">
+                    <div class="avatar">👺</div>
                     <div class="player-name">Бот 3</div>
                     <div class="player-balance">990</div>
                     <div class="cards"><div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div></div>
@@ -208,6 +233,7 @@
                         <div class="timer-text" id="timer-text">Ожидание...</div>
                         <div class="timer-bar"><div class="timer-progress" id="timer-progress"></div></div>
                     </div>
+                    <div class="avatar" id="my-avatar-display" onclick="openAvatarModal()" title="Сменить аватар">😎</div>
                     <div class="player-name" id="my-name">Вы</div>
                     <div class="player-balance" id="my-balance">970</div>
                     <div class="cards-container">
@@ -234,7 +260,7 @@
             </div>
             <div class="log-area" id="game-log">
                 <p>Добро пожаловать в Seka Elite!</p>
-                <p>Подключите кошелек и выберите стол.</p>
+                <p>Выберите стол или настройте свой профиль.</p>
             </div>
         </div>
     </div>
@@ -246,14 +272,37 @@
             chip: new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3'),
             win: new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3')
         };
-        // Настройка громкости, чтобы не оглушало
         sfx.card.volume = 0.5; sfx.chip.volume = 0.6; sfx.win.volume = 0.7;
 
         function playSound(type) {
-            if (sfx[type]) {
-                sfx[type].currentTime = 0;
-                sfx[type].play().catch(e => console.log("Браузер заблокировал автовоспроизведение:", e));
-            }
+            if (sfx[type]) { sfx[type].currentTime = 0; sfx[type].play().catch(e => console.log("Блокировка звука:", e)); }
+        }
+
+        // --- ЛОГИКА АВАТАРОВ ---
+        const avatarList = ['😎', '👨‍💼', '🥷', '🕵️‍♂️', '🧛‍♂️', '🧙‍♂️', '🦁', '🐉', '👽', '🤡'];
+        let currentAvatar = '😎';
+
+        function openAvatarModal() {
+            const container = document.getElementById('avatar-grid-container');
+            container.innerHTML = '';
+            avatarList.forEach(av => {
+                const div = document.createElement('div');
+                div.className = `avatar-option ${av === currentAvatar ? 'selected' : ''}`;
+                div.innerText = av;
+                div.onclick = () => selectAvatar(av);
+                container.appendChild(div);
+            });
+            document.getElementById('avatarModal').style.display = 'flex';
+        }
+
+        function closeAvatarModal() { document.getElementById('avatarModal').style.display = 'none'; }
+
+        function selectAvatar(av) {
+            currentAvatar = av;
+            document.getElementById('my-avatar-display').innerText = av;
+            document.getElementById('btn-avatar').innerHTML = `${av} ПРОФИЛЬ`;
+            closeAvatarModal();
+            addLog(`Вы сменили аватар на ${av}`);
         }
 
         // --- БАЗОВАЯ ЛОГИКА И КОШЕЛЕК ---
@@ -278,7 +327,7 @@
         function openCabinet() { document.getElementById('cab-balance').innerText = balances.player; document.getElementById('cabinetModal').style.display = 'flex'; document.getElementById('cab-msg').innerText = ''; }
         function closeCabinet() { document.getElementById('cabinetModal').style.display = 'none'; document.getElementById('cabinet-amount').value = ''; }
         function cabinetAction(type) {
-            playSound('chip'); // Звук фишек при операциях в кабинете
+            playSound('chip');
             const amount = parseInt(document.getElementById('cabinet-amount').value);
             const msg = document.getElementById('cab-msg');
             if (type === 'bonus') { balances.player += 100; msg.innerText = "✅ Бонус 100 очков!"; msg.style.color = "#2ecc71"; updateUI(); return; }
@@ -350,7 +399,7 @@
             document.getElementById('btn-blind').style.display = 'none';
         }
 
-        // --- КОЛОДА ---
+        // --- КОЛОДА И ОЧКИ ---
         let deck = [];
         function initDeck() {
             deck = []; const suits = ['♥', '♦', '♣', '♠']; const values = ['10', 'J', 'Q', 'K', 'A'];
@@ -362,7 +411,6 @@
         }
         function drawCard() { return deck.pop(); }
 
-        // --- ТОЧНЫЙ ПОДСЧЕТ ОЧКОВ ---
         function calcSekaPoints(cards) {
             let suits = {'♥':0, '♦':0, '♣':0, '♠':0}; let jokerPts = 0; let acesCount = 0; let jokersCount = 0; let values = [];
             cards.forEach(c => {
@@ -461,7 +509,7 @@
             if (!isSekaRound && balances.player < baseKon) { addLog("❌ Недостаточно очков для кона!"); return; }
             clearInterval(timerInterval); isPlaying = true; toggleButtons(true);
             document.getElementById('raise-box').style.display = 'none';
-            playSound('card'); // Звук раздачи карт
+            playSound('card');
 
             if (!isSekaRound) {
                 pot = 0; currentBet = baseKon;
@@ -548,7 +596,7 @@
         // --- ЛОГИКА СЕКИ ---
         function handleSeka(winners, maxPts) {
             let displayPts = Math.floor(maxPts);
-            playSound('card'); // Привлечение внимания к Секе
+            playSound('card'); 
             addLog(`<span class="seka-alert">🔥 СЕКА! Спор за банк ${pot} (${displayPts} очк).</span>`);
             isSekaRound = true; let nextActive = {}; winners.forEach(w => nextActive[w] = true);
             let buyIn = currentBet; 
