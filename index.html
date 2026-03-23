@@ -17,7 +17,7 @@
             --btn-purple: #9b59b6;
             --btn-red: #e74c3c;
             --btn-orange: #f39c12;
-            --btn-dark: #34495e; /* Цвет для ТЕМНОЙ */
+            --btn-dark: #34495e;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -240,6 +240,22 @@
     </div>
 
     <script>
+        // --- АУДИО ЭФФЕКТЫ ---
+        const sfx = {
+            card: new Audio('https://assets.mixkit.co/active_storage/sfx/2074/2074-preview.mp3'),
+            chip: new Audio('https://assets.mixkit.co/active_storage/sfx/2003/2003-preview.mp3'),
+            win: new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3')
+        };
+        // Настройка громкости, чтобы не оглушало
+        sfx.card.volume = 0.5; sfx.chip.volume = 0.6; sfx.win.volume = 0.7;
+
+        function playSound(type) {
+            if (sfx[type]) {
+                sfx[type].currentTime = 0;
+                sfx[type].play().catch(e => console.log("Браузер заблокировал автовоспроизведение:", e));
+            }
+        }
+
         // --- БАЗОВАЯ ЛОГИКА И КОШЕЛЕК ---
         let userAddress = null;
         async function handleWalletClick() {
@@ -262,6 +278,7 @@
         function openCabinet() { document.getElementById('cab-balance').innerText = balances.player; document.getElementById('cabinetModal').style.display = 'flex'; document.getElementById('cab-msg').innerText = ''; }
         function closeCabinet() { document.getElementById('cabinetModal').style.display = 'none'; document.getElementById('cabinet-amount').value = ''; }
         function cabinetAction(type) {
+            playSound('chip'); // Звук фишек при операциях в кабинете
             const amount = parseInt(document.getElementById('cabinet-amount').value);
             const msg = document.getElementById('cab-msg');
             if (type === 'bonus') { balances.player += 100; msg.innerText = "✅ Бонус 100 очков!"; msg.style.color = "#2ecc71"; updateUI(); return; }
@@ -275,7 +292,7 @@
         function openPrivate() { if (!userAddress) return; document.getElementById('privateModal').style.display = 'flex'; }
         function closePrivate() { document.getElementById('privateModal').style.display = 'none'; }
         function createPrivate() {
-            if (balances.player >= 100) { balances.player -= 100; currentPrivateCode = Math.floor(1000 + Math.random() * 9000).toString(); closePrivate(); joinTable(50, `Приватный (${currentPrivateCode})`); }
+            if (balances.player >= 100) { playSound('chip'); balances.player -= 100; currentPrivateCode = Math.floor(1000 + Math.random() * 9000).toString(); closePrivate(); joinTable(50, `Приватный (${currentPrivateCode})`); }
         }
         function joinPrivate() {
             let code = document.getElementById('private-code-input').value.trim();
@@ -284,14 +301,12 @@
 
         // --- СОСТОЯНИЕ ИГРЫ И ПРАВИЛА ---
         let balances = { player: 970, bot1: 1500, bot2: 1200, bot3: 2000 }; 
-        // Индексы: 0=Нижний(Вы), 1=Левый(Бот1), 2=Верхний(Бот2), 3=Правый(Бот3)
         let playersOrder = ['player', 'bot1', 'bot2', 'bot3'];
         let activePlayers = { player: true, bot1: true, bot2: true, bot3: true };
         let pot = 0; let baseKon = 10; let currentBet = 10; 
         let isPlaying = false; let isSekaRound = false;
         
-        // НОВЫЕ ПЕРЕМЕННЫЕ ОЧЕРЕДИ
-        let dealerIdx = 0; // Изначально раздает игрок
+        let dealerIdx = 0;
         let currentTurnIdx = 0;
         let isFirstActionInRound = false;
 
@@ -304,8 +319,7 @@
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('btn-back').style.display = 'flex';
             document.getElementById('bet-display').innerText = customName ? customName : `Кон ${baseKon}`;
-            updateUI();
-            startPreRoundTimer(); 
+            updateUI(); startPreRoundTimer(); 
         }
 
         function showLobby() {
@@ -341,50 +355,28 @@
         function initDeck() {
             deck = []; const suits = ['♥', '♦', '♣', '♠']; const values = ['10', 'J', 'Q', 'K', 'A'];
             for (let v of values) { 
-                for (let s of suits) { 
-                    deck.push({ 
-                        html: `<div class="card ${s==='♥'||s==='♦' ? 'red' : 'black'}">${v}${s}</div>`, 
-                        points: v==='A'?11:10, 
-                        suit: s,
-                        valStr: v
-                    }); 
-                } 
+                for (let s of suits) { deck.push({ html: `<div class="card ${s==='♥'||s==='♦' ? 'red' : 'black'}">${v}${s}</div>`, points: v==='A'?11:10, suit: s, valStr: v }); } 
             }
             deck.push({ html: `<div class="card black" style="color: #9b59b6; font-size: 22px;">🃏</div>`, points: 11, suit: 'Joker', valStr: 'Joker' });
             for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
         }
         function drawCard() { return deck.pop(); }
 
-        // --- ТОЧНЫЙ ПОДСЧЕТ ОЧКОВ ПО ТВОИМ ПРАВИЛАМ ---
+        // --- ТОЧНЫЙ ПОДСЧЕТ ОЧКОВ ---
         function calcSekaPoints(cards) {
-            let suits = {'♥':0, '♦':0, '♣':0, '♠':0};
-            let jokerPts = 0; let acesCount = 0; let jokersCount = 0;
-            let values = [];
-
+            let suits = {'♥':0, '♦':0, '♣':0, '♠':0}; let jokerPts = 0; let acesCount = 0; let jokersCount = 0; let values = [];
             cards.forEach(c => {
-                if(c.suit === 'Joker') { jokerPts += 11; jokersCount++; }
-                else { suits[c.suit] += c.points; }
+                if(c.suit === 'Joker') { jokerPts += 11; jokersCount++; } else { suits[c.suit] += c.points; }
                 if(c.valStr === 'A') acesCount++;
                 if(c.valStr !== 'Joker') values.push(c.valStr);
             });
-
-            // 1. Максимальная сумма по масти (с учетом Джокера)
             let maxSuit = Math.max(suits['♥'], suits['♦'], suits['♣'], suits['♠']) + jokerPts;
-
-            // 2. Проверка на 2 Туза или Туз+Джокер (22 очка)
             let twoAcesScore = (acesCount >= 2 || (acesCount === 1 && jokersCount >= 1)) ? 22 : 0;
-
             let finalScore = Math.max(maxSuit, twoAcesScore);
-
-            // 3. Проверка на "Три одинаковые" (30 очков) с ранжированием
             if (values.length === 3 && values[0] === values[1] && values[1] === values[2]) {
-                // Добавляем микро-баллы для правильного определения старшинства,
-                // но отображаться будет ровно 30 (через Math.floor)
                 let rankBonus = {'10': 0.1, 'J': 0.2, 'Q': 0.3, 'K': 0.4, 'A': 0.5}[values[0]] || 0;
-                let threeKindScore = 30 + rankBonus;
-                finalScore = Math.max(finalScore, threeKindScore);
+                finalScore = Math.max(finalScore, 30 + rankBonus);
             }
-
             return finalScore;
         }
 
@@ -393,8 +385,7 @@
 
         let timerInterval;
         function startTimer(nameText, duration, onComplete) {
-            clearInterval(timerInterval);
-            let timeLeft = duration;
+            clearInterval(timerInterval); let timeLeft = duration;
             document.getElementById('timer-progress').style.width = '100%';
             document.getElementById('timer-progress').style.backgroundColor = '#2ecc71';
             document.getElementById('timer-text').innerText = `${nameText} (${timeLeft}с)`;
@@ -404,7 +395,6 @@
                 document.getElementById('timer-text').innerText = `${nameText} (${timeLeft}с)`;
                 document.getElementById('timer-progress').style.width = ((timeLeft / duration) * 100) + '%';
                 if(timeLeft <= 10) document.getElementById('timer-progress').style.backgroundColor = '#e74c3c';
-
                 if (timeLeft <= 0) { clearInterval(timerInterval); if(onComplete) onComplete(); }
             }, 1000);
         }
@@ -412,28 +402,20 @@
         function startPreRoundTimer() {
             toggleButtons(false); document.getElementById('btn-deal').disabled = false;
             startTimer('СТАВЬТЕ КОН', 30, () => {
-                if(balances.player >= baseKon && !isPlaying) {
-                    addLog("⏳ Время вышло, автоматический старт!");
-                    startNewRound();
-                } else {
-                    addLog("Вы не поставили кон.");
-                }
+                if(balances.player >= baseKon && !isPlaying) { addLog("⏳ Время вышло, автоматический старт!"); startNewRound(); }
+                else { addLog("Вы не поставили кон."); }
             });
         }
 
-        // --- ЛОГИКА ОЧЕРЕДИ: ХОД ПОД ПРАВУЮ РУКУ (Против часовой: +3 по массиву) ---
+        // --- ЛОГИКА ОЧЕРЕДИ ---
         function getActiveCount() { let c=0; for(let k in activePlayers) if(activePlayers[k]) c++; return c; }
-        
         function getNextActivePlayer(fromIdx) {
             let idx = fromIdx;
-            // +3 % 4 в массиве из 4 элементов — это шаг назад (вправо по кругу)
             do { idx = (idx + 3) % 4; } while (!activePlayers[playersOrder[idx]] && getActiveCount() > 1);
             return idx;
         }
-
         function getPlayerName(key) {
-            if(key === 'player') return 'Вы';
-            return key === 'bot1' ? 'Бот 1 (Слева)' : key === 'bot2' ? 'Бот 2 (Сверху)' : 'Бот 3 (Справа)';
+            if(key === 'player') return 'Вы'; return key === 'bot1' ? 'Бот 1 (Слева)' : key === 'bot2' ? 'Бот 2 (Сверху)' : 'Бот 3 (Справа)';
         }
 
         function processNextTurn() {
@@ -442,8 +424,6 @@
 
             let pKey = playersOrder[currentTurnIdx];
             let pName = getPlayerName(pKey);
-
-            // Темная только для того, кто сидит справа от раздающего (первый ход в раунде)
             let rightOfDealerIdx = (dealerIdx + 3) % 4;
             let isFirstAfterDealer = (currentTurnIdx === rightOfDealerIdx) && isFirstActionInRound;
 
@@ -454,43 +434,34 @@
                 startTimer('Вы', 30, playerFold);
             } else {
                 startTimer(pName, 30, () => {});
-                
                 setTimeout(() => {
-                    clearInterval(timerInterval);
-                    if(!isPlaying) return;
-
+                    clearInterval(timerInterval); if(!isPlaying) return;
                     if (isFirstAfterDealer && Math.random() > 0.6) {
-                        balances[pKey] -= baseKon; pot += baseKon; currentBet += baseKon;
+                        playSound('chip'); balances[pKey] -= baseKon; pot += baseKon; currentBet += baseKon;
                         addLog(`🤖 ${pName} поставил В ТЕМНУЮ (+${baseKon}). Мин. ставка: ${currentBet}`);
-                        isFirstActionInRound = false;
-                        currentTurnIdx = getNextActivePlayer(currentTurnIdx);
-                        processNextTurn();
+                        isFirstActionInRound = false; currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn();
                     } else {
                         isFirstActionInRound = false;
                         let action = Math.random() > 0.25 ? "поддержал" : "пас";
                         if(action === "поддержал") {
-                            balances[pKey] -= currentBet; pot += currentBet;
+                            playSound('chip'); balances[pKey] -= currentBet; pot += currentBet;
                             addLog(`🤖 ${pName} ${action} (${currentBet})`);
-                            currentTurnIdx = getNextActivePlayer(currentTurnIdx);
-                            processNextTurn();
+                            currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn();
                         } else {
-                            addLog(`🤖 ${pName} пас`);
-                            activePlayers[pKey] = false;
-                            document.getElementById(pKey).style.opacity = '0.4';
-                            currentTurnIdx = getNextActivePlayer(currentTurnIdx);
-                            processNextTurn();
+                            addLog(`🤖 ${pName} пас`); activePlayers[pKey] = false; document.getElementById(pKey).style.opacity = '0.4';
+                            currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn();
                         }
                     }
+                    updateUI();
                 }, 2000);
             }
         }
 
         function startNewRound() {
             if (!isSekaRound && balances.player < baseKon) { addLog("❌ Недостаточно очков для кона!"); return; }
-            clearInterval(timerInterval);
-            isPlaying = true;
-            toggleButtons(true);
+            clearInterval(timerInterval); isPlaying = true; toggleButtons(true);
             document.getElementById('raise-box').style.display = 'none';
+            playSound('card'); // Звук раздачи карт
 
             if (!isSekaRound) {
                 pot = 0; currentBet = baseKon;
@@ -501,20 +472,16 @@
             updateUI(); initDeck();
 
             let dealerName = getPlayerName(playersOrder[dealerIdx]);
-            addLog(`<span class="dealer-info">🎲 Раздает: ${dealerName} (Ход направо)</span>`);
-            addLog(`Все участники внесли кон.`);
+            addLog(`<span class="dealer-info">🎲 Раздает: ${dealerName} (Ход направо)</span>`); addLog(`Все участники внесли кон.`);
 
             botCardsData = {};
             ['bot1', 'bot2', 'bot3'].forEach(bot => {
-                let pDiv = document.getElementById(bot);
-                pDiv.querySelector('.player-name').innerText = getPlayerName(bot);
+                let pDiv = document.getElementById(bot); pDiv.querySelector('.player-name').innerText = getPlayerName(bot);
                 if (activePlayers[bot]) {
                     botCardsData[bot] = [drawCard(), drawCard(), drawCard()];
                     pDiv.querySelector('.cards').innerHTML = '<div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div>';
                     pDiv.style.opacity = '1';
-                } else {
-                    pDiv.querySelector('.cards').innerHTML = ''; pDiv.style.opacity = '0.4';
-                }
+                } else { pDiv.querySelector('.cards').innerHTML = ''; pDiv.style.opacity = '0.4'; }
             });
 
             myCardsData = []; playerPoints = 0;
@@ -524,26 +491,19 @@
             if (activePlayers.player) {
                 for(let i=0; i<3; i++) { let c = drawCard(); myCardsData.push(c); myCardsDiv.innerHTML += c.html; }
                 playerPoints = calcSekaPoints(myCardsData);
-                // Math.floor отрезает скрытые десятые доли, чтобы игрок видел ровное число
                 document.getElementById('my-name').innerText = `Вы (${Math.floor(playerPoints)} очк)`;
                 myDiv.style.opacity = '1';
-                
-                isFirstActionInRound = true;
-                currentTurnIdx = getNextActivePlayer(dealerIdx);
-                processNextTurn();
+                isFirstActionInRound = true; currentTurnIdx = getNextActivePlayer(dealerIdx); processNextTurn();
             } else {
                 document.getElementById('my-name').innerText = `Вы (Вне игры)`;
-                myDiv.style.opacity = '0.4'; toggleButtons(false);
-                addLog(`Вы не участвуете в этой раздаче.`);
-                isFirstActionInRound = true;
-                currentTurnIdx = getNextActivePlayer(dealerIdx);
-                processNextTurn();
+                myDiv.style.opacity = '0.4'; toggleButtons(false); addLog(`Вы не участвуете в этой раздаче.`);
+                isFirstActionInRound = true; currentTurnIdx = getNextActivePlayer(dealerIdx); processNextTurn();
             }
         }
 
-        // ДЕЙСТВИЯ ИГРОКА
+        // --- ДЕЙСТВИЯ ИГРОКА ---
         function playerBlind() {
-            balances.player -= baseKon; pot += baseKon; currentBet += baseKon;
+            playSound('chip'); balances.player -= baseKon; pot += baseKon; currentBet += baseKon;
             addLog(`Вы поставили В ТЕМНУЮ (+${baseKon}). Мин. ставка: ${currentBet}`);
             document.getElementById('btn-blind').style.display = 'none';
             isFirstActionInRound = false; updateUI(); toggleButtons(false);
@@ -552,21 +512,18 @@
 
         function playerCall() {
             if(balances.player < currentBet) return;
-            balances.player -= currentBet; pot += currentBet;
+            playSound('chip'); balances.player -= currentBet; pot += currentBet;
             addLog(`Вы поддержали (${currentBet})`);
             isFirstActionInRound = false; updateUI(); toggleButtons(false);
             currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn();
         }
 
-        function toggleRaise() {
-            const box = document.getElementById('raise-box');
-            box.style.display = box.style.display === 'none' ? 'block' : 'none';
-        }
+        function toggleRaise() { const box = document.getElementById('raise-box'); box.style.display = box.style.display === 'none' ? 'block' : 'none'; }
 
         function confirmRaise() {
             const raiseAmt = parseInt(document.getElementById('raise-slider').value);
             if(balances.player < raiseAmt) { addLog("❌ Недостаточно средств!"); return; }
-            currentBet = raiseAmt; balances.player -= raiseAmt; pot += raiseAmt;
+            playSound('chip'); currentBet = raiseAmt; balances.player -= raiseAmt; pot += raiseAmt;
             document.getElementById('bet-display').innerText = `Ставка: ${currentBet}`;
             document.getElementById('raise-box').style.display = 'none';
             addLog(`Вы ПОДНЯЛИ ставку до (${currentBet})`);
@@ -583,7 +540,7 @@
 
         function playerReveal() {
             if(balances.player < currentBet) return;
-            balances.player -= currentBet; pot += currentBet;
+            playSound('chip'); balances.player -= currentBet; pot += currentBet;
             addLog(`Вы поддержали (${currentBet}) и нажали ВСКРЫТЬ!`);
             revealCards();
         }
@@ -591,14 +548,14 @@
         // --- ЛОГИКА СЕКИ ---
         function handleSeka(winners, maxPts) {
             let displayPts = Math.floor(maxPts);
+            playSound('card'); // Привлечение внимания к Секе
             addLog(`<span class="seka-alert">🔥 СЕКА! Спор за банк ${pot} (${displayPts} очк).</span>`);
-            isSekaRound = true; let nextActive = {};
-            winners.forEach(w => nextActive[w] = true);
+            isSekaRound = true; let nextActive = {}; winners.forEach(w => nextActive[w] = true);
             let buyIn = currentBet; 
             
             ['bot1', 'bot2', 'bot3'].forEach(bot => {
                 if (!activePlayers[bot] && balances[bot] >= buyIn && Math.random() > 0.5) {
-                    balances[bot] -= buyIn; pot += buyIn; nextActive[bot] = true;
+                    playSound('chip'); balances[bot] -= buyIn; pot += buyIn; nextActive[bot] = true;
                     addLog(`🤖 ${getPlayerName(bot)} вошел в Секу за ${buyIn}`);
                 }
             });
@@ -606,7 +563,7 @@
             if (!activePlayers.player && balances.player >= buyIn) {
                 setTimeout(() => {
                     if (confirm(`СЕКА объявлена! Вы пасовали. Войти в Секу за ${buyIn} очков? Банк: ${pot}`)) {
-                        balances.player -= buyIn; pot += buyIn; nextActive.player = true;
+                        playSound('chip'); balances.player -= buyIn; pot += buyIn; nextActive.player = true;
                         addLog(`Вы вошли в Секу за ${buyIn}`);
                     } else { addLog(`Вы отказались от Секи.`); }
                     finalizeSekaPrep(nextActive);
@@ -614,15 +571,12 @@
             } else { finalizeSekaPrep(nextActive); }
         }
 
-        function finalizeSekaPrep(nextActive) {
-            activePlayers = nextActive; updateUI(); startPreRoundTimer();
-        }
+        function finalizeSekaPrep(nextActive) { activePlayers = nextActive; updateUI(); startPreRoundTimer(); }
 
         // --- ВСКРЫТИЕ И ПОБЕДА ---
         function revealCards() {
             isPlaying = false; clearInterval(timerInterval);
-            document.getElementById('timer-text').innerText = "Вскрытие...";
-            addLog("🔥 ВСКРЫТИЕ КАРТ!");
+            document.getElementById('timer-text').innerText = "Вскрытие..."; addLog("🔥 ВСКРЫТИЕ КАРТ!");
 
             let activeScores = {};
             if (activePlayers.player) activeScores.player = playerPoints;
@@ -632,33 +586,29 @@
                     let pts = calcSekaPoints(botCardsData[bot]);
                     let cardsHtml = ''; botCardsData[bot].forEach(c => { cardsHtml += c.html; });
                     document.getElementById(bot).querySelector('.cards').innerHTML = cardsHtml;
-                    // Округляем для отображения
                     document.getElementById(bot).querySelector('.player-name').innerText = `${getPlayerName(bot).split(' ')[0]} (${Math.floor(pts)} очк)`;
                     activeScores[bot] = pts;
                 }
             });
 
-            let maxPts = 0;
-            for (let key in activeScores) { if (activeScores[key] > maxPts) maxPts = activeScores[key]; }
-            let winners = [];
-            for (let key in activeScores) { if (activeScores[key] === maxPts) winners.push(key); }
+            let maxPts = 0; for (let key in activeScores) { if (activeScores[key] > maxPts) maxPts = activeScores[key]; }
+            let winners = []; for (let key in activeScores) { if (activeScores[key] === maxPts) winners.push(key); }
 
             setTimeout(() => {
                 if (winners.length > 1) {
                     handleSeka(winners, maxPts);
                 } else if (winners.length === 1) {
-                    let winner = winners[0];
-                    let displayMax = Math.floor(maxPts);
-                    if (winner === 'player') { addLog(`🏆 Вы выиграли с ${displayMax} очками! Забрали банк: ${pot}`); balances.player += pot; } 
-                    else { addLog(`💀 Выиграл ${getPlayerName(winner).split(' ')[0]} с ${displayMax} очками.`); balances[winner] += pot; }
-                    
+                    let winner = winners[0]; let displayMax = Math.floor(maxPts);
+                    if (winner === 'player') { 
+                        playSound('win'); 
+                        addLog(`🏆 Вы выиграли с ${displayMax} очками! Забрали банк: ${pot}`); balances.player += pot; 
+                    } else { 
+                        addLog(`💀 Выиграл ${getPlayerName(winner).split(' ')[0]} с ${displayMax} очками.`); balances[winner] += pot; 
+                    }
                     dealerIdx = playersOrder.indexOf(winner); 
-                    
-                    pot = 0; updateUI(); 
-                    startPreRoundTimer();
+                    pot = 0; updateUI(); startPreRoundTimer();
                 } else {
-                    addLog("Раунд завершен без победителя.");
-                    pot = 0; startPreRoundTimer();
+                    addLog("Раунд завершен без победителя."); pot = 0; startPreRoundTimer();
                 }
             }, 1500);
         }
