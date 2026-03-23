@@ -17,6 +17,7 @@
             --btn-purple: #9b59b6;
             --btn-red: #e74c3c;
             --btn-orange: #f39c12;
+            --btn-dark: #34495e; /* Цвет для ТЕМНОЙ */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -43,11 +44,7 @@
             padding: 15px; width: 100%; max-width: 320px; text-align: center; cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
         }
-        .table-card:hover { 
-            transform: translateY(-5px); 
-            box-shadow: 0 5px 20px rgba(251, 192, 45, 0.2); 
-            border-color: var(--gold); 
-        }
+        .table-card:hover { transform: translateY(-5px); box-shadow: 0 5px 20px rgba(251, 192, 45, 0.2); border-color: var(--gold); }
         .table-card h2 { color: white; margin-bottom: 8px; font-size: 18px; }
         .table-card p { color: var(--btn-green); font-weight: bold; font-size: 14px; margin-bottom: 5px; }
         .table-card span { font-size: 12px; color: #888; }
@@ -100,11 +97,13 @@
         .btn-raise { background: var(--btn-purple); }
         .btn-reveal { background: var(--btn-orange); }
         .btn-fold { background: var(--btn-red); }
+        .btn-dark-action { background: var(--btn-dark); display: none; } /* Кнопка Темная */
 
         .log-area { background: #000; border: 1px solid #333; border-radius: 8px; height: 120px; overflow-y: auto; padding: 10px; font-family: monospace; font-size: 11px; color: #a0a0a0; }
         .log-area p { margin-bottom: 4px; line-height: 1.3; }
         .log-area .highlight { color: #2ecc71; }
         .log-area .seka-alert { color: var(--btn-orange); font-weight: bold; }
+        .log-area .dealer-info { color: var(--btn-purple); font-weight: bold; }
 
         .raise-slider-container { display: none; width: 100%; background: #222; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: center; border: 1px solid #444; }
         .raise-slider-container input[type="range"] { width: 70%; vertical-align: middle; margin: 0 10px; accent-color: var(--btn-purple); }
@@ -142,7 +141,6 @@
             <p id="cab-msg" style="margin-top: 10px; font-size: 12px; color: #aaa;"></p>
         </div>
     </div>
-
     <div class="modal-overlay" id="privateModal">
         <div class="modal-content" style="border-color: var(--btn-purple);">
             <h3 style="color: var(--btn-purple);">Приватный Стол 🔒</h3>
@@ -227,10 +225,11 @@
                 <button class="btn btn-purple" style="padding: 5px 10px; margin-left: 10px;" onclick="confirmRaise()">Подтвердить</button>
             </div>
             <div class="controls">
-                <button class="btn btn-cards" onclick="startNewRound()" id="btn-deal">РАЗДАТЬ</button>
+                <button class="btn btn-cards" onclick="startNewRound()" id="btn-deal">РАЗДАТЬ (КОН)</button>
+                <button class="btn btn-dark-action" onclick="playerBlind()" id="btn-blind">ТЕМНАЯ</button>
                 <button class="btn btn-call" onclick="playerCall()" id="btn-call" disabled>ПОДДЕРЖАТЬ</button>
                 <button class="btn btn-raise" onclick="toggleRaise()" id="btn-raise" disabled>ПОДНЯТЬ</button>
-                <button class="btn btn-reveal" onclick="revealCards()" id="btn-reveal" disabled>ВСКРЫТЬ</button>
+                <button class="btn btn-reveal" onclick="playerReveal()" id="btn-reveal" disabled>ВСКРЫТЬ</button>
                 <button class="btn btn-fold" onclick="playerFold()" id="btn-fold" disabled>ПАС</button>
             </div>
             <div class="log-area" id="game-log">
@@ -250,86 +249,71 @@
                         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                         userAddress = accounts[0];
                         document.getElementById('wallet-btn').innerText = userAddress.substring(0, 6) + '...' + userAddress.substring(userAddress.length - 4);
-                        addLog(`✅ Кошелек подключен: ${userAddress.substring(0, 6)}...`);
-                    } catch (error) { addLog("❌ Ошибка подключения кошелька."); }
+                        addLog(`✅ Кошелек подключен.`);
+                    } catch (error) { addLog("❌ Ошибка подключения."); }
                 } else {
-                    addLog("⚠️ Web3 не найден. Демо-режим кошелька.");
                     userAddress = "0xDemo...Wallet";
                     document.getElementById('wallet-btn').innerText = "КАБИНЕТ (BNB)";
                 }
             } else { openCabinet(); }
         }
 
-        // --- ЛОГИКА КАБИНЕТА И ПРИВАТНЫХ СТОЛОВ ---
-        function openCabinet() {
-            document.getElementById('cab-balance').innerText = balances.player;
-            document.getElementById('cabinetModal').style.display = 'flex';
-            document.getElementById('cab-msg').innerText = '';
-        }
+        // --- ЛОГИКА КАБИНЕТА ---
+        function openCabinet() { document.getElementById('cab-balance').innerText = balances.player; document.getElementById('cabinetModal').style.display = 'flex'; document.getElementById('cab-msg').innerText = ''; }
         function closeCabinet() { document.getElementById('cabinetModal').style.display = 'none'; document.getElementById('cabinet-amount').value = ''; }
         function cabinetAction(type) {
-            const input = document.getElementById('cabinet-amount');
-            const amount = parseInt(input.value);
+            const amount = parseInt(document.getElementById('cabinet-amount').value);
             const msg = document.getElementById('cab-msg');
-            if (type === 'bonus') { balances.player += 100; msg.innerText = "✅ Вы получили бонус 100 очков!"; msg.style.color = "#2ecc71"; updateUI(); return; }
-            if (isNaN(amount) || amount <= 0) { msg.innerText = "❌ Введите корректную сумму."; msg.style.color = "#e74c3c"; return; }
-            if (type === 'deposit') { balances.player += amount; msg.innerText = `✅ Внесено ${amount} очков.`; msg.style.color = "#2ecc71"; }
-            else if (type === 'withdraw') {
-                if (amount > balances.player) { msg.innerText = "❌ Недостаточно очков для вывода."; msg.style.color = "#e74c3c"; return; }
-                balances.player -= amount; msg.innerText = `✅ Выведено ${amount} очков.`; msg.style.color = "#2ecc71";
-            }
-            updateUI(); input.value = '';
+            if (type === 'bonus') { balances.player += 100; msg.innerText = "✅ Бонус 100 очков!"; msg.style.color = "#2ecc71"; updateUI(); return; }
+            if (isNaN(amount) || amount <= 0) return;
+            if (type === 'deposit') { balances.player += amount; msg.innerText = `✅ Внесено ${amount}`; msg.style.color = "#2ecc71"; }
+            else if (type === 'withdraw' && amount <= balances.player) { balances.player -= amount; msg.innerText = `✅ Выведено ${amount}`; msg.style.color = "#2ecc71"; }
+            updateUI(); document.getElementById('cabinet-amount').value = '';
         }
 
         let currentPrivateCode = null;
-        function openPrivate() {
-            if (!userAddress) { alert("Сначала подключите кошелек!"); return; }
-            document.getElementById('privateModal').style.display = 'flex';
-            document.getElementById('priv-msg').innerText = '';
-            document.getElementById('private-code-input').value = '';
-        }
+        function openPrivate() { if (!userAddress) return; document.getElementById('privateModal').style.display = 'flex'; }
         function closePrivate() { document.getElementById('privateModal').style.display = 'none'; }
         function createPrivate() {
-            if (balances.player < 100) { document.getElementById('priv-msg').innerText = "❌ Недостаточно очков (Нужно 100)."; document.getElementById('priv-msg').style.color = "#e74c3c"; return; }
-            balances.player -= 100;
-            currentPrivateCode = Math.floor(1000 + Math.random() * 9000).toString();
-            updateUI(); alert(`✅ Приватный стол создан!\nКлюч доступа: ${currentPrivateCode}\nРаздайте его друзьям.`);
-            closePrivate(); joinTable(50, `Приватный (Код: ${currentPrivateCode})`);
+            if (balances.player >= 100) { balances.player -= 100; currentPrivateCode = Math.floor(1000 + Math.random() * 9000).toString(); closePrivate(); joinTable(50, `Приватный (${currentPrivateCode})`); }
         }
         function joinPrivate() {
             let code = document.getElementById('private-code-input').value.trim();
-            if (code === "") { document.getElementById('priv-msg').innerText = "❌ Введите код!"; return; }
-            if (code === currentPrivateCode || code === "7777") { closePrivate(); joinTable(50, `Приватный (Код: ${code})`); }
-            else { document.getElementById('priv-msg').innerText = "❌ Код не найден!"; document.getElementById('priv-msg').style.color = "#e74c3c"; }
+            if (code === currentPrivateCode || code === "7777") { closePrivate(); joinTable(50, `Приватный (${code})`); }
         }
 
+        // --- СОСТОЯНИЕ ИГРЫ И ПРАВИЛА ---
+        let balances = { player: 970, bot1: 1500, bot2: 1200, bot3: 2000 }; 
+        let playersOrder = ['player', 'bot1', 'bot2', 'bot3'];
+        let activePlayers = { player: true, bot1: true, bot2: true, bot3: true };
+        let pot = 0; let baseKon = 10; let currentBet = 10; 
+        let isPlaying = false; let isSekaRound = false;
+        
+        // НОВЫЕ ПЕРЕМЕННЫЕ ОЧЕРЕДИ
+        let dealerIdx = 0; // Изначально раздает игрок
+        let currentTurnIdx = 0;
+        let isFirstActionInRound = false;
+
+        let myCardsData = []; let botCardsData = {}; let playerPoints = 0;
+
         function joinTable(konAmount, customName = null) {
-            if (!userAddress) { alert("Сначала подключите кошелек!"); return; }
-            if (balances.player < konAmount) { alert("У вас недостаточно очков. Пополните баланс!"); return; }
+            if (!userAddress) { alert("Подключите кошелек!"); return; }
             baseKon = konAmount; currentBet = baseKon;
-            const raiseSlider = document.getElementById('raise-slider');
-            raiseSlider.min = baseKon; raiseSlider.step = baseKon; raiseSlider.max = baseKon * 10; raiseSlider.value = baseKon * 2;
-            document.getElementById('raise-val').innerText = raiseSlider.value;
             document.getElementById('lobby-screen').style.display = 'none';
             document.getElementById('game-screen').style.display = 'flex';
             document.getElementById('btn-back').style.display = 'flex';
-            let tableNameDisplay = customName ? customName : `Кон ${baseKon}`;
-            document.getElementById('bet-display').innerText = tableNameDisplay;
-            addLog(`Вы сели за стол "${tableNameDisplay}".`); updateUI();
+            document.getElementById('bet-display').innerText = customName ? customName : `Кон ${baseKon}`;
+            updateUI();
+            startPreRoundTimer(); // Запуск таймера ожидания кона
         }
+
         function showLobby() {
-            if (isPlaying) { alert("Вы не можете покинуть стол во время игры!"); return; }
+            if (isPlaying) { alert("Нельзя покинуть стол во время игры!"); return; }
             document.getElementById('lobby-screen').style.display = 'flex';
             document.getElementById('game-screen').style.display = 'none';
             document.getElementById('btn-back').style.display = 'none';
-            addLog("Вы вернулись в лобби.");
+            clearInterval(timerInterval);
         }
-
-        // --- СОСТОЯНИЕ ИГРЫ И СЕКА ---
-        let balances = { player: 970, bot1: 1500, bot2: 1200, bot3: 2000 }; 
-        let activePlayers = { player: true, bot1: true, bot2: true, bot3: true };
-        let pot = 0; let baseKon = 10; let currentBet = 10; let isPlaying = false; let isSekaRound = false;
-        let playerPoints = 0; let botCardsData = {};
 
         function updateUI() {
             document.getElementById('my-balance').innerText = balances.player;
@@ -338,6 +322,8 @@
             document.getElementById('bot3').querySelector('.player-balance').innerText = balances.bot3;
             document.getElementById('pot-display').innerText = `Банк: ${pot}`;
             document.getElementById('cab-balance').innerText = balances.player;
+            const raiseSlider = document.getElementById('raise-slider');
+            raiseSlider.min = baseKon; raiseSlider.step = baseKon; raiseSlider.max = currentBet * 5;
         }
 
         function toggleButtons(active) {
@@ -346,24 +332,36 @@
             document.getElementById('btn-raise').disabled = !active;
             document.getElementById('btn-reveal').disabled = !active;
             document.getElementById('btn-fold').disabled = !active;
-            document.getElementById('btn-back').style.opacity = active ? "0.5" : "1";
-            document.getElementById('btn-back').style.pointerEvents = active ? "none" : "auto";
+            document.getElementById('btn-blind').style.display = 'none';
         }
 
+        // --- КОЛОДА И ПОДСЧЕТ ПО МАСТЯМ (СТРОГО КАК ПРОСИЛ) ---
         let deck = [];
         function initDeck() {
             deck = []; const suits = ['♥', '♦', '♣', '♠']; const values = ['10', 'J', 'Q', 'K', 'A'];
-            for (let v of values) { for (let s of suits) { deck.push({ html: `<div class="card ${s==='♥'||s==='♦' ? 'red' : 'black'}">${v}${s}</div>`, points: v==='A'?11:10 }); } }
-            deck.push({ html: `<div class="card black" style="color: #9b59b6; font-size: 22px;">🃏</div>`, points: 11 });
+            for (let v of values) { 
+                for (let s of suits) { 
+                    deck.push({ html: `<div class="card ${s==='♥'||s==='♦' ? 'red' : 'black'}">${v}${s}</div>`, points: v==='A'?11:10, suit: s }); 
+                } 
+            }
+            deck.push({ html: `<div class="card black" style="color: #9b59b6; font-size: 22px;">🃏</div>`, points: 11, suit: 'Joker' });
             for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
         }
         function drawCard() { return deck.pop(); }
 
-        const logArea = document.getElementById('game-log');
-        function addLog(message) {
-            const p = document.createElement('p'); p.innerHTML = message;
-            logArea.appendChild(p); logArea.scrollTop = logArea.scrollHeight;
+        // ПРАВИЛЬНЫЙ ПОДСЧЕТ ОЧКОВ
+        function calcSekaPoints(cards) {
+            let suits = {'♥':0, '♦':0, '♣':0, '♠':0};
+            let jokerPts = 0;
+            cards.forEach(c => {
+                if(c.suit === 'Joker') jokerPts += 11;
+                else suits[c.suit] += c.points;
+            });
+            return Math.max(suits['♥'], suits['♦'], suits['♣'], suits['♠']) + jokerPts;
         }
+
+        const logArea = document.getElementById('game-log');
+        function addLog(message) { const p = document.createElement('p'); p.innerHTML = message; logArea.appendChild(p); logArea.scrollTop = logArea.scrollHeight; }
 
         let timerInterval;
         function startTimer(nameText, duration, onComplete) {
@@ -371,22 +369,96 @@
             let timeLeft = duration;
             document.getElementById('timer-progress').style.width = '100%';
             document.getElementById('timer-progress').style.backgroundColor = '#2ecc71';
-            document.getElementById('timer-text').innerText = `Ход: ${nameText} (${timeLeft}с)`;
+            document.getElementById('timer-text').innerText = `${nameText} (${timeLeft}с)`;
             
             timerInterval = setInterval(() => {
                 timeLeft--;
-                document.getElementById('timer-text').innerText = `Ход: ${nameText} (${timeLeft}с)`;
-                let percentage = (timeLeft / duration) * 100;
-                document.getElementById('timer-progress').style.width = percentage + '%';
-                if(timeLeft <= Math.floor(duration/3)) document.getElementById('timer-progress').style.backgroundColor = '#e74c3c';
-                else if(timeLeft <= Math.floor(duration*0.6)) document.getElementById('timer-progress').style.backgroundColor = '#f39c12';
+                document.getElementById('timer-text').innerText = `${nameText} (${timeLeft}с)`;
+                document.getElementById('timer-progress').style.width = ((timeLeft / duration) * 100) + '%';
+                if(timeLeft <= 10) document.getElementById('timer-progress').style.backgroundColor = '#e74c3c';
 
                 if (timeLeft <= 0) { clearInterval(timerInterval); if(onComplete) onComplete(); }
             }, 1000);
         }
 
+        function startPreRoundTimer() {
+            toggleButtons(false); document.getElementById('btn-deal').disabled = false;
+            startTimer('СТАВЬТЕ КОН', 30, () => {
+                if(balances.player >= baseKon && !isPlaying) {
+                    addLog("⏳ Время вышло, автоматический старт!");
+                    startNewRound();
+                } else {
+                    addLog("Вы не поставили кон.");
+                }
+            });
+        }
+
+        // --- ЛОГИКА ОЧЕРЕДИ И ТЕМНОЙ ---
+        function getActiveCount() { let c=0; for(let k in activePlayers) if(activePlayers[k]) c++; return c; }
+        
+        function getNextActivePlayer(fromIdx) {
+            let idx = fromIdx;
+            do { idx = (idx + 1) % 4; } while (!activePlayers[playersOrder[idx]] && getActiveCount() > 1);
+            return idx;
+        }
+
+        function getPlayerName(key) {
+            if(key === 'player') return 'Вы';
+            return key === 'bot1' ? 'Бот 1' : key === 'bot2' ? 'Бот 2' : 'Бот 3';
+        }
+
+        function processNextTurn() {
+            if(!isPlaying) return;
+            if (getActiveCount() <= 1) { revealCards(); return; }
+
+            let pKey = playersOrder[currentTurnIdx];
+            let pName = getPlayerName(pKey);
+
+            // Проверка на возможность "ТЕМНОЙ" (только для первого ходящего после дилера)
+            let isFirstAfterDealer = (currentTurnIdx === (dealerIdx + 1) % 4) && isFirstActionInRound;
+
+            if (pKey === 'player') {
+                toggleButtons(true);
+                if(isFirstAfterDealer) document.getElementById('btn-blind').style.display = 'inline-block';
+                addLog('<span class="highlight">Ваш ход!</span>');
+                startTimer('Вы', 30, playerFold);
+            } else {
+                startTimer(pName, 30, () => { /* Фоллбек таймера для бота */ });
+                
+                // Боты думают пару секунд, чтобы юзер видел таймер
+                setTimeout(() => {
+                    clearInterval(timerInterval);
+                    if(!isPlaying) return;
+
+                    if (isFirstAfterDealer && Math.random() > 0.6) {
+                        balances[pKey] -= baseKon; pot += baseKon; currentBet += baseKon;
+                        addLog(`🤖 ${pName} поставил В ТЕМНУЮ (+${baseKon}). Мин. ставка: ${currentBet}`);
+                        isFirstActionInRound = false;
+                        currentTurnIdx = getNextActivePlayer(currentTurnIdx);
+                        processNextTurn();
+                    } else {
+                        isFirstActionInRound = false;
+                        let action = Math.random() > 0.25 ? "поддержал" : "пас";
+                        if(action === "поддержал") {
+                            balances[pKey] -= currentBet; pot += currentBet;
+                            addLog(`🤖 ${pName} ${action} (${currentBet})`);
+                            currentTurnIdx = getNextActivePlayer(currentTurnIdx);
+                            processNextTurn();
+                        } else {
+                            addLog(`🤖 ${pName} пас`);
+                            activePlayers[pKey] = false;
+                            document.getElementById(pKey).style.opacity = '0.4';
+                            currentTurnIdx = getNextActivePlayer(currentTurnIdx);
+                            processNextTurn();
+                        }
+                    }
+                }, 2000); // Имитация раздумий бота 2 сек, хотя таймер 30 сек
+            }
+        }
+
         function startNewRound() {
             if (!isSekaRound && balances.player < baseKon) { addLog("❌ Недостаточно очков для кона!"); return; }
+            clearInterval(timerInterval);
             isPlaying = true;
             toggleButtons(true);
             document.getElementById('raise-box').style.display = 'none';
@@ -396,84 +468,64 @@
                 activePlayers = { player: true, bot1: true, bot2: true, bot3: true };
                 ['player', 'bot1', 'bot2', 'bot3'].forEach(p => { balances[p] -= baseKon; });
                 pot = baseKon * 4;
-            } else {
-                isSekaRound = false; // Сброс флага секи, банк и ставки сохраняются
-            }
+            } else { isSekaRound = false; }
             updateUI(); initDeck();
+
+            let dealerName = getPlayerName(playersOrder[dealerIdx]);
+            addLog(`<span class="dealer-info">🎲 Раздает: ${dealerName}</span>`);
+            addLog(`Все участники внесли кон.`);
 
             botCardsData = {};
             ['bot1', 'bot2', 'bot3'].forEach(bot => {
                 let pDiv = document.getElementById(bot);
-                let nameStr = bot === 'bot1' ? 'Бот 1' : bot === 'bot2' ? 'Бот 2' : 'Бот 3';
-                pDiv.querySelector('.player-name').innerText = nameStr;
+                pDiv.querySelector('.player-name').innerText = getPlayerName(bot);
                 if (activePlayers[bot]) {
                     botCardsData[bot] = [drawCard(), drawCard(), drawCard()];
                     pDiv.querySelector('.cards').innerHTML = '<div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div>';
                     pDiv.style.opacity = '1';
                 } else {
-                    pDiv.querySelector('.cards').innerHTML = '';
-                    pDiv.style.opacity = '0.4';
+                    pDiv.querySelector('.cards').innerHTML = ''; pDiv.style.opacity = '0.4';
                 }
             });
 
-            let myCardsDiv = document.getElementById('my-cards');
-            myCardsDiv.innerHTML = ''; playerPoints = 0;
+            myCardsData = []; playerPoints = 0;
+            let myCardsDiv = document.getElementById('my-cards'); myCardsDiv.innerHTML = '';
             let myDiv = document.getElementById('player');
             
             if (activePlayers.player) {
-                for(let i=0; i<3; i++) { let c = drawCard(); myCardsDiv.innerHTML += c.html; playerPoints += c.points; }
+                for(let i=0; i<3; i++) { let c = drawCard(); myCardsData.push(c); myCardsDiv.innerHTML += c.html; }
+                playerPoints = calcSekaPoints(myCardsData);
                 document.getElementById('my-name').innerText = `Вы (${playerPoints} очк)`;
                 myDiv.style.opacity = '1';
-                addLog(`🃏 Раздача!`); addLog('<span class="highlight">Ваш ход!</span>');
-                startTimer('Вы', 15, playerFold);
+                
+                isFirstActionInRound = true;
+                currentTurnIdx = getNextActivePlayer(dealerIdx); // Первым ходит следующий после раздающего
+                processNextTurn();
             } else {
                 document.getElementById('my-name').innerText = `Вы (Вне игры)`;
-                myDiv.style.opacity = '0.4';
-                toggleButtons(false);
-                addLog(`🃏 Вы не участвуете в этой раздаче.`);
-                botActions(true); // Автоматический розыгрыш ботов
+                myDiv.style.opacity = '0.4'; toggleButtons(false);
+                addLog(`Вы не участвуете в этой раздаче.`);
+                isFirstActionInRound = true;
+                currentTurnIdx = getNextActivePlayer(dealerIdx);
+                processNextTurn();
             }
         }
 
-        function playBot(botKey, name, nextFunc) {
-            if (!activePlayers[botKey]) { nextFunc(); return; }
-            startTimer(name, 2, () => {
-                let action = Math.random() > 0.3 ? "поддержал" : "пас";
-                if(action === "поддержал") { 
-                    balances[botKey] -= currentBet; pot += currentBet; 
-                    addLog(`🤖 ${name} ${action} (${currentBet})`); 
-                } else { 
-                    addLog(`🤖 ${name} пас`); 
-                    activePlayers[botKey] = false;
-                    document.getElementById(botKey).style.opacity = '0.4';
-                }
-                updateUI(); setTimeout(nextFunc, 300);
-            });
-        }
-
-        function botActions(isFinal = false) {
-            if(!isPlaying) return;
-            toggleButtons(false);
-            playBot('bot1', 'Бот 1', () => {
-                playBot('bot2', 'Бот 2', () => {
-                    playBot('bot3', 'Бот 3', () => {
-                        if (isFinal || !activePlayers.player) {
-                            revealCards();
-                        } else {
-                            toggleButtons(true);
-                            addLog('<span class="highlight">Ваш ход!</span>');
-                            startTimer('Вы', 15, playerFold);
-                        }
-                    });
-                });
-            });
+        // ДЕЙСТВИЯ ИГРОКА
+        function playerBlind() {
+            balances.player -= baseKon; pot += baseKon; currentBet += baseKon;
+            addLog(`Вы поставили В ТЕМНУЮ (+${baseKon}). Мин. ставка: ${currentBet}`);
+            document.getElementById('btn-blind').style.display = 'none';
+            isFirstActionInRound = false; updateUI(); toggleButtons(false);
+            currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn();
         }
 
         function playerCall() {
             if(balances.player < currentBet) return;
             balances.player -= currentBet; pot += currentBet;
             addLog(`Вы поддержали (${currentBet})`);
-            updateUI(); botActions();
+            isFirstActionInRound = false; updateUI(); toggleButtons(false);
+            currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn();
         }
 
         function toggleRaise() {
@@ -488,66 +540,56 @@
             document.getElementById('bet-display').innerText = `Ставка: ${currentBet}`;
             document.getElementById('raise-box').style.display = 'none';
             addLog(`Вы ПОДНЯЛИ ставку до (${currentBet})`);
-            updateUI(); botActions();
+            isFirstActionInRound = false; updateUI(); toggleButtons(false);
+            currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn();
         }
 
         function playerFold() {
-            activePlayers.player = false;
-            document.getElementById('player').style.opacity = '0.4';
-            clearInterval(timerInterval);
-            addLog("🏳️ Вы спасовали.");
-            toggleButtons(false);
-            botActions(true); // Даем ботам доиграть
+            activePlayers.player = false; document.getElementById('player').style.opacity = '0.4';
+            clearInterval(timerInterval); addLog("🏳️ Вы спасовали.");
+            isFirstActionInRound = false; toggleButtons(false);
+            currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn();
         }
 
+        function playerReveal() {
+            if(balances.player < currentBet) return;
+            balances.player -= currentBet; pot += currentBet;
+            addLog(`Вы поддержали (${currentBet}) и нажали ВСКРЫТЬ!`);
+            revealCards();
+        }
+
+        // --- ЛОГИКА СЕКИ ---
         function handleSeka(winners, maxPts) {
             addLog(`<span class="seka-alert">🔥 СЕКА! Спор за банк ${pot} (${maxPts} очк).</span>`);
-            isSekaRound = true;
-            let nextActive = {};
-            winners.forEach(w => nextActive[w] = true); // Вскрывшиеся остаются бесплатно
-
-            let buyIn = currentBet; // Последняя ставка для тех, кто был в пасе
+            isSekaRound = true; let nextActive = {};
+            winners.forEach(w => nextActive[w] = true); // Вскрывшиеся в Секе бесплатно
+            let buyIn = currentBet; // Остальные платят размер последней ставки
             
-            // Боты думают входить ли в секу
             ['bot1', 'bot2', 'bot3'].forEach(bot => {
-                if (!activePlayers[bot] && balances[bot] >= buyIn) {
-                    if (Math.random() > 0.5) { // 50% шанс войти
-                        balances[bot] -= buyIn; pot += buyIn;
-                        nextActive[bot] = true;
-                        let bName = bot === 'bot1' ? 'Бот 1' : bot === 'bot2' ? 'Бот 2' : 'Бот 3';
-                        addLog(`🤖 ${bName} вошел в Секу за ${buyIn}`);
-                    }
+                if (!activePlayers[bot] && balances[bot] >= buyIn && Math.random() > 0.5) {
+                    balances[bot] -= buyIn; pot += buyIn; nextActive[bot] = true;
+                    addLog(`🤖 ${getPlayerName(bot)} вошел в Секу за ${buyIn}`);
                 }
             });
 
-            // Игрок думает входить ли в секу (если пасовал)
             if (!activePlayers.player && balances.player >= buyIn) {
                 setTimeout(() => {
-                    if (confirm(`СЕКА объявлена! Вы пасовали. Хотите войти в Секу за ${buyIn} очков? Банк: ${pot}`)) {
-                        balances.player -= buyIn; pot += buyIn;
-                        nextActive.player = true;
+                    if (confirm(`СЕКА объявлена! Вы пасовали. Войти в Секу за ${buyIn} очков? Банк: ${pot}`)) {
+                        balances.player -= buyIn; pot += buyIn; nextActive.player = true;
                         addLog(`Вы вошли в Секу за ${buyIn}`);
-                    } else {
-                        addLog(`Вы отказались от Секи.`);
-                    }
+                    } else { addLog(`Вы отказались от Секи.`); }
                     finalizeSekaPrep(nextActive);
                 }, 500);
-            } else {
-                finalizeSekaPrep(nextActive);
-            }
+            } else { finalizeSekaPrep(nextActive); }
         }
 
         function finalizeSekaPrep(nextActive) {
-            activePlayers = nextActive;
-            updateUI(); toggleButtons(false);
-            document.getElementById('btn-deal').disabled = false;
-            document.getElementById('timer-text').innerText = "Ожидание Секи...";
-            addLog("Нажмите РАЗДАТЬ для старта раунда Секи!");
+            activePlayers = nextActive; updateUI(); startPreRoundTimer();
         }
 
+        // --- ВСКРЫТИЕ И ПОБЕДА ---
         function revealCards() {
-            isPlaying = false;
-            clearInterval(timerInterval);
+            isPlaying = false; clearInterval(timerInterval);
             document.getElementById('timer-text').innerText = "Вскрытие...";
             addLog("🔥 ВСКРЫТИЕ КАРТ!");
 
@@ -556,11 +598,10 @@
 
             ['bot1', 'bot2', 'bot3'].forEach(bot => {
                 if (activePlayers[bot]) {
-                    let pts = 0; let cardsHtml = '';
-                    botCardsData[bot].forEach(c => { pts += c.points; cardsHtml += c.html; });
+                    let pts = calcSekaPoints(botCardsData[bot]);
+                    let cardsHtml = ''; botCardsData[bot].forEach(c => { cardsHtml += c.html; });
                     document.getElementById(bot).querySelector('.cards').innerHTML = cardsHtml;
-                    let bName = bot === 'bot1' ? 'Бот 1' : bot === 'bot2' ? 'Бот 2' : 'Бот 3';
-                    document.getElementById(bot).querySelector('.player-name').innerText = `${bName} (${pts} очк)`;
+                    document.getElementById(bot).querySelector('.player-name').innerText = `${getPlayerName(bot)} (${pts} очк)`;
                     activeScores[bot] = pts;
                 }
             });
@@ -575,25 +616,20 @@
                     handleSeka(winners, maxPts);
                 } else if (winners.length === 1) {
                     let winner = winners[0];
-                    if (winner === 'player') {
-                        addLog(`🏆 Вы выиграли с ${maxPts} очками! Забрали банк: ${pot}`);
-                        balances.player += pot;
-                    } else {
-                        let wName = winner === 'bot1' ? 'Бот 1' : winner === 'bot2' ? 'Бот 2' : 'Бот 3';
-                        addLog(`💀 Выиграл ${wName} с ${maxPts} очками.`);
-                        balances[winner] += pot;
-                    }
-                    pot = 0; updateUI(); toggleButtons(false);
-                    document.getElementById('btn-deal').disabled = false;
-                    addLog("Нажмите РАЗДАТЬ для новой игры.");
+                    if (winner === 'player') { addLog(`🏆 Вы выиграли с ${maxPts} очками! Забрали банк: ${pot}`); balances.player += pot; } 
+                    else { addLog(`💀 Выиграл ${getPlayerName(winner)} с ${maxPts} очками.`); balances[winner] += pot; }
+                    
+                    dealerIdx = playersOrder.indexOf(winner); // Победитель сдает следующим!
+                    
+                    pot = 0; updateUI(); 
+                    startPreRoundTimer(); // Запуск таймера на следующий раунд
                 } else {
                     addLog("Раунд завершен без победителя.");
-                    pot = 0; toggleButtons(false); document.getElementById('btn-deal').disabled = false;
+                    pot = 0; startPreRoundTimer();
                 }
             }, 1500);
         }
 
-        updateUI();
     </script>
 </body>
 </html>
