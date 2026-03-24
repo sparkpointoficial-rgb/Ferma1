@@ -98,7 +98,6 @@
         .btn:active { transform: translateY(2px); box-shadow: 0 2px 3px rgba(0,0,0,0.3); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .btn-cards { background: var(--btn-blue); }
         .btn-call { background: var(--btn-green); }
         .btn-raise { background: var(--btn-purple); }
         .btn-reveal { background: var(--btn-orange); }
@@ -251,7 +250,6 @@
                 <button class="btn btn-purple" style="padding: 5px 10px; margin-left: 10px;" onclick="confirmRaise()">Подтвердить</button>
             </div>
             <div class="controls">
-                <button class="btn btn-cards" onclick="startNewRound()" id="btn-deal">РАЗДАТЬ (КОН)</button>
                 <button class="btn btn-dark-action" onclick="playerBlind()" id="btn-blind">ТЕМНАЯ</button>
                 <button class="btn btn-call" onclick="playerCall()" id="btn-call" disabled>ПОДДЕРЖАТЬ</button>
                 <button class="btn btn-raise" onclick="toggleRaise()" id="btn-raise" disabled>ПОДНЯТЬ</button>
@@ -391,7 +389,6 @@
         }
 
         function toggleButtons(active) {
-            document.getElementById('btn-deal').disabled = active;
             document.getElementById('btn-call').disabled = !active;
             document.getElementById('btn-raise').disabled = !active;
             document.getElementById('btn-reveal').disabled = !active;
@@ -448,20 +445,37 @@
         }
 
         function startPreRoundTimer() {
-            toggleButtons(false); document.getElementById('btn-deal').disabled = false;
-            startTimer('СТАВЬТЕ КОН', 30, () => {
-                if(balances.player >= baseKon && !isPlaying) { addLog("⏳ Время вышло, автоматический старт!"); startNewRound(); }
-                else { addLog("Вы не поставили кон."); }
+            toggleButtons(false); 
+            
+            // Таймер 30 секунд по правилам
+            startTimer('ОЖИДАНИЕ СТАВОК', 30, () => {
+                if(balances.player >= baseKon && !isPlaying) { 
+                    addLog("⏳ Время вышло, автоматический старт!"); 
+                    startNewRound(); 
+                } else { 
+                    addLog("❌ У вас нет очков на кон."); 
+                }
             });
+
+            // Имитация динамики мультиплеера: все скинулись раньше таймера
+            setTimeout(() => { 
+                if(!isPlaying && balances.player >= baseKon) { 
+                    clearInterval(timerInterval); 
+                    addLog("✅ Все сделали кон. Автоматическая раздача!"); 
+                    startNewRound(); 
+                } 
+            }, 3000); // Раздаем через 3 секунды, чтобы игроку не было скучно ждать все 30 сек
         }
 
         // --- ЛОГИКА ОЧЕРЕДИ ---
         function getActiveCount() { let c=0; for(let k in activePlayers) if(activePlayers[k]) c++; return c; }
+        
         function getNextActivePlayer(fromIdx) {
             let idx = fromIdx;
-            do { idx = (idx + 3) % 4; } while (!activePlayers[playersOrder[idx]] && getActiveCount() > 1);
+            do { idx = (idx + 1) % 4; } while (!activePlayers[playersOrder[idx]] && getActiveCount() > 1);
             return idx;
         }
+        
         function getPlayerName(key) {
             if(key === 'player') return 'Вы'; return key === 'bot1' ? 'Бот 1 (Слева)' : key === 'bot2' ? 'Бот 2 (Сверху)' : 'Бот 3 (Справа)';
         }
@@ -472,12 +486,21 @@
 
             let pKey = playersOrder[currentTurnIdx];
             let pName = getPlayerName(pKey);
-            let rightOfDealerIdx = (dealerIdx + 3) % 4;
-            let isFirstAfterDealer = (currentTurnIdx === rightOfDealerIdx) && isFirstActionInRound;
+            
+            // Определяем первого активного игрока сразу после дилера
+            let nextToDealerIdx = getNextActivePlayer(dealerIdx);
+            let isFirstAfterDealer = (currentTurnIdx === nextToDealerIdx) && isFirstActionInRound;
 
             if (pKey === 'player') {
                 toggleButtons(true);
-                if(isFirstAfterDealer) document.getElementById('btn-blind').style.display = 'inline-block';
+                
+                // Кнопка ТЕМНАЯ только для первого игрока после дилера
+                if(isFirstAfterDealer) {
+                    document.getElementById('btn-blind').style.display = 'inline-block';
+                } else {
+                    document.getElementById('btn-blind').style.display = 'none';
+                }
+
                 addLog('<span class="highlight">Ваш ход!</span>');
                 startTimer('Вы', 30, playerFold);
             } else {
@@ -520,7 +543,7 @@
             updateUI(); initDeck();
 
             let dealerName = getPlayerName(playersOrder[dealerIdx]);
-            addLog(`<span class="dealer-info">🎲 Раздает: ${dealerName} (Ход направо)</span>`); addLog(`Все участники внесли кон.`);
+            addLog(`<span class="dealer-info">🎲 Раздает: ${dealerName}</span>`); 
 
             botCardsData = {};
             ['bot1', 'bot2', 'bot3'].forEach(bot => {
@@ -599,20 +622,22 @@
             playSound('card'); 
             addLog(`<span class="seka-alert">🔥 СЕКА! Спор за банк ${pot} (${displayPts} очк).</span>`);
             isSekaRound = true; let nextActive = {}; winners.forEach(w => nextActive[w] = true);
+            
+            // В Секу входят по последней ставке, которая была перед вскрытием
             let buyIn = currentBet; 
             
             ['bot1', 'bot2', 'bot3'].forEach(bot => {
                 if (!activePlayers[bot] && balances[bot] >= buyIn && Math.random() > 0.5) {
                     playSound('chip'); balances[bot] -= buyIn; pot += buyIn; nextActive[bot] = true;
-                    addLog(`🤖 ${getPlayerName(bot)} вошел в Секу за ${buyIn}`);
+                    addLog(`🤖 ${getPlayerName(bot)} заходит в Секу по последней ставке (${buyIn})`);
                 }
             });
 
             if (!activePlayers.player && balances.player >= buyIn) {
                 setTimeout(() => {
-                    if (confirm(`СЕКА объявлена! Вы пасовали. Войти в Секу за ${buyIn} очков? Банк: ${pot}`)) {
+                    if (confirm(`СЕКА объявлена! Вы пасовали. Войти в Секу по последней ставке (${buyIn} очков)? Банк: ${pot}`)) {
                         playSound('chip'); balances.player -= buyIn; pot += buyIn; nextActive.player = true;
-                        addLog(`Вы вошли в Секу за ${buyIn}`);
+                        addLog(`Вы вошли в Секу по последней ставке (${buyIn})`);
                     } else { addLog(`Вы отказались от Секи.`); }
                     finalizeSekaPrep(nextActive);
                 }, 500);
