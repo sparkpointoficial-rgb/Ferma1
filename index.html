@@ -62,11 +62,11 @@
             margin-top: 20px;
         }
 
-        .center-pot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+        .center-pot { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 5; }
         .pot-amount { background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 10px; color: var(--gold); font-weight: bold; font-size: 14px; border: 1px solid var(--gold); margin-bottom: 5px; }
         .bet-info { font-size: 12px; color: #ddd; }
 
-        .player { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: opacity 0.3s; }
+        .player { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: opacity 0.3s; z-index: 10; }
         .avatar { width: 36px; height: 36px; border-radius: 50%; background: #222; border: 2px solid var(--gold); display: flex; justify-content: center; align-items: center; font-size: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         .player-name { font-size: 11px; font-weight: bold; text-align: center; background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 6px; }
         .player-balance { background: rgba(0,0,0,0.8); color: var(--gold); font-size: 10px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--gold); }
@@ -80,7 +80,7 @@
         .player-bot-1 { top: 25%; left: -15px; }
         .player-bot-2 { top: -35px; left: 50%; transform: translateX(-50%); }
         .player-bot-3 { top: 25%; right: -15px; }
-        .player-main { bottom: -45px; left: 50%; transform: translateX(-50%); z-index: 10; }
+        .player-main { bottom: -45px; left: 50%; transform: translateX(-50%); z-index: 20; }
         
         .player-main .avatar { width: 44px; height: 44px; font-size: 24px; cursor: pointer; transition: transform 0.2s; }
         .player-main .avatar:hover { transform: scale(1.1); box-shadow: 0 0 10px var(--gold); }
@@ -92,7 +92,7 @@
         .timer-bar { width: 80%; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
         .timer-progress { width: 100%; height: 100%; background: #2ecc71; transition: width 1s linear; }
 
-        .controls-wrapper { padding: 10px; background: #1a1a1a; border-top: 1px solid #333; }
+        .controls-wrapper { padding: 10px; background: #1a1a1a; border-top: 1px solid #333; z-index: 30; position: relative; }
         .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 15px; }
         .btn { padding: 10px 15px; border: none; border-radius: 6px; color: white; font-weight: bold; font-size: 11px; text-transform: uppercase; cursor: pointer; flex: 1 1 calc(20% - 8px); min-width: 85px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s; }
         .btn:active { transform: translateY(2px); box-shadow: 0 2px 3px rgba(0,0,0,0.3); }
@@ -129,6 +129,26 @@
         .avatar-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 15px; }
         .avatar-option { width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 2px solid #444; transition: 0.2s; font-size: 28px; display: flex; align-items: center; justify-content: center; background: #222; }
         .avatar-option:hover, .avatar-option.selected { border-color: var(--gold); transform: scale(1.1); background: #333; }
+
+        /* АНИМАЦИЯ ФИШКИ */
+        .chip-anim {
+            position: fixed;
+            width: 22px;
+            height: 22px;
+            background: radial-gradient(circle, var(--gold) 0%, #d4ac0d 100%);
+            border: 2px dashed #fff;
+            border-radius: 50%;
+            z-index: 9999;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+            color: #000;
+            font-size: 8px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
@@ -222,7 +242,7 @@
                     <div class="cards"><div class="card hidden"></div><div class="card hidden"></div><div class="card hidden"></div></div>
                 </div>
 
-                <div class="center-pot">
+                <div class="center-pot" id="center-pot">
                     <div class="pot-amount" id="pot-display">Банк: 0</div>
                     <div class="bet-info" id="bet-display">Кон: 10</div>
                 </div>
@@ -274,6 +294,40 @@
 
         function playSound(type) {
             if (sfx[type]) { sfx[type].currentTime = 0; sfx[type].play().catch(e => console.log("Блокировка звука:", e)); }
+        }
+
+        // --- АНИМАЦИЯ ФИШКИ ---
+        function throwChip(fromId, amount) {
+            playSound('chip'); // Звук фишки срабатывает вместе с анимацией
+            const fromEl = document.getElementById(fromId);
+            const potEl = document.getElementById('center-pot');
+            if (!fromEl || !potEl) return;
+
+            const fromRect = fromEl.getBoundingClientRect();
+            const potRect = potEl.getBoundingClientRect();
+
+            const chip = document.createElement('div');
+            chip.className = 'chip-anim';
+            chip.innerText = amount > 999 ? '1k+' : amount;
+            
+            // Старт от центра аватара
+            chip.style.left = (fromRect.left + fromRect.width / 2 - 11) + 'px';
+            chip.style.top = (fromRect.top + fromRect.height / 2 - 11) + 'px';
+            
+            document.body.appendChild(chip);
+
+            // Полет в центр (к банку)
+            setTimeout(() => {
+                chip.style.left = (potRect.left + potRect.width / 2 - 11) + 'px';
+                chip.style.top = (potRect.top + potRect.height / 2 - 11) + 'px';
+                chip.style.transform = 'scale(0.5)';
+                chip.style.opacity = '0';
+            }, 50);
+
+            // Удаляем элемент после завершения анимации
+            setTimeout(() => {
+                chip.remove();
+            }, 550);
         }
 
         // --- ЛОГИКА АВАТАРОВ ---
@@ -447,7 +501,6 @@
         function startPreRoundTimer() {
             toggleButtons(false); 
             
-            // Таймер 30 секунд по правилам
             startTimer('ОЖИДАНИЕ СТАВОК', 30, () => {
                 if(balances.player >= baseKon && !isPlaying) { 
                     addLog("⏳ Время вышло, автоматический старт!"); 
@@ -457,14 +510,13 @@
                 }
             });
 
-            // Имитация динамики мультиплеера: все скинулись раньше таймера
             setTimeout(() => { 
                 if(!isPlaying && balances.player >= baseKon) { 
                     clearInterval(timerInterval); 
                     addLog("✅ Все сделали кон. Автоматическая раздача!"); 
                     startNewRound(); 
                 } 
-            }, 3000); // Раздаем через 3 секунды, чтобы игроку не было скучно ждать все 30 сек
+            }, 3000); 
         }
 
         // --- ЛОГИКА ОЧЕРЕДИ ---
@@ -487,14 +539,12 @@
             let pKey = playersOrder[currentTurnIdx];
             let pName = getPlayerName(pKey);
             
-            // Определяем первого активного игрока сразу после дилера
             let nextToDealerIdx = getNextActivePlayer(dealerIdx);
             let isFirstAfterDealer = (currentTurnIdx === nextToDealerIdx) && isFirstActionInRound;
 
             if (pKey === 'player') {
                 toggleButtons(true);
                 
-                // Кнопка ТЕМНАЯ только для первого игрока после дилера
                 if(isFirstAfterDealer) {
                     document.getElementById('btn-blind').style.display = 'inline-block';
                 } else {
@@ -508,14 +558,16 @@
                 setTimeout(() => {
                     clearInterval(timerInterval); if(!isPlaying) return;
                     if (isFirstAfterDealer && Math.random() > 0.6) {
-                        playSound('chip'); balances[pKey] -= baseKon; pot += baseKon; currentBet += baseKon;
+                        throwChip(pKey, baseKon); // Анимация фишки
+                        balances[pKey] -= baseKon; pot += baseKon; currentBet += baseKon;
                         addLog(`🤖 ${pName} поставил В ТЕМНУЮ (+${baseKon}). Мин. ставка: ${currentBet}`);
                         isFirstActionInRound = false; currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn();
                     } else {
                         isFirstActionInRound = false;
                         let action = Math.random() > 0.25 ? "поддержал" : "пас";
                         if(action === "поддержал") {
-                            playSound('chip'); balances[pKey] -= currentBet; pot += currentBet;
+                            throwChip(pKey, currentBet); // Анимация фишки
+                            balances[pKey] -= currentBet; pot += currentBet;
                             addLog(`🤖 ${pName} ${action} (${currentBet})`);
                             currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn();
                         } else {
@@ -537,7 +589,10 @@
             if (!isSekaRound) {
                 pot = 0; currentBet = baseKon;
                 activePlayers = { player: true, bot1: true, bot2: true, bot3: true };
-                ['player', 'bot1', 'bot2', 'bot3'].forEach(p => { balances[p] -= baseKon; });
+                ['player', 'bot1', 'bot2', 'bot3'].forEach((p, index) => { 
+                    setTimeout(() => throwChip(p, baseKon), index * 150); // Фишки летят в банк по очереди!
+                    balances[p] -= baseKon; 
+                });
                 pot = baseKon * 4;
             } else { isSekaRound = false; }
             updateUI(); initDeck();
@@ -574,7 +629,8 @@
 
         // --- ДЕЙСТВИЯ ИГРОКА ---
         function playerBlind() {
-            playSound('chip'); balances.player -= baseKon; pot += baseKon; currentBet += baseKon;
+            throwChip('player', baseKon); // Полет фишки
+            balances.player -= baseKon; pot += baseKon; currentBet += baseKon;
             addLog(`Вы поставили В ТЕМНУЮ (+${baseKon}). Мин. ставка: ${currentBet}`);
             document.getElementById('btn-blind').style.display = 'none';
             isFirstActionInRound = false; updateUI(); toggleButtons(false);
@@ -583,7 +639,8 @@
 
         function playerCall() {
             if(balances.player < currentBet) return;
-            playSound('chip'); balances.player -= currentBet; pot += currentBet;
+            throwChip('player', currentBet); // Полет фишки
+            balances.player -= currentBet; pot += currentBet;
             addLog(`Вы поддержали (${currentBet})`);
             isFirstActionInRound = false; updateUI(); toggleButtons(false);
             currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn();
@@ -594,7 +651,8 @@
         function confirmRaise() {
             const raiseAmt = parseInt(document.getElementById('raise-slider').value);
             if(balances.player < raiseAmt) { addLog("❌ Недостаточно средств!"); return; }
-            playSound('chip'); currentBet = raiseAmt; balances.player -= raiseAmt; pot += raiseAmt;
+            throwChip('player', raiseAmt); // Полет фишки
+            currentBet = raiseAmt; balances.player -= raiseAmt; pot += raiseAmt;
             document.getElementById('bet-display').innerText = `Ставка: ${currentBet}`;
             document.getElementById('raise-box').style.display = 'none';
             addLog(`Вы ПОДНЯЛИ ставку до (${currentBet})`);
@@ -611,7 +669,8 @@
 
         function playerReveal() {
             if(balances.player < currentBet) return;
-            playSound('chip'); balances.player -= currentBet; pot += currentBet;
+            throwChip('player', currentBet); // Полет фишки
+            balances.player -= currentBet; pot += currentBet;
             addLog(`Вы поддержали (${currentBet}) и нажали ВСКРЫТЬ!`);
             revealCards();
         }
@@ -623,12 +682,12 @@
             addLog(`<span class="seka-alert">🔥 СЕКА! Спор за банк ${pot} (${displayPts} очк).</span>`);
             isSekaRound = true; let nextActive = {}; winners.forEach(w => nextActive[w] = true);
             
-            // В Секу входят по последней ставке, которая была перед вскрытием
             let buyIn = currentBet; 
             
             ['bot1', 'bot2', 'bot3'].forEach(bot => {
                 if (!activePlayers[bot] && balances[bot] >= buyIn && Math.random() > 0.5) {
-                    playSound('chip'); balances[bot] -= buyIn; pot += buyIn; nextActive[bot] = true;
+                    setTimeout(() => throwChip(bot, buyIn), 300); // Полет фишки бота
+                    balances[bot] -= buyIn; pot += buyIn; nextActive[bot] = true;
                     addLog(`🤖 ${getPlayerName(bot)} заходит в Секу по последней ставке (${buyIn})`);
                 }
             });
@@ -636,7 +695,8 @@
             if (!activePlayers.player && balances.player >= buyIn) {
                 setTimeout(() => {
                     if (confirm(`СЕКА объявлена! Вы пасовали. Войти в Секу по последней ставке (${buyIn} очков)? Банк: ${pot}`)) {
-                        playSound('chip'); balances.player -= buyIn; pot += buyIn; nextActive.player = true;
+                        throwChip('player', buyIn); // Полет фишки игрока
+                        balances.player -= buyIn; pot += buyIn; nextActive.player = true;
                         addLog(`Вы вошли в Секу по последней ставке (${buyIn})`);
                     } else { addLog(`Вы отказались от Секи.`); }
                     finalizeSekaPrep(nextActive);
