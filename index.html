@@ -109,7 +109,13 @@
         .log-area .seka-alert { color: var(--btn-orange); font-weight: bold; }
         .log-area .dealer-info { color: var(--btn-purple); font-weight: bold; }
 
-        .raise-slider-container { display: none; width: 100%; background: #222; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: center; border: 1px solid #444; }
+        /* ИСПРАВЛЕННЫЙ CSS ДЛЯ ПОЛЗУНКА НА МОБИЛЬНЫХ УСТРОЙСТВАХ */
+        .raise-slider-container { 
+            display: none; width: 95%; max-width: 400px; background: rgba(34, 34, 34, 0.95); 
+            padding: 10px; border-radius: 8px; text-align: center; border: 1px solid var(--btn-purple); 
+            position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); 
+            margin-bottom: 5px; box-shadow: 0 -5px 15px rgba(0,0,0,0.5); z-index: 40; backdrop-filter: blur(5px);
+        }
         .raise-slider-container input[type="range"] { width: 70%; vertical-align: middle; margin: 0 10px; accent-color: var(--btn-purple); }
         
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
@@ -256,8 +262,8 @@
         <div class="controls-wrapper">
             <div class="raise-slider-container" id="raise-box">
                 <span style="color: white; font-weight: bold;">Сумма: </span>
-                <input type="range" id="raise-slider" min="10" max="200" step="10" value="20" oninput="document.getElementById('raise-val').innerText = this.value">
-                <span id="raise-val" style="color: var(--gold); font-weight: bold; width: 40px; display: inline-block;">20</span>
+                <input type="range" id="raise-slider" oninput="document.getElementById('raise-val').innerText = this.value">
+                <span id="raise-val" style="color: var(--gold); font-weight: bold; width: 40px; display: inline-block;"></span>
                 <button class="btn btn-purple" style="padding: 5px 10px; margin-left: 10px;" onclick="confirmRaise()">Подтвердить</button>
             </div>
             <div class="controls">
@@ -269,7 +275,7 @@
             </div>
             <div class="log-area" id="game-log">
                 <p>Добро пожаловать в Seka Elite!</p>
-                <p>Правила СЕКИ: Тёмная поднимает ставку. Докупаться из паса нельзя.</p>
+                <p>Правила СЕКИ: Тёмная поднимает ставку.</p>
             </div>
         </div>
     </div>
@@ -365,7 +371,14 @@
             document.getElementById('bet-display').innerText = `Текущая ставка: ${currentBet}`;
             document.getElementById('cab-balance').innerText = balances.player;
             document.getElementById('admin-btn').innerText = `АДМИН: ${balances.admin}`;
-            const raiseSlider = document.getElementById('raise-slider'); raiseSlider.min = currentBet + baseKon; raiseSlider.step = baseKon; raiseSlider.max = balances.player > 1000 ? 1000 : balances.player; raiseSlider.value = currentBet + baseKon;
+            
+            // ИСПРАВЛЕННАЯ ЛОГИКА ПОЛЗУНКА
+            const raiseSlider = document.getElementById('raise-slider'); 
+            let minRaise = currentBet + baseKon;
+            raiseSlider.min = minRaise; 
+            raiseSlider.step = baseKon; 
+            raiseSlider.max = Math.max(minRaise, balances.player); 
+            raiseSlider.value = minRaise;
             document.getElementById('raise-val').innerText = raiseSlider.value;
         }
 
@@ -454,15 +467,13 @@
                 setTimeout(() => {
                     clearInterval(timerInterval); if(!isPlaying) return;
                     
-                    // Бот ставит Темную (если первый)
                     if (isFirstAfterDealer && !isSekaRound && Math.random() > 0.6 && balances[pKey] >= baseKon) {
-                        throwChip(pKey, baseKon); balances[pKey] -= baseKon; pot += baseKon; currentBet = baseKon * 2; // Умножаем ставку в 2 раза
+                        throwChip(pKey, baseKon); balances[pKey] -= baseKon; pot += baseKon; currentBet = baseKon * 2;
                         addLog(`🤖 ${pName} поставил В ТЕМНУЮ (+${baseKon}). Мин. ставка: ${currentBet}`); 
                         isFirstActionInRound = false; currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn();
                     } else {
                         isFirstActionInRound = false; 
                         let action = "пас";
-                        // Логика бота: если есть деньги на текущую ставку, с шансом 70% он ее поддерживает.
                         if (balances[pKey] >= currentBet) { action = Math.random() > 0.3 ? "поддержал" : "пас"; }
                         
                         if(action === "поддержал") { 
@@ -481,6 +492,7 @@
 
         function startNewRound() {
             clearInterval(timerInterval); isPlaying = true; toggleButtons(true); document.getElementById('raise-box').style.display = 'none';
+            document.getElementById('btn-call').onclick = playerCall; // Восстанавливаем функцию кнопки ПОДДЕРЖАТЬ
             
             if (!isSekaRound) {
                 if (balances.player < baseKon) { addLog("❌ Недостаточно очков для кона!"); return; }
@@ -488,7 +500,6 @@
                 ['player', 'bot1', 'bot2', 'bot3'].forEach((p, index) => { setTimeout(() => throwChip(p, baseKon), index * 150); balances[p] -= baseKon; });
                 pot = baseKon * 4;
             } else {
-                // Это Сека! Банк остается. Кон сбрасывается для начала торгов.
                 currentBet = baseKon;
                 isSekaRound = false; 
             }
@@ -525,7 +536,7 @@
         // --- ДЕЙСТВИЯ ИГРОКА ---
         function playerBlind() { 
             throwChip('player', baseKon); balances.player -= baseKon; pot += baseKon; 
-            currentBet = baseKon * 2; // Тёмная поднимает ставку в 2 раза
+            currentBet = baseKon * 2; 
             addLog(`Вы поставили В ТЕМНУЮ (+${baseKon}). Мин. ставка: ${currentBet}`); 
             document.getElementById('btn-blind').style.display = 'none'; isFirstActionInRound = false; updateUI(); toggleButtons(false); currentTurnIdx = getNextActivePlayer(currentTurnIdx); processNextTurn(); 
         }
@@ -540,7 +551,7 @@
             const raiseAmt = parseInt(document.getElementById('raise-slider').value); 
             if(balances.player < raiseAmt) { addLog("❌ Недостаточно средств!"); return; } 
             throwChip('player', raiseAmt); 
-            currentBet = raiseAmt; // Устанавливаем новую планку для всех
+            currentBet = raiseAmt; 
             balances.player -= raiseAmt; pot += raiseAmt; 
             document.getElementById('raise-box').style.display = 'none'; 
             addLog(`Вы ПОДНЯЛИ ставку до (${currentBet})`); 
@@ -558,31 +569,67 @@
         }
 
         // --- ЛОГИКА СЕКИ ---
-        function handleSeka(winners, maxPts) {
+        function handleSeka(winners, maxPts, showdownPlayers, sekaBuyIn) {
             let displayPts = Math.floor(maxPts); playSound('card'); 
             addLog(`<span class="seka-alert">🔥 СЕКА! Спор за банк ${pot} (${displayPts} очк).</span>`);
-            addLog(`<span style="color:#aaa;">Пасовавшие игроки не допускаются в спор.</span>`);
+            addLog(`<span style="color:#aaa;">Кто был на вскрытии — в игре. Пасовавшие могут войти за ${sekaBuyIn}.</span>`);
             isSekaRound = true; 
             
-            // В Секе участвуют ТОЛЬКО те, кто дошел до вскрытия и у кого максимальные равные очки. 
-            // Докупиться из паса больше нельзя!
-            let nextActive = { player: false, bot1: false, bot2: false, bot3: false }; 
-            winners.forEach(w => nextActive[w] = true); 
+            // В Секе автоматом участвуют все, кто был на вскрытии
+            activePlayers = { ...showdownPlayers }; 
 
-            activePlayers = nextActive; 
+            // Боты, которые пасовали, решают, заходить ли за плату (50% шанс)
+            ['bot1', 'bot2', 'bot3'].forEach(bot => {
+                if (!showdownPlayers[bot] && balances[bot] >= sekaBuyIn) {
+                    if (Math.random() > 0.5) { 
+                        balances[bot] -= sekaBuyIn;
+                        pot += sekaBuyIn;
+                        activePlayers[bot] = true;
+                        addLog(`🤖 ${getPlayerName(bot).split(' ')[0]} докупил вход в Секу за ${sekaBuyIn}`);
+                    }
+                }
+            });
+
             updateUI(); 
             startPreRoundTimer(); 
+            
+            // Если игрок пасовал, даем ему шанс купить вход на время таймера
+            if (!showdownPlayers.player && balances.player >= sekaBuyIn) {
+                let btnCall = document.getElementById('btn-call');
+                btnCall.innerText = `ВОЙТИ В СЕКУ (${sekaBuyIn})`;
+                btnCall.style.backgroundColor = 'var(--btn-orange)'; // Выделим цветом
+                btnCall.disabled = false;
+                btnCall.onclick = function() {
+                    if (balances.player >= sekaBuyIn) {
+                        balances.player -= sekaBuyIn;
+                        pot += sekaBuyIn;
+                        activePlayers.player = true;
+                        addLog(`✅ Вы купили вход в Секу за ${sekaBuyIn}`);
+                        btnCall.disabled = true;
+                        btnCall.innerText = `В ИГРЕ`;
+                        btnCall.style.backgroundColor = 'var(--btn-green)';
+                        updateUI();
+                    }
+                };
+            }
         }
 
         function revealCards() {
             isPlaying = false; clearInterval(timerInterval); document.getElementById('timer-text').innerText = "Вскрытие..."; addLog("🔥 ВСКРЫТИЕ КАРТ!");
-            let activeScores = {}; if (activePlayers.player) activeScores.player = playerPoints;
+            
+            // Запоминаем тех, кто был на вскрытии, и ставку вскрытия
+            let showdownPlayers = { ...activePlayers };
+            let sekaBuyInAmount = currentBet;
+
+            let activeScores = {}; 
+            if (activePlayers.player) activeScores.player = playerPoints;
+            
             ['bot1', 'bot2', 'bot3'].forEach(bot => {
                 if (activePlayers[bot]) { let pts = calcSekaPoints(botCardsData[bot]); let cardsHtml = ''; botCardsData[bot].forEach(c => { cardsHtml += c.html; }); document.getElementById(bot).querySelector('.cards').innerHTML = cardsHtml; document.getElementById(bot).querySelector('.player-name').innerText = `${getPlayerName(bot).split(' ')[0]} (${Math.floor(pts)} очк)`; activeScores[bot] = pts; }
             });
 
             for (let p in activeScores) {
-                if (activeScores[p] === 33.5) { // 3 Туза
+                if (activeScores[p] === 33.5) { 
                     let winnerName = p === 'player' ? 'Вы собрали' : `${getPlayerName(p).split(' ')[0]} собрал`;
                     addLog(`🌟 <span style="color:var(--gold);">ПРЕМИЯ! ${winnerName} 3 ТУЗА! Все платят по 10 очков.</span>`);
                     playSound('win');
@@ -596,10 +643,17 @@
             let winners = []; for (let key in activeScores) { if (activeScores[key] === maxPts) winners.push(key); }
 
             setTimeout(() => {
-                if (winners.length > 1) { handleSeka(winners, maxPts); } 
+                if (winners.length > 1) { 
+                    handleSeka(winners, maxPts, showdownPlayers, sekaBuyInAmount); 
+                } 
                 else if (winners.length === 1) {
                     let winner = winners[0]; let displayMax = Math.floor(maxPts);
-                    let adminFee = Math.max(1, Math.floor(pot * 0.01)); let winAmount = pot - adminFee; balances.admin += adminFee;
+                    
+                    // ИСПРАВЛЕННАЯ КОМИССИЯ АДМИНА (РОВНО 1%)
+                    let adminFee = pot * 0.01; 
+                    let winAmount = pot - adminFee; 
+                    balances.admin += adminFee;
+                    
                     if (winner === 'player') { playSound('win'); addLog(`🏆 Вы выиграли с ${displayMax} очками! Забрали: ${winAmount}`); balances.player += winAmount; } 
                     else { addLog(`💀 Выиграл ${getPlayerName(winner).split(' ')[0]} с ${displayMax} очк. Забрал: ${winAmount}`); balances[winner] += winAmount; }
                     dealerIdx = playersOrder.indexOf(winner); pot = 0; updateUI(); startPreRoundTimer();
